@@ -4,13 +4,13 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy(app)
 
-class Machine(db.Model):
-    __tablename__ = "machines"
+class Container(db.Model):
+    __tablename__ = "dockers"
     __table_args__ = (
     )
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    ip_addr = db.Column(db.String(32), nullable=False, unique=True)
-    host_name = db.Column(db.String(32), default="N/A", unique=False)
+    docker_name = db.Column(db.String(32), nullable=False, unique=True)
+    image_name = db.Column(db.String(32), default="N/A", unique=False)
     cpu_cores = db.Column(db.Integer, nullable=False, unique=False)
     free_mem_in_MB = db.Column(db.Integer, nullable=False, unique=False)
     deploy_point_1 = db.Column(db.String(256), nullable=False, unique=False)
@@ -32,14 +32,14 @@ if __name__ == "__main__":
 
     for i in range(1):
         db.create_all()
-        new_obj = Machine(ip_addr="10.130.160.114",
-                          host_name="hc-app-1", cpu_cores=16, free_mem_in_MB=304, deploy_point_1="/mnt/", free_storage_in_GB_1=1700
-                          )
-        if Machine.query.filter_by(ip_addr=new_obj.ip_addr).limit(1).all():
+        new_obj = Docker(ip_addr="10.130.160.114",
+                           host_name="hc-app-1", cpu_cores=16, free_mem_in_MB=304, deploy_point_1="/mnt/", free_storage_in_GB_1=1700
+                           )
+        if Docker.query.filter_by(ip_addr=new_obj.ip_addr).limit(1).all():
             print(new_obj, "exists")
             continue
         sess = db.session()
         sess.add(new_obj)
         sess.commit()
         print(dir(new_obj))
-    print(Machine.query.all())
+    print(Docker.query.all())

@@ -12,23 +12,30 @@ def overview():
     print(url_for("api_g1.get_data", x=123,_external=True))
     return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True)
 
-@api_group1.route('/machines', methods=['GET'])
+
+@api_group1.route('/machines', methods=['GET', 'POST'])
 def get_machines():
     print(request.method)
-    return render_template("index.html", machines_class="active", show_boards=True)
+    if(request.method=="POST"):
+        pass
+    else:
+        return render_template("machines.html", machines_class="active", show_boards=True)
 
-@api_group1.route('/containers', methods=['GET'])
+
+
+@api_group1.route('/containers', methods=['GET', 'POST'])
 def get_containers():
     print(request.method)
-    return render_template("index.html", containers_class="active")
+    return render_template("containers.html", containers_class="active")
 
-@api_group1.route('/products', methods=['GET'])
+
+@api_group1.route('/products', methods=['GET', 'POST'])
 def get_products():
     print(request.method)
     sps = SoftPackage.query.all()
     for sp in sps:
         print(sp)
-    return render_template("index.html", products_class="active",soft_packages=sps)
+    return render_template("products.html", products_class="active",soft_packages=sps)
 
 
 @api_group1.route('/data/<x>', methods=['GET'])

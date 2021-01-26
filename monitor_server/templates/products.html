@@ -27,31 +27,28 @@
   {% endblock %}
 
     {% block contents %}
-      <h2 class="sub-header">Section title</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>地址</th>
-                  <th>描述</th>
-                  <th>描述2</th>
-                  <th>描述3</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for sp in soft_packages %}
-                    <tr>
-                        <td>[[sp.full_name]]</td>
-                      <td>[[sp.file_path]]</td>
-                      <td>[[sp.reserve_1]]</td>
-                      <td>adipiscing</td>
-                      <td>elit</td>
-                    </tr>
-                {% endfor %}
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      <h2 class="sub-header">包列表</h2>
+      <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>包名</th>
+            <th>地址</th>
+            <th>描述</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sp in soft_packages %}
+              <tr>
+                  <td>[[sp.full_name]]</td>
+                <td>[[sp.file_path]]</td>
+                <td>[[sp.reserve_1]]</td>
+                <td> <button> type="button" class=""</button></td>
+              </tr>
+          {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
   {% endblock %}
 
