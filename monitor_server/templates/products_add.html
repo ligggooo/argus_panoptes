@@ -12,10 +12,10 @@
             <input type="text" class="form-control" id="package_name" aria-describedby="input1">
           </div>
 
-          <label for="package_path">存储地址：例如 /mnt/data/software/0012</label>
+          <label for="package_path">相对存储地址：例如 ${storage_root}:/mnt/data/software/0012</label>
           <div class="input-group">
-            <span class="input-group-addon" id="input2">@</span>
-            <input type="text" class="form-control" id="package_path" aria-describedby="input2">
+            <span class="input-group-addon" id="input2">${storage_root}:</span>
+            <input type="text" class="form-control" id="package_path" aria-describedby="input2"><p class="">heheh</p>
           </div>
           <div class="col-sm-1 col-sm-offset-10">
             <label for="submit_btn"></label>
@@ -39,7 +39,20 @@
                     "package_name":$("#package_name").val(),
                     "package_path":$("#package_path").val()
                 };
-                $.post("[[url_for_add]]", data);
+                $.post("[[url_for_add]]", data, function(data,status){
+                  console.log(data);
+                  console.log(status);
+                  data = JSON.parse(data);
+                  if(data.status=="success"){
+                    $(location).attr("href","[[ success_url ]]");
+                  }else{
+                    if(data.info=="failed on clear"){
+                      ${"#form_error"}.val(data.info);
+                    }else{
+
+                    }
+                  }
+                });
             });
         });
     </script>

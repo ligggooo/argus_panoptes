@@ -15,7 +15,7 @@ app.jinja_env.variable_end_string=']]'
 # 将db注册到app中（在内部读取配置文件）    　　
 app.config["SQLALCHEMY_ECHO"] = True
 
-from models.model_002_package import SoftPackage
+from models import *
 
 from .api import server_views
 app.register_blueprint(server_views.api_group1)
