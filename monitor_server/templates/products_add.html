@@ -1,0 +1,48 @@
+{% extends "base_add_template.html" %}
+    {% block boards %}
+          <h1 class="page-header">新增条目</h1>
+    {% endblock %}
+
+    {% block contents %}
+      <div class="col-sm-8 col-sm-offset-2">
+        <form method="post" action="[[url_for_add]]">
+          <label for="package_name">包名+大中小版本号：例如 helloworld 1.1.0</label>
+          <div class="input-group">
+            <span class="input-group-addon" id="input1"> = </span>
+            <input type="text" class="form-control" id="package_name" aria-describedby="input1">
+          </div>
+
+          <label for="package_path">存储地址：例如 /mnt/data/software/0012</label>
+          <div class="input-group">
+            <span class="input-group-addon" id="input2">@</span>
+            <input type="text" class="form-control" id="package_path" aria-describedby="input2">
+          </div>
+          <div class="col-sm-1 col-sm-offset-10">
+            <label for="submit_btn"></label>
+            <input type="button" class="btn btn-success btn-sm" id="submit_btn" value="Submit">
+          </div>
+        </form>
+          <script>
+
+          </script>
+
+      </div>
+    {% endblock %}
+
+
+    {% block morescripts %}
+    <script >
+        $(document).ready(function() {
+            $("#submit_btn").click(function () {
+                console.log("123131");
+                data = {
+                    "package_name":$("#package_name").val(),
+                    "package_path":$("#package_path").val()
+                };
+                $.post("[[url_for_add]]", data);
+            });
+        });
+    </script>
+
+    {%  endblock %}
+

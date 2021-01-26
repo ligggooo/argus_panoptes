@@ -1,0 +1,44 @@
+{% extends "base_template.html" %}
+
+{% block body %}
+
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+          {% block boards %}
+          <h1 class="page-header">标题模板</h1>
+          {% endblock %}
+
+          {% block contents%}
+            <p>这里是内容区域<p>
+            <h2 class="sub-header">这里是内容区域</h2>
+            <div class="table-responsive">
+          {% endblock %}
+
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+  <script>
+    // new Vue({
+    //   el: '.sidebar_vue',
+    //   data: {
+    //     active: ''
+    //   },
+    //   methods: {
+    //       doit:function(){
+    //           this.active="active"
+    //       }
+    //   },
+    // });
+  </script>
+    {% block morescripts %}
+    {%  endblock %}
+
+{% endblock %}
