@@ -31,12 +31,14 @@ def get_products():
         sp.edit_url = url_for("api_g1.edit_products", num=sp.spid)
         sp.upload_url = url_for("api_g1.upload_products",num=sp.spid)
         sp.download_url = url_for("api_g1.download_products", num=sp.spid)
+        sp.download_disabled = ""
         if os.path.exists(real_path):
             sp.desc = sp.desc
             sp.tr_class = "info"
         else:
             sp.desc = "文件不存在"
             sp.tr_class = "danger"
+            sp.download_disabled="disabled"
     print(url_for("api_g1.add_products"))
     rm_post_url = url_for("api_g1.rm_products")
     return render_template("products.html", products_class="active",
@@ -138,6 +140,7 @@ def upload_products(num):
     sp = SoftPackage.query.filter_by(spid=int(num)).all()[0]
     if request.method == 'POST':
         f = request.files['file']
+        os.makedirs(os.path.join(_data_dir + os.path.sep + sp.file_path))
         upload_path = os.path.join(_data_dir + os.path.sep + sp.file_path, sp.full_name)
         f.save(upload_path)
         return redirect(url_for('api_g1.get_products'))
