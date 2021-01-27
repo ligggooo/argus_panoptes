@@ -28,10 +28,9 @@ class Machine(db.Model):
 
 if __name__ == "__main__":
 
-    for i in range(1):
-        db.create_all()
-        new_obj = Machine(ip_addr="10.130.160.114",
-                          host_name="hc-app-1", cpu_cores=16, free_mem_in_MB=304, deploy_point_1="/mnt/", free_storage_in_GB_1=1700
+    for i in range(10):
+        new_obj = Machine(ip_addr="10.130.160.11"+str(i),
+                          host_name="hc-app-"+str(i), cpu_cores=16, free_mem_in_MB=304, deploy_point_1="/mnt/", free_storage_in_GB_1=1700
                           )
         if Machine.query.filter_by(ip_addr=new_obj.ip_addr).limit(1).all():
             print(new_obj, "exists")

@@ -1,13 +1,13 @@
-from flask import request, url_for, render_template, redirect, send_from_directory
+from flask import Blueprint,request, url_for, render_template, redirect, send_from_directory
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from models import SoftPackage, db
-from api import api_group1
+
 from operation_utils.file import get_data_dir
 
-
 _data_dir = get_data_dir()
+api_group1 = Blueprint("api_g1",__name__)
 
 @api_group1.route('/')
 def overview():
@@ -15,10 +15,6 @@ def overview():
     # print(url_for("api_g1.get_data", x=123,_external=True))
     print(request.method)
     return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True)
-
-
-
-
 
 
 @api_group1.route('/products', methods=['GET', 'POST'])

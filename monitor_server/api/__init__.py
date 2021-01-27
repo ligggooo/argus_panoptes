@@ -1,4 +1,6 @@
 from flask import Blueprint
 
 
-api_group1 = Blueprint("api_g1",__name__)
+from .server_views_products import *
+from .server_views_machines import *
+from .server_views_containers import *
