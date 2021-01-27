@@ -1,0 +1,22 @@
+{% extends "base_add_edit_template.html" %}
+
+{% block boards %}
+ <h1 class="page-header">上传文件</h1>
+{% endblock %}
+
+{% block contents %}
+<div class="col-md-8 col-md-offset-2">
+    <form action="" enctype='multipart/form-data' method='POST'>
+        <div class="btn-group btn-group-justified" role="group" aria-label="...">
+            <div class="btn-group" role="group">
+                <input class="form-control btn btn-warning btn-sm" type="file" name="file">
+            </div>
+            <div class="btn-group" role="group">
+                <input class=" form-control btn btn-success" type="submit" value="上传">
+            </div>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
+
