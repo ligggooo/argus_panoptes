@@ -11,17 +11,32 @@
             <span class="input-group-addon" id="input1"> = </span>
             <input type="text" class="form-control" id="package_name" aria-describedby="input1">
           </div>
+            <div class="alert alert-danger" role="alert" id="input_1_error_div">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only" >Error:</span>
+                <p style="display: inline" id="input_1_error"></p>
+            </div>
 
           <label for="package_path">相对存储地址：例如 ${storage_root}:/mnt/data/software/0012</label>
           <div class="input-group">
             <span class="input-group-addon" id="input2">${storage_root}:</span>
-            <input type="text" class="form-control" id="package_path" aria-describedby="input2"><p class="">heheh</p>
+            <input type="text" class="form-control" id="package_path" aria-describedby="input2">
           </div>
+            <div class="alert alert-danger" role="alert" id="input_2_error_div">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only" >Error:</span>
+                <p style="display: inline" id="input_2_error"></p>
+            </div>
           <div class="col-sm-1 col-sm-offset-10">
             <label for="submit_btn"></label>
             <input type="button" class="btn btn-success btn-sm" id="submit_btn" value="Submit">
           </div>
         </form>
+          <div class="alert alert-danger" role="alert" id="form_error_div">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only" >Error:</span>
+                <p style="display: inline" id="form_error"></p>
+            </div>
           <script>
 
           </script>
@@ -31,8 +46,25 @@
 
 
     {% block morescripts %}
+    <script type="text/css">
+        #input_1_error_div{
+            display: none;
+        }
+    </script>
     <script >
         $(document).ready(function() {
+            $("#input_1_error_div").hide();
+            $("#input_2_error_div").hide();
+            $("#form_error_div").hide();
+            $("#package_name").change(function () {
+                $("#input_1_error_div").hide();
+                $("#form_error_div").hide();
+            });
+            $("#package_path").change(function () {
+                $("#input_2_error_div").hide();
+                $("#form_error_div").hide();
+            });
+
             $("#submit_btn").click(function () {
                 console.log("123131");
                 data = {
@@ -46,9 +78,18 @@
                   if(data.status=="success"){
                     $(location).attr("href","[[ success_url ]]");
                   }else{
-                    if(data.info=="failed on clear"){
-                      ${"#form_error"}.val(data.info);
+                    if(data.info!=="failed on clear"){
+                      $("#form_error").text(data.info);
+                      $("#form_error_div").show();
                     }else{
+                        if(data.info_2.length>0){
+                            $("#input_2_error").text(data.info_2);
+                            $("#input_2_error_div").show();
+                        }
+                        if(data.info_1.length>0){
+                            $("#input_1_error").text(data.info_1);
+                            $("#input_1_error_div").show();
+                        }
 
                     }
                   }
