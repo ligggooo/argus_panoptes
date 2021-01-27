@@ -1,35 +1,38 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
-from monitor_server import app
-from flask_sqlalchemy import SQLAlchemy
+from monitor_server import db
 
-db = SQLAlchemy(app)
 
 class SoftPackage(db.Model):
     __tablename__ = "software_packages"
     __table_args__ = (
         UniqueConstraint("name", "main_version",
-                         "second_version", "third_version"),
+                         "second_version", "third_version","suffix"),
     )
-    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
-    package_name = db.Column(db.String(256), nullable=False,unique=False,name="name")
+    spid = db.Column(db.Integer, primary_key=True,autoincrement=True,name="id")
+    package_name = db.Column(db.String(64), nullable=False,unique=False,name="name")
     main_version = db.Column(db.Integer, nullable=False)
     second_version = db.Column(db.Integer, nullable=False,default=0)
     third_version = db.Column(db.Integer, nullable=False,default=0)
-    file_path = db.Column(db.String(512), nullable=False, unique=False)
+    suffix = db.Column(db.String(8), default="")
+    file_path = db.Column(db.String(256), nullable=False, unique=False)
+    desc = db.Column(db.String(512), nullable=True, unique=False)
     reserve_1 = db.Column(db.String(256), nullable=True,unique=False)
     reserve_2 = db.Column(db.String(256), nullable=True,unique=False)
     def __repr__(self):
-        return "<%s_v%d.%d.%d>" % (self.package_name,self.main_version,self.second_version,self.third_version)
+        return "<%s_v%d.%d.%d>" % (self.package_name,self.main_version,
+                                   self.second_version,self.third_version)
 
     @property
     def full_name(self):
-        return "%s %d.%d.%d" % (self.package_name,self.main_version,self.second_version,self.third_version)
+        return "%s_v%d.%d.%d.%s" % (self.package_name,self.main_version,
+                                    self.second_version,self.third_version,self.suffix)
 
 
 if __name__ == "__main__":
+    db.create_all()
     for i in range(10):
         new_soft_pack = SoftPackage(package_name="dev_helloworld",
-                                main_version=0,second_version=1,third_version=i,file_path="/mnt/data/software/0012",
+                                main_version=0,second_version=1,third_version=i,file_path="/mnt/data/software/0012",suffix="tar"
                                 )
         if SoftPackage.query.filter_by(package_name=new_soft_pack.package_name,
                                        main_version=new_soft_pack.main_version,

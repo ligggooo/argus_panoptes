@@ -1,15 +1,19 @@
-{% extends "base_add_template.html" %}
+{% extends "base_add_edit_template.html" %}
     {% block boards %}
-          <h1 class="page-header">新增条目</h1>
+        {% if old_sp %}
+          <h1 class="page-header">编辑条目</h1>
+        {% else %}
+            <h1 class="page-header">新增条目</h1>
+        {% endif %}
     {% endblock %}
 
     {% block contents %}
       <div class="col-sm-8 col-sm-offset-2">
-        <form method="post" action="[[url_for_add]]">
-          <label for="package_name">包名+大中小版本号：例如 helloworld 1.1.0</label>
+        <form method="post" action="[[url_for_post]]">
+          <label for="package_name">包名+大中小版本号：例如 dev_helloworld_v0.1.0.tar</label>
           <div class="input-group">
             <span class="input-group-addon" id="input1"> = </span>
-            <input type="text" class="form-control" id="package_name" aria-describedby="input1">
+            <input type="text" class="form-control" id="package_name" aria-describedby="input1" value="[[old_sp.full_name]]">
           </div>
             <div class="alert alert-danger" role="alert" id="input_1_error_div">
               <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -17,26 +21,37 @@
                 <p style="display: inline" id="input_1_error"></p>
             </div>
 
-          <label for="package_path">相对存储地址：例如 ${storage_root}:/mnt/data/software/0012</label>
+          <label for="package_path">相对存储地址：</label>
           <div class="input-group">
             <span class="input-group-addon" id="input2">${storage_root}:</span>
-            <input type="text" class="form-control" id="package_path" aria-describedby="input2">
+            <input type="text" class="form-control" id="package_path" aria-describedby="input2" value="[[old_sp.file_path]]">
           </div>
             <div class="alert alert-danger" role="alert" id="input_2_error_div">
               <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
               <span class="sr-only" >Error:</span>
                 <p style="display: inline" id="input_2_error"></p>
             </div>
-          <div class="col-sm-1 col-sm-offset-10">
+
+        {% if old_sp %}
+          <label for="package_desc">描述信息：</label>
+          <div class="form-group">
+            <textarea class="form-control" rows="3" id="package_desc">[[old_sp.desc]]</textarea>
+          </div>
+        {% endif %}
+
+            <div class="col-sm-10 col-sm-offset-0 " role="alert">
+                <div class="col-sm-12 col-sm-offset-0 alert alert-danger" id="form_error_div">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only" >Error:</span>
+                    <p style="" id="form_error"></p>
+                </div>
+            </div>
+              <div class="col-sm-1 col-sm-offset-0">
             <label for="submit_btn"></label>
             <input type="button" class="btn btn-success btn-sm" id="submit_btn" value="Submit">
           </div>
         </form>
-          <div class="alert alert-danger" role="alert" id="form_error_div">
-              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-              <span class="sr-only" >Error:</span>
-                <p style="display: inline" id="form_error"></p>
-            </div>
+
           <script>
 
           </script>
@@ -69,9 +84,10 @@
                 console.log("123131");
                 data = {
                     "package_name":$("#package_name").val(),
-                    "package_path":$("#package_path").val()
+                    "package_path":$("#package_path").val(),
+                    "package_desc":$("#package_desc").val(),
                 };
-                $.post("[[url_for_add]]", data, function(data,status){
+                $.post("[[url_for_post]]", data, function(data,status){
                   console.log(data);
                   console.log(status);
                   data = JSON.parse(data);

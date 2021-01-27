@@ -1,3 +1,9 @@
+import os
+from operation_utils.file import get_parent_dir
+
+SRC_ROOT = get_parent_dir(os.path.abspath(__file__), 2)
+
+
 class Config(object):
     DEBUG = False
     TESTING = False

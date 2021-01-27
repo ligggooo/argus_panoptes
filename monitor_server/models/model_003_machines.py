@@ -1,8 +1,6 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
-from monitor_server import app
-from flask_sqlalchemy import SQLAlchemy
+from monitor_server import db
 
-db = SQLAlchemy(app)
 
 class Machine(db.Model):
     __tablename__ = "machines"

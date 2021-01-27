@@ -3,16 +3,17 @@ import re
 
 
 def clear_package_name(fullname):
-    pattern = "([a-zA-Z]\w*) ([0-9]+)\.([0-9]+)\.([0-9]+)"
+    # dev_helloworld_v0.1.0.tar
+    pattern = "([a-zA-Z]\w*)_v([0-9]+)\.([0-9]+)\.([0-9]+).(\w+)"
     res = re.match(pattern, fullname)
     if not res:
         return None, "format error"
     try:
-        package_name, main_version, second_version, third_version = res.groups()
+        package_name, main_version, second_version, third_version, suffix = res.groups()
         main_version = int(main_version)
         second_version = int(second_version)
         third_version = int(third_version)
-        return (package_name, main_version, second_version, third_version),""
+        return (package_name, main_version, second_version, third_version, suffix),""
     except Exception as e:
         print("invalid input :%s", fullname)
         return None, "format error"

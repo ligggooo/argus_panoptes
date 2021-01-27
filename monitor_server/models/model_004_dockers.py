@@ -1,8 +1,5 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
-from monitor_server import app
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy(app)
+from monitor_server import db
 
 class Container(db.Model):
     __tablename__ = "dockers"

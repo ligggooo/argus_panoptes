@@ -1,5 +1,5 @@
 from flask import Flask
-
+from flask_sqlalchemy import SQLAlchemy
 
 from .settings.conf import TestingConfig
 import sys
@@ -15,10 +15,11 @@ app.jinja_env.variable_end_string=']]'
 # 将db注册到app中（在内部读取配置文件）    　　
 app.config["SQLALCHEMY_ECHO"] = True
 
-from models import *
 
-from .api import server_views
-app.register_blueprint(server_views.api_group1)
+db = SQLAlchemy(app)
+
+
+
 
 
 
