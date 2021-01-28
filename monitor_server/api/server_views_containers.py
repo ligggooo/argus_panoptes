@@ -33,4 +33,8 @@ def get_deployments():
     return render_template("deployments.html", deployment_class="active",members=members)
 
 
+@api_group3.route('/tasks', methods=['GET', 'POST'])
+def get_taskss():
+    return "todo"
+
 
