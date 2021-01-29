@@ -17,6 +17,7 @@ class Machine(db.Model):
     free_storage_in_GB_2 = db.Column(db.Integer, nullable=True, unique=False)
     reserve_1 = db.Column(db.String(256), nullable=True, unique=False)
     reserve_2 = db.Column(db.String(256), nullable=True, unique=False)
+    docker_server_port= db.Column(db.Integer, nullable=False, unique=False, default=2375)
 
     def __repr__(self):
         return "<%s %s>" % (self.ip_addr, self.host_name)
@@ -27,7 +28,7 @@ class Machine(db.Model):
 
 
 if __name__ == "__main__":
-
+    db.create_all()
     for i in range(10):
         new_obj = Machine(ip_addr="10.130.160.11"+str(i),
                           host_name="hc-app-"+str(i), cpu_cores=16, free_mem_in_MB=304, deploy_point_1="/mnt/", free_storage_in_GB_1=1700
