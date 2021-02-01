@@ -1,0 +1,113 @@
+{% extends "base_add_edit_template.html" %}
+    {% block boards %}
+        {% if old_obj %}
+          <h1 class="page-header">编辑条目</h1>
+        {% else %}
+            <h1 class="page-header">新增条目</h1>
+        {% endif %}
+    {% endblock %}
+
+    {% block contents %}
+      <div class="col-sm-8 col-sm-offset-2">
+        <form method="post" action="[[url_for_post]]">
+          <label for="image_name">容器名</label>
+          <div class="input-group">
+            <span class="input-group-addon" id="input1"> = </span>
+            <input type="text" class="form-control" id="image_name" aria-describedby="input1" value="[[old_obj.image_name]]">
+          </div>
+            <div class="alert alert-danger" role="alert" id="input_1_error_div">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only" >Error:</span>
+                <p style="display: inline" id="input_1_error"></p>
+            </div>
+
+          <label for="package_desc">host机器</label>
+          <div class="form-group">
+            <textarea class="form-control" rows="3" id="package_desc">[[old_obj.desc]]</textarea>
+          </div>
+
+          <div class="col-sm-10 col-sm-offset-0 " role="alert">
+              <div class="col-sm-12 col-sm-offset-0 alert alert-danger" id="form_error_div">
+                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                  <span class="sr-only" >Error:</span>
+                  <p style="" id="form_error"></p>
+              </div>
+          </div>
+
+          <label for="package_desc">docker镜像</label>
+          <div class="form-group">
+            <textarea class="form-control" rows="3" id="package_desc">[[old_obj.desc]]</textarea>
+          </div>
+
+          <div class="col-sm-10 col-sm-offset-0 " role="alert">
+              <div class="col-sm-12 col-sm-offset-0 alert alert-danger" id="form_error_div">
+                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                  <span class="sr-only" >Error:</span>
+                  <p style="" id="form_error"></p>
+              </div>
+          </div>
+
+          <div class="col-sm-1 col-sm-offset-0">
+            <label for="submit_btn"></label>
+            <input type="button" class="btn btn-success btn-sm" id="submit_btn" value="Submit">
+          </div>
+        </form>
+      </div>
+    {% endblock %}
+
+
+    {% block morescripts %}
+    <script type="text/css">
+        #input_1_error_div{
+            display: none;
+        }
+    </script>
+    <script >
+        $(document).ready(function() {
+            $("#input_1_error_div").hide();
+            $("#input_2_error_div").hide();
+            $("#form_error_div").hide();
+            $("#package_name").change(function () {
+                $("#input_1_error_div").hide();
+                $("#form_error_div").hide();
+            });
+            $("#package_path").change(function () {
+                $("#input_2_error_div").hide();
+                $("#form_error_div").hide();
+            });
+
+            $("#submit_btn").click(function () {
+                console.log("123131");
+                data = {
+                    "image_name":$("#image_name").val(),
+                    "package_desc":$("#package_desc").val(),
+                };
+                $.post("[[url_for_post]]", data, function(data,status){
+                  console.log(data);
+                  console.log(status);
+                  data = JSON.parse(data);
+                  if(data.status=="success"){
+                    $(location).attr("href","[[ success_url ]]");
+                  }else{
+                    if(data.info!=="failed on clear"){
+                      $("#form_error").text(data.info);
+                      $("#form_error_div").show();
+                    }else{
+                        if(data.info_2.length>0){
+                            $("#input_2_error").text(data.info_2);
+                            $("#input_2_error_div").show();
+                        }
+                        if(data.info_1.length>0){
+                            $("#input_1_error").text(data.info_1);
+                            $("#input_1_error_div").show();
+                        }
+
+                    }
+                  }
+                });
+            });
+        });
+    </script>
+
+    {%  endblock %}
+

@@ -15,6 +15,8 @@ def get_machines():
     machines = sorted(machines, key=lambda x:x.ip_addr)
     for m in machines:
         print(m)
+        m.url_containers = url_for("api_g3.get_containers",machine_id=m.id)
+        print(m.url_containers)
     return render_template("machines.html", machines_class="active", show_boards=True,
                         url_for_add=url_for("api_g2.add_machines"),machines=machines)
 

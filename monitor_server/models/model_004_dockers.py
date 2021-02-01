@@ -11,6 +11,9 @@ class Image(db.Model):
     desc = db.Column(db.String(512), nullable=False, unique=False)
     size_in_MB = db.Column(db.Integer, nullable=False, unique=False)
 
+    def __repr__(self):
+        return "<%s>" % self.image_name
+
 
 class Container(db.Model):
     __tablename__ = "containers"
