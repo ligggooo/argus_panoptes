@@ -13,7 +13,7 @@
           <label for="image_name">容器名</label>
           <div class="input-group">
             <span class="input-group-addon" id="input1"> = </span>
-            <input type="text" class="form-control" id="image_name" aria-describedby="input1" value="[[old_obj.image_name]]">
+            <input type="text" class="form-control" id="container_name" aria-describedby="input1" value="[[old_obj.container_name]]">
           </div>
             <div class="alert alert-danger" role="alert" id="input_1_error_div">
               <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -21,22 +21,30 @@
                 <p style="display: inline" id="input_1_error"></p>
             </div>
 
-          <label for="package_desc">host机器</label>
-          <div class="form-group">
-            <textarea class="form-control" rows="3" id="package_desc">[[old_obj.desc]]</textarea>
+
+          <div class="input-group col-sm-5">
+            <label for="machine_select">host机器</label>
+            <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
+            <div class="">
+              <select class="form-control" id="machine_select" [[host_ip_disabled]]="[[host_ip_disabled]]">
+                {% for m in machines %}
+                  <option value="[[m.id]]" [[m.selected]]>[[m.ip_addr]]</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
 
-          <div class="col-sm-10 col-sm-offset-0 " role="alert">
-              <div class="col-sm-12 col-sm-offset-0 alert alert-danger" id="form_error_div">
-                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                  <span class="sr-only" >Error:</span>
-                  <p style="" id="form_error"></p>
-              </div>
-          </div>
 
-          <label for="package_desc">docker镜像</label>
-          <div class="form-group">
-            <textarea class="form-control" rows="3" id="package_desc">[[old_obj.desc]]</textarea>
+
+          <div class="input-group col-sm-5">
+            <label for="image_select">docker镜像</label>
+            <div class="">
+              <select class="form-control" id="image_select">
+                {% for m in images %}
+                  <option value="[[m.id]]" [[m.selected]]>[[m.image_name]]</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
 
           <div class="col-sm-10 col-sm-offset-0 " role="alert">
@@ -79,8 +87,11 @@
             $("#submit_btn").click(function () {
                 console.log("123131");
                 data = {
-                    "image_name":$("#image_name").val(),
-                    "package_desc":$("#package_desc").val(),
+                    "container_name":$("#container_name").val(),
+                    "host_ip":$("#machine_select option:selected").text(),
+                    "machine_id":$("#machine_select option:selected").val(),
+                    "image_name":$("#image_select option:selected").text(),
+                    "image_id":$("#image_select option:selected").val()
                 };
                 $.post("[[url_for_post]]", data, function(data,status){
                   console.log(data);

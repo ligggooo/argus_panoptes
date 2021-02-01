@@ -71,13 +71,41 @@ def get_containers():
         #
         m.url_containers_on_image = url_for("api_g3.get_containers", image_id=m.image_id)
         m.url_containers_on_machine = url_for("api_g3.get_containers", machine_id=m.machine_id)
+        m.edit_url = url_for("api_g3.edit_containers", num=m.id)
     return render_template("containers.html", containers_class="active", members=members,
                            url_for_add=url_for_add, url_for_search=url_for_search)
 
 
 @api_group3.route('/containers/add', methods=['GET', 'POST'])
 def add_containers():
-    return render_template("containers_add_edit.html")
+    machines = Machine.query.all()
+    machines = sorted(machines, key=lambda x:x.ip_addr)
+    images = Image.query.all()
+    # @todo
+    return render_template("containers_add_edit.html",machines=machines, images=images, old_obj=None,host_ip_disabled="")
+
+
+@api_group3.route('/containers/edit/<num>', methods=['GET', 'POST'])
+def edit_containers(num):
+    if request.method=="POST":
+        data = request.form
+        return '{"asadsa":123}'
+    old_obj = Container.query.filter_by(id=num).all()[0]
+    machines = Machine.query.all()
+    machines = sorted(machines, key=lambda x:x.ip_addr)
+    for m in machines:
+        if m.id == old_obj.id:
+            m.selected="selected"
+
+    images = Image.query.all()
+    for i in images:
+        if i.id == old_obj.id:
+            i.selected="selected"
+    # @todo
+    this_page = url_for("api_g3.edit_images", num=num)
+    dest_page = url_for("api_g3.get_images")
+    return render_template("containers_add_edit.html", machines=machines, images=images, old_obj=old_obj,
+                           host_ip_disabled="disabled",this_page=this_page,dest_page=dest_page)
 
 
 @api_group3.route('/containers/search', methods=['GET', 'POST'])

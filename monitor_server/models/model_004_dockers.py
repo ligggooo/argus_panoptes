@@ -20,7 +20,8 @@ class Container(db.Model):
     __table_args__ = (
     )
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    container_name = db.Column(db.String(32), nullable=False, unique=True)
+    container_name = db.Column(db.String(128), nullable=False, unique=True)
+    command = db.Column(db.String(512), nullable=False, unique=True)
     image_id = db.Column(db.Integer, nullable=False, unique=False)
     machine_id = db.Column(db.Integer, nullable=False, unique=False)
 

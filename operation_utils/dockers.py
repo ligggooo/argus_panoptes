@@ -42,7 +42,7 @@ def get_docker_images():
 
 def get_docker_containers(ip,port):
     client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
-    for c in client.containers.list():
+    for c in client.containers.list(all=True):
         print(c)
         print(c.attrs)
 
@@ -60,9 +60,19 @@ def docker_clients():
     # get_docker_images()
     # client.images.pull("172.16.100.51:5000/hello-world","v1")
 
+def create_container(ip,port,image_name,tag,container_name,command):
+    client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+    images = client.images.list()
+    print(images)
+    c= client.containers.create(image="%s:%s"%(image_name,tag),command=command,name=container_name)
+    print(c, dir(c))
+    c.run()
+
+
 if __name__ == '__main__':
     #get_docker_images()
     #
     #
     # docker_clients()
-    get_docker_containers("172.16.100.52",2375)
+    # get_docker_containers("172.16.100.52",2375)
+    create_container("172.16.100.52",2375,"172.16.100.51:5000/hello-world","v1","xx","/hello")
