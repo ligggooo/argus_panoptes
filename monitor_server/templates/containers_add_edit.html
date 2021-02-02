@@ -10,9 +10,9 @@
     {% block contents %}
       <div class="col-sm-8 col-sm-offset-2">
         <form method="post" action="[[url_for_post]]">
-          <label for="image_name">容器名</label>
+          <label for="input1">容器名：</label>
           <div class="input-group">
-            <span class="input-group-addon" id="input1"> = </span>
+            <span class="input-group-addon" id="input1"> : </span>
             <input type="text" class="form-control" id="container_name" aria-describedby="input1" value="[[old_obj.container_name]]">
           </div>
             <div class="alert alert-danger" role="alert" id="input_1_error_div">
@@ -20,6 +20,11 @@
               <span class="sr-only" >Error:</span>
                 <p style="display: inline" id="input_1_error"></p>
             </div>
+
+          <label for="command">启动命令：</label>
+          <div class="form-group">
+            <textarea class="form-control" rows="3" id="command">[[old_obj.command]]</textarea>
+          </div>
 
 
           <div class="input-group col-sm-5">
@@ -85,17 +90,24 @@
             });
 
             $("#submit_btn").click(function () {
-                console.log("123131");
+                console.log("start posting data to "+"[[url_for_post]]");
+                let command = $("#command").val();
                 data = {
                     "container_name":$("#container_name").val(),
+                    "command":command,
                     "host_ip":$("#machine_select option:selected").text(),
                     "machine_id":$("#machine_select option:selected").val(),
                     "image_name":$("#image_select option:selected").text(),
                     "image_id":$("#image_select option:selected").val()
                 };
+                if(command===""){
+                alert("命令不能为空");
+                return;
+                }
+                console.log(data);
                 $.post("[[url_for_post]]", data, function(data,status){
-                  console.log(data);
-                  console.log(status);
+                  console.log("data = " + data);
+                  console.log("status= " + status);
                   data = JSON.parse(data);
                   if(data.status=="success"){
                     $(location).attr("href","[[ success_url ]]");

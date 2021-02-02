@@ -60,14 +60,53 @@ def docker_clients():
     # get_docker_images()
     # client.images.pull("172.16.100.51:5000/hello-world","v1")
 
-def create_container(ip,port,image_name,tag,container_name,command):
-    client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
-    images = client.images.list()
-    print(images)
-    c= client.containers.create(image="%s:%s"%(image_name,tag),command=command,name=container_name)
-    print(c, dir(c))
-    c.run()
+def create_container(ip,port,image_name_tag,container_name,command):
+    try:
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        # images = client.images.list()
+        # print(images)
+        c= client.containers.create(image=image_name_tag, command=command, name=container_name)
+        # print(c, dir(c))
+        # c.run()
+    except Exception as e:
+        traceback.print_exc()
+        return None, str(e)
+    return c,None
 
+def get_container(ip,port,container_id):
+    try:
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        # images = client.images.list()
+        # print(images)
+        c= client.containers.get(container_id=container_id)
+        # print(c, dir(c))
+        # c.run()
+    except Exception as e:
+        traceback.print_exc()
+        return None, str(e)
+    return c,None
+
+def rename_container(ip,port,container_id,new_name):
+    try:
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        c= client.containers.get(container_id=container_id)
+        if new_name!=c.name:
+            c.rename(new_name)
+        msg = None
+    except Exception as e:
+        traceback.print_exc()
+        msg = str(e)
+    return c,msg
+
+def rm_container(ip,port,container_id):
+    try:
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        c= client.containers.get(container_id=container_id)
+        c.remove()
+        return None
+    except Exception as e:
+        traceback.print_exc()
+        return str(e)
 
 if __name__ == '__main__':
     #get_docker_images()
@@ -75,4 +114,11 @@ if __name__ == '__main__':
     #
     # docker_clients()
     # get_docker_containers("172.16.100.52",2375)
-    create_container("172.16.100.52",2375,"172.16.100.51:5000/hello-world","v1","xx","/hello")
+    c= create_container("10.130.160.114",2375,"image_20201024:latest","xx","/hello")
+    c,err = get_container("10.130.160.114",2375,"xx")
+
+    print(c.id,c.name)
+    c, err = rename_container("10.130.160.114", 2375, "xx","zzzzzz")
+    print(c.id, c.name)
+
+    rm_container("10.130.160.114",2375,"xxxxxx")

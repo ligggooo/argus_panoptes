@@ -3,7 +3,7 @@ import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from models import SoftPackage,db,Image,Machine,Container,Deployment
-from operation_utils.dockers import get_docker_images
+from operation_utils.dockers import get_docker_images,create_container,get_container
 
 api_group3 = Blueprint("api_g3",__name__)
 
@@ -49,6 +49,7 @@ def edit_images(num):
 
     return render_template("images_add_edit.html", url_for_post=this_page, success_url=dest_page, old_obj=old_obj)
 
+
 @api_group3.route('/containers', methods=['GET', 'POST'])
 def get_containers():
     print(request.method)
@@ -60,14 +61,23 @@ def get_containers():
         members = members.filter_by(machine_id=machine_id)
     if image_id:
         members = members.filter_by(image_id=image_id)
-    if (not machine_id) and (not image_id):
-        members = members.all()
+
+    members = members.all()
 
     url_for_add = url_for("api_g3.add_containers")
     url_for_search = url_for("api_g3.search_for_containers")
     for m in members:
-        m.host_ip = Machine.query.filter_by(id=m.machine_id).all()[0].ip_addr
+        machine = Machine.query.filter_by(id=m.machine_id).all()[0]
+        m.host_ip = machine.ip_addr
         m.image_name = Image.query.filter_by(id=m.image_id).all()[0].image_name
+
+        c, err_msg = get_container(machine.ip_addr,machine.docker_server_port, m.container_id)
+        if not c:
+            m.status = "error"
+            m.detail = err_msg
+            m.tr_class = "danger"
+        else:
+            m.status = c.status
         #
         m.url_containers_on_image = url_for("api_g3.get_containers", image_id=m.image_id)
         m.url_containers_on_machine = url_for("api_g3.get_containers", machine_id=m.machine_id)
@@ -78,19 +88,56 @@ def get_containers():
 
 @api_group3.route('/containers/add', methods=['GET', 'POST'])
 def add_containers():
+    if request.method=="POST":
+        msg = {"status":"success","info":"ok"}
+        print(request.form)
+        container_name = request.form.get("container_name")
+        command = request.form.get("command")
+        machine_id = request.form.get("machine_id")
+        image_id = request.form.get("image_id")
+        machine = Machine.query.filter_by(id=machine_id).all()[0]
+        image = Image.query.filter_by(id=image_id).all()[0]
+        c,err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name, command)
+        if not c:
+            msg["info"] = err_msg
+            msg['status'] = "failed"
+        else:
+            db.session.add(Container(container_name=container_name,container_id=c.id,machine_id=machine_id,image_id=image_id,command=command))
+            db.session.commit()
+        return json.dumps(msg)
     machines = Machine.query.all()
-    machines = sorted(machines, key=lambda x:x.ip_addr)
+    machines = sorted(machines, key=lambda x: x.ip_addr)
     images = Image.query.all()
-    # @todo
-    return render_template("containers_add_edit.html",machines=machines, images=images, old_obj=None,host_ip_disabled="")
+    this_page = url_for("api_g3.add_containers")
+    dest_page = url_for("api_g3.get_containers")
+    return render_template("containers_add_edit.html", machines=machines, images=images, old_obj=None,
+                           host_ip_disabled="", url_for_post=this_page, success_url=dest_page)
 
 
 @api_group3.route('/containers/edit/<num>', methods=['GET', 'POST'])
 def edit_containers(num):
-    if request.method=="POST":
-        data = request.form
-        return '{"asadsa":123}'
     old_obj = Container.query.filter_by(id=num).all()[0]
+    if request.method=="POST":
+        msg = {"status": "success", "info": "ok"}
+        print(request.form)
+        container_name = request.form.get("container_name")
+        command = request.form.get("command")
+        machine_id = request.form.get("machine_id")
+        image_id = request.form.get("image_id")
+        machine = Machine.query.filter_by(id=machine_id).all()[0]
+        image = Image.query.filter_by(id=image_id).all()[0]
+        c, err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name,
+                                      command)
+        if not c:
+            msg["info"] = err_msg
+            msg['status'] = "failed"
+        else:
+            db.session.add(
+                Container(container_name=container_name, container_id=c.id, machine_id=machine_id, image_id=image_id,
+                          command=command))
+            db.session.commit()
+        return json.dumps(msg)
+
     machines = Machine.query.all()
     machines = sorted(machines, key=lambda x:x.ip_addr)
     for m in machines:
@@ -102,10 +149,10 @@ def edit_containers(num):
         if i.id == old_obj.id:
             i.selected="selected"
     # @todo
-    this_page = url_for("api_g3.edit_images", num=num)
-    dest_page = url_for("api_g3.get_images")
+    this_page = url_for("api_g3.edit_containers", num=num)
+    dest_page = url_for("api_g3.get_containers")
     return render_template("containers_add_edit.html", machines=machines, images=images, old_obj=old_obj,
-                           host_ip_disabled="disabled",this_page=this_page,dest_page=dest_page)
+                           host_ip_disabled="disabled",url_for_post=this_page,success_url=dest_page)
 
 
 @api_group3.route('/containers/search', methods=['GET', 'POST'])
