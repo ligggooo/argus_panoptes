@@ -10,10 +10,10 @@
     {% block contents %}
       <div class="col-sm-8 col-sm-offset-2">
         <form method="post" action="[[url_for_post]]">
-          <label for="input1">容器名：</label>
+          <label for="service_name">服务名:</label>
           <div class="input-group">
-            <span class="input-group-addon" id="input1"> : </span>
-            <input type="text" class="form-control" id="container_name" aria-describedby="input1" value="[[old_obj.container_name]]">
+            <span class="input-group-addon" id="input1"> = </span>
+            <input type="text" class="form-control" id="service_name" aria-describedby="input1" value="[[old_obj.name]]">
           </div>
             <div class="alert alert-danger" role="alert" id="input_1_error_div">
               <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -21,46 +21,54 @@
                 <p style="display: inline" id="input_1_error"></p>
             </div>
 
-          <label for="command">启动命令：建议 [ /launch_test.sh ]</label>
-          <div class="form-group">
-            <textarea class="form-control" rows="3" id="command" [[command_ip_disabled]]="[[command_ip_disabled]]">[[old_obj.command]]</textarea>
-          </div>
 
-
-          <div class="input-group col-sm-5">
-            <label for="machine_select">host机器</label>
+          <div class="input-group col-sm-8">
+            <label for="container_select">容器:</label>
             <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
             <div class="">
-              <select class="form-control" id="machine_select" [[host_ip_disabled]]="[[host_ip_disabled]]">
-                {% for m in machines %}
-                  <option value="[[m.id]]" [[m.selected]]>[[m.ip_addr]]</option>
+              <select class="form-control" id="container_select">
+                {% for m in containers %}
+                  <option value="[[m.id]]" [[m.selected]]>[[m.host_ip]] -- [[m.container_name]]</option>
                 {% endfor %}
               </select>
             </div>
           </div>
-
-
-
-          <div class="input-group col-sm-5">
-            <label for="image_select">docker镜像</label>
-            <div class="">
-              <select class="form-control" id="image_select">
-                {% for m in images %}
-                  <option value="[[m.id]]" [[m.selected]]>[[m.image_name]]</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-
-          <div class="col-sm-10 col-sm-offset-0 " role="alert">
-              <div class="col-sm-12 col-sm-offset-0 alert alert-danger" id="form_error_div">
-                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                  <span class="sr-only" >Error:</span>
-                  <p style="" id="form_error"></p>
+          <!--<div class="row">-->
+            <div class="input-group col-sm-8">
+              <label for="container_select">软件版本:</label>
+              <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
+              <div class="">
+                <select class="form-control" id="soft_package_select">
+                  {% for m in soft_packages %}
+                    <option value="[[m.spid]]" [[m.selected]]>[[m.full_name]]</option>
+                  {% endfor %}
+                </select>
               </div>
+            </div>
+
+          <div class="input-group col-sm-8">
+              <label for="custom_check" class="form_control">临时自定义:</label>
+              <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
+              <input type="checkbox" id="custom_check" class="form_control">
+            </div>
+
+          <!--</div>-->
+
+
+          <label for="package_desc">描述信息：</label>
+          <div class="form-group">
+            <textarea class="form-control" rows="3" id="package_desc">[[old_obj.desc]]</textarea>
           </div>
 
-          <div class="col-sm-1 col-sm-offset-0">
+
+            <div class="col-sm-10 col-sm-offset-0 " role="alert">
+                <div class="col-sm-12 col-sm-offset-0 alert alert-danger" id="form_error_div">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only" >Error:</span>
+                    <p style="" id="form_error"></p>
+                </div>
+            </div>
+              <div class="col-sm-1 col-sm-offset-0">
             <label for="submit_btn"></label>
             <input type="button" class="btn btn-success btn-sm" id="submit_btn" value="Submit">
           </div>
@@ -90,24 +98,15 @@
             });
 
             $("#submit_btn").click(function () {
-                console.log("start posting data to "+"[[url_for_post]]");
-                let command = $("#command").val();
+                console.log("123131");
                 data = {
-                    "container_name":$("#container_name").val(),
-                    "command":command,
-                    "host_ip":$("#machine_select option:selected").text(),
-                    "machine_id":$("#machine_select option:selected").val(),
-                    "image_name":$("#image_select option:selected").text(),
-                    "image_id":$("#image_select option:selected").val()
+                    "package_name":$("#package_name").val(),
+                    "package_path":$("#package_path").val(),
+                    "package_desc":$("#package_desc").val(),
                 };
-                if(command===""){
-                alert("命令不能为空");
-                return;
-                }
-                console.log(data);
                 $.post("[[url_for_post]]", data, function(data,status){
-                  console.log("data = " + data);
-                  console.log("status= " + status);
+                  console.log(data);
+                  console.log(status);
                   data = JSON.parse(data);
                   if(data.status=="success"){
                     $(location).attr("href","[[ success_url ]]");

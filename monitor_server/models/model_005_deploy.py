@@ -6,6 +6,7 @@ class Deployment(db.Model):
     __tablename__ = "deployments"
     __table_args__ = ( )
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(256), nullable=False, unique=False)
     desc = db.Column(db.String(256), nullable=False, unique=False)
     container_id = db.Column(db.Integer, nullable=False, unique=False)
     soft_package_id = db.Column(db.Integer, nullable=False, unique=False)

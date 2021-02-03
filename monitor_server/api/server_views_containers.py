@@ -3,9 +3,11 @@ import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from models import SoftPackage,db,Image,Machine,Container,Deployment
-from operation_utils.dockers import get_docker_images,create_container,get_container
+from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
+    stop_container, restart_container, remove_container
 
 api_group3 = Blueprint("api_g3",__name__)
+
 
 @api_group3.route('/images', methods=['GET', 'POST'])
 def get_images():
@@ -55,12 +57,15 @@ def get_containers():
     print(request.method)
     machine_id = request.args.get("machine_id")
     image_id = request.args.get("image_id")
+    container_id = request.args.get("container_id")
 
     members = Container.query
     if machine_id:
         members = members.filter_by(machine_id=machine_id)
     if image_id:
         members = members.filter_by(image_id=image_id)
+    if container_id:
+        members = members.filter_by(id=container_id)
 
     members = members.all()
 
@@ -71,19 +76,47 @@ def get_containers():
         m.host_ip = machine.ip_addr
         m.image_name = Image.query.filter_by(id=m.image_id).all()[0].image_name
 
-        c, err_msg = get_container(machine.ip_addr,machine.docker_server_port, m.container_id)
+        c, err_msg = get_container(machine.ip_addr,machine.docker_server_port, m.container_raw_id)
         if not c:
             m.status = "error"
             m.detail = err_msg
             m.tr_class = "danger"
         else:
             m.status = c.status
+            if(c.status) =="running":
+                m.tr_class = "success"
         #
+        m.url_check_services = url_for("api_g4.get_deployments", container_id=m.id)
+        m.services = Deployment.query.filter_by(container_id=m.id).all()
         m.url_containers_on_image = url_for("api_g3.get_containers", image_id=m.image_id)
         m.url_containers_on_machine = url_for("api_g3.get_containers", machine_id=m.machine_id)
         m.edit_url = url_for("api_g3.edit_containers", num=m.id)
+        m.start_url = url_for("api_g3.activate_containers", num=m.id, action="start")
+        m.stop_url = url_for("api_g3.activate_containers", num=m.id, action="stop")
+        m.restart_url = url_for("api_g3.activate_containers", num=m.id, action="restart")
+        m.remove_url = url_for("api_g3.activate_containers", num=m.id, action="remove")
     return render_template("containers.html", containers_class="active", members=members,
-                           url_for_add=url_for_add, url_for_search=url_for_search)
+                           url_for_add=url_for_add, url_for_search=url_for_search,url_base=url_for("api_g3.get_containers"))
+
+
+@api_group3.route('/containers/action/<num>/<action>', methods=['POST'])
+def activate_containers(num,action):
+    target_url = url_for("api_g3.get_containers")
+    msg = {"status": "success", "info": num + " " + action, "target_url": target_url}
+    container = Container.query.filter_by(id=num).all()[0]
+    machine = Machine.query.filter_by(id=container.machine_id).all()[0]
+    if action=="start":
+        msg["status"], msg["info"] = start_container(machine.ip_addr,machine.docker_server_port,container.container_raw_id)
+    elif action=="stop":
+        msg["status"], msg["info"] = stop_container(machine.ip_addr,machine.docker_server_port,container.container_raw_id)
+    elif action=="restart":
+        msg["status"], msg["info"] = restart_container(machine.ip_addr,machine.docker_server_port,container.container_raw_id)
+    elif action == "remove":
+        msg["status"], msg["info"] = remove_container(machine.ip_addr, machine.docker_server_port,
+                                                       container.container_raw_id)
+        db.session.delete(container)
+        db.session.commit()
+    return json.dumps(msg)
 
 
 @api_group3.route('/containers/add', methods=['GET', 'POST'])
@@ -102,7 +135,7 @@ def add_containers():
             msg["info"] = err_msg
             msg['status'] = "failed"
         else:
-            db.session.add(Container(container_name=container_name,container_id=c.id,machine_id=machine_id,image_id=image_id,command=command))
+            db.session.add(Container(container_name=container_name,container_raw_id=c.id,machine_id=machine_id,image_id=image_id,command=command))
             db.session.commit()
         return json.dumps(msg)
     machines = Machine.query.all()
@@ -126,33 +159,40 @@ def edit_containers(num):
         image_id = request.form.get("image_id")
         machine = Machine.query.filter_by(id=machine_id).all()[0]
         image = Image.query.filter_by(id=image_id).all()[0]
-        c, err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name,
-                                      command)
-        if not c:
-            msg["info"] = err_msg
-            msg['status'] = "failed"
+        # todo  旧容器删除
+        if int(old_obj.image_id) == int(image_id):
+            old_obj.command = command
+            old_obj.container_name = container_name
         else:
-            db.session.add(
-                Container(container_name=container_name, container_id=c.id, machine_id=machine_id, image_id=image_id,
-                          command=command))
-            db.session.commit()
+            rm_container(machine.ip_addr, machine.docker_server_port, old_obj.container_raw_id)
+            db.session.delete(old_obj)
+            c, err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name,
+                                          command)
+            if not c:
+                msg["info"] = err_msg
+                msg['status'] = "failed"
+            else:
+                db.session.add(
+                    Container(container_name=container_name, container_raw_id=c.id, machine_id=machine_id, image_id=image_id,
+                              command=command))
+        db.session.commit()
         return json.dumps(msg)
 
     machines = Machine.query.all()
     machines = sorted(machines, key=lambda x:x.ip_addr)
     for m in machines:
-        if m.id == old_obj.id:
+        if m.id == old_obj.machine_id:
             m.selected="selected"
 
     images = Image.query.all()
     for i in images:
-        if i.id == old_obj.id:
+        if i.id == old_obj.image_id:
             i.selected="selected"
     # @todo
     this_page = url_for("api_g3.edit_containers", num=num)
     dest_page = url_for("api_g3.get_containers")
     return render_template("containers_add_edit.html", machines=machines, images=images, old_obj=old_obj,
-                           host_ip_disabled="disabled",url_for_post=this_page,success_url=dest_page)
+                           host_ip_disabled="disabled",command_ip_disabled="disabled", url_for_post=this_page,success_url=dest_page)
 
 
 @api_group3.route('/containers/search', methods=['GET', 'POST'])
@@ -160,18 +200,5 @@ def search_for_containers():
     pass
 
 
-@api_group3.route('/deployments', methods=['GET', 'POST'])
-def get_deployments():
-    print(request.method)
-    members = Deployment.query.all()
-    for m in members:
-        m.container_name = Container.query.filter_by(id=m.container_id).all()[0].container_name
-        m.package_name = SoftPackage.query.filter_by(spid=m.soft_package_id).all()[0].full_name
-    return render_template("deployments.html", deployment_class="active",members=members)
-
-
-@api_group3.route('/tasks', methods=['GET', 'POST'])
-def get_tasks():
-    return "todo"
 
 

@@ -60,18 +60,48 @@ def docker_clients():
     # get_docker_images()
     # client.images.pull("172.16.100.51:5000/hello-world","v1")
 
-def create_container(ip,port,image_name_tag,container_name,command):
+
+def __get_container(ip,port,container_id):
+    client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+    c = client.containers.get(container_id=container_id)
+    return c
+
+
+def create_container(ip, port, image_name_tag, container_name, command):
     try:
         client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
         # images = client.images.list()
         # print(images)
-        c= client.containers.create(image=image_name_tag, command=command, name=container_name)
+        c= client.containers.create(stdin_open=True,image=image_name_tag, command=command, name=container_name)
         # print(c, dir(c))
         # c.run()
     except Exception as e:
         traceback.print_exc()
         return None, str(e)
     return c,None
+
+
+def init_docker_container(host_ip, container_name, dockerimage,command='/bin/bash'):
+    client = docker.APIClient(base_url='tcp://' + host_ip + ':2375')
+    client.images()
+    client.create_container(stdin_open=True,
+                            environment={"HOST_IP": host_ip,
+                                         "PATH_MAP": "/app/inte_dir/" + container_name},
+                            name=container_name,
+                            host_config=client.create_host_config(mem_limit='24G',memswap_limit='32G'),
+                            image=dockerimage,
+                            command=command)
+    client.start(container_name)
+    tmp_exec = client.exec_create(container_name, ["mkdir", "-p", "/app/inte_dir/" + container_name])
+    client.exec_start(tmp_exec.get('Id'))
+
+    # ssh_cp(host_ip, 22, "root", "P2sswd123", container_name, "/app/inte_dir/projects_codes/",
+    #        "/app/inte_dir/" + container_name)
+    # client.stop(container_name)
+    client.start(container_name)
+
+
+
 
 def get_container(ip,port,container_id):
     try:
@@ -98,15 +128,62 @@ def rename_container(ip,port,container_id,new_name):
         msg = str(e)
     return c,msg
 
+
 def rm_container(ip,port,container_id):
     try:
         client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
         c= client.containers.get(container_id=container_id)
-        c.remove()
+        if c:
+            c.remove()
         return None
     except Exception as e:
         traceback.print_exc()
         return str(e)
+
+
+def start_container(ip, port, container_id):
+    try:
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        c = client.containers.get(container_id=container_id)
+        if c:
+            c.start()
+        return "success",None
+    except Exception as e:
+        traceback.print_exc()
+        return "failed",str(e)
+
+
+def stop_container(ip, port, container_id):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            c.stop(timeout=2)
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "failed",str(e)
+
+
+def restart_container(ip, port, container_id):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            c.restart(timeout=5)
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "failed",str(e)
+
+
+def remove_container(ip, port, container_id):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            c.remove(v=True)
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "success",str(e)
 
 if __name__ == '__main__':
     #get_docker_images()
@@ -114,11 +191,17 @@ if __name__ == '__main__':
     #
     # docker_clients()
     # get_docker_containers("172.16.100.52",2375)
-    c= create_container("10.130.160.114",2375,"image_20201024:latest","xx","/hello")
-    c,err = get_container("10.130.160.114",2375,"xx")
+    # c= create_container("10.130.160.114",2375,"image_20201024:latest","xx","/hello")
+    # c,err = get_container("10.130.160.114",2375,"xx")
+    #
+    # print(c.id,c.name)
+    # c, err = rename_container("10.130.160.114", 2375, "xx","zzzzzz")
+    # print(c.id, c.name)
+    #
+    # rm_container("10.130.160.114",2375,"xxxxxx")
+    # start_container("10.130.160.114",2375,"xx")
 
-    print(c.id,c.name)
-    c, err = rename_container("10.130.160.114", 2375, "xx","zzzzzz")
-    print(c.id, c.name)
-
-    rm_container("10.130.160.114",2375,"xxxxxx")
+    host = "10.130.160.114"
+    image = "image_20201024:latest"
+    #init_docker_container(host, "test005", image, command='/bin/bash')
+    c = create_container(host, 2375, image, "test007", "/bin/bash")

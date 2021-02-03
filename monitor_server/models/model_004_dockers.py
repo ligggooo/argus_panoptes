@@ -20,14 +20,14 @@ class Container(db.Model):
     __table_args__ = (
     )
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    container_id = db.Column(db.String(128), nullable=False, unique=False)
+    container_raw_id = db.Column(db.String(128), nullable=False, unique=False)
     container_name = db.Column(db.String(128), nullable=False, unique=False)
     command = db.Column(db.String(512), nullable=False, unique=False)
     image_id = db.Column(db.Integer, nullable=False, unique=False)
     machine_id = db.Column(db.Integer, nullable=False, unique=False)
 
     def __repr__(self):
-        return "<%s %s>" % (self.ip_addr, self.host_name)
+        return "<%s %s>" % (self.machine_id, self.container_name)
 
     @property
     def full_name(self):
