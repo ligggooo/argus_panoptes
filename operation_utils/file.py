@@ -15,7 +15,12 @@ def get_data_dir():
     data_root = os.path.join(src_root, "data")
     return data_root if os.path.exists(data_root) else None
 
-
+def get_tmp_data_dir():
+    src_root = get_parent_dir(os.path.abspath(__this_file),1)
+    data_root = os.path.join(src_root, "data_tmp",)
+    if not os.path.exists(data_root):
+        os.makedirs(data_root)
+    return data_root
 
 
 if __name__ == "__main__":

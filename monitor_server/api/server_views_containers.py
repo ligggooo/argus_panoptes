@@ -77,9 +77,9 @@ def get_containers():
         m.image_name = Image.query.filter_by(id=m.image_id).all()[0].image_name
 
         c, err_msg = get_container(machine.ip_addr,machine.docker_server_port, m.container_raw_id)
+        m.detail = err_msg.replace("\n","<br>")
         if not c:
             m.status = "error"
-            m.detail = err_msg
             m.tr_class = "danger"
         else:
             m.status = c.status

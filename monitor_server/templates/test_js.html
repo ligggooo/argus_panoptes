@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+
+<script >
+    $(document).ready(function() {
+        $("#input_1_error_div").hide();
+        $("#input_2_error_div").hide();
+        $("#form_error_div").hide();
+        $("#package_name").change(function () {
+            $("#input_1_error_div").hide();
+            $("#form_error_div").hide();
+        });
+
+        $("#package_path").change(function () {
+            $("#input_2_error_div").hide();
+            $("#form_error_div").hide();
+        });
+
+        $("#submit_btn").click(function () {
+            console.log("123131");
+            let formData=new FormData();
+            formData.append("service_name",$("#service_name").val());
+            formData.append("service_desc",$("#service_desc").val());
+            formData.append("container_id",$("#container_select").val());
+            formData.append("src_method",$("input[name='select_src']:checked").val());
+            formData.append("file", $("#upload_file"));
+            formData.append("soft_package_id",$("#soft_package_select").val());
+
+            $.ajax({
+              url:"[[url_for_post]]",
+              type:"post",
+              data:formData,
+              contentType:false,
+              processData:false,
+              success:function(data,status){
+                console.log(data);
+                console.log(status);
+                data = JSON.parse(data);
+                if(data.status=="success"){
+                  $(location).attr("href","[[ success_url ]]");
+                }else{
+                  if(data.info!=="failed on clear"){
+                    $("#form_error").text(data.info);
+                    $("#form_error_div").show();
+                  }else{
+                      if(data.info_2.length>0){
+                          $("#input_2_error").text(data.info_2);
+                          $("#input_2_error_div").show();
+                      }
+                      if(data.info_1.length>0){
+                          $("#input_1_error").text(data.info_1);
+                          $("#input_1_error_div").show();
+                      }
+                  }
+                  }
+              }
+
+
+            });
+        });
+
+
+        $('input[type=radio][name=select_src]').change(function(){
+            if ($("input[name='select_src']:checked").val() === "select"){
+                $("#soft_package_select").attr("disabled",false);
+                $("#upload_file").attr("disabled",true);
+                $("#upload_submit").attr("disabled",true);
+            }else{
+                $("#soft_package_select").attr("disabled",true);
+                $("#upload_file").attr("disabled",false);
+                $("#upload_submit").attr("disabled",false);
+            }
+        });
+       });
+</script>
+
+
+</body>
+</html>

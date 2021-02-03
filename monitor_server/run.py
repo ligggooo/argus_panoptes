@@ -1,6 +1,9 @@
 from flask import Flask, url_for
 from flask import render_template
 from flask import request
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from monitor_server import app
 
@@ -14,6 +17,6 @@ app.register_blueprint(api_group5)
 
 
 if __name__ == '__main__':
-    # app.run(host="172.16.5.148",port=5000)
-    app.run()
+    app.run(host="172.16.5.148",port=5000)
+    #app.run()
 

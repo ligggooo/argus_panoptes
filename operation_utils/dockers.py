@@ -109,12 +109,13 @@ def get_container(ip,port,container_id):
         # images = client.images.list()
         # print(images)
         c= client.containers.get(container_id=container_id)
+        logs = c.logs(timestamps=True, tail=20).decode("utf-8")
         # print(c, dir(c))
         # c.run()
     except Exception as e:
         traceback.print_exc()
         return None, str(e)
-    return c,None
+    return c,logs
 
 def rename_container(ip,port,container_id,new_name):
     try:
@@ -185,6 +186,17 @@ def remove_container(ip, port, container_id):
         traceback.print_exc()
         return "success",str(e)
 
+def cp_file_2_container(ip, port, container_id, file_path):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            data = open(file_path,"rb").read()
+            c.put_archive("/",data)
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "success",str(e)
+
 if __name__ == '__main__':
     #get_docker_images()
     #
@@ -204,4 +216,6 @@ if __name__ == '__main__':
     host = "10.130.160.114"
     image = "image_20201024:latest"
     #init_docker_container(host, "test005", image, command='/bin/bash')
-    c = create_container(host, 2375, image, "test007", "/bin/bash")
+    # c = create_container(host, 2375, image, "test007", "/bin/bash")
+
+    cp_file_2_container(host, 2375, "test005", "./test/test.tar")

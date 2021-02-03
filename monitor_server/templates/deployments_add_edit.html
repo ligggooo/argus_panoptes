@@ -9,7 +9,8 @@
 
     {% block contents %}
       <div class="col-sm-8 col-sm-offset-2">
-        <form method="post" action="[[url_for_post]]">
+        <!--<form method="post" action="[[url_for_post]]">-->
+          <form action="" enctype='multipart/form-data' method='POST' id="this_form">
           <label for="service_name">服务名:</label>
           <div class="input-group">
             <span class="input-group-addon" id="input1"> = </span>
@@ -34,22 +35,30 @@
             </div>
           </div>
           <!--<div class="row">-->
-            <div class="input-group col-sm-8">
+            <div class="input-group col-sm-12">
 
-                <input type="radio" id="select_check" name="select_src" value="select" aria-label="...">&nbsp
+                <input type="radio" id="select_check" name="select_src" checked value="select" aria-label="...">&nbsp
                 <label for="select_check" >从版本库中选择:</label>
-                &nbsp&nbsp
-                <input type="radio" id="upload_check"  name="select_src" value="upload" aria-label="...">&nbsp
-                <label for="upload_check" >临时上传文件:</label> &nbsp <a type="button">12312312</a>
-              <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
               <div class="">
-                <select class="form-control" id="soft_package_select" disabled>
+                <select class="form-control" id="soft_package_select">
                   {% for m in soft_packages %}
                     <option value="[[m.spid]]" [[m.selected]]>[[m.full_name]]</option>
                   {% endfor %}
                 </select>
 
               </div>
+
+                <input type="radio" id="upload_check"  name="select_src" value="upload" aria-label="...">&nbsp
+                <label for="upload_check" >临时上传文件:</label> &nbsp
+                <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                    <div class="btn-group" role="group">
+                        <input class="form-control btn btn-warning btn-sm" id="upload_file" type="file" name="file" disabled>
+                    </div>
+
+                </div>
+
+              <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
+
             </div>
 
 <!--          <div class="input-group col-sm-8">-->
@@ -65,9 +74,9 @@
           <!--</div>-->
 
 
-          <label for="package_desc">描述信息：</label>
+          <label for="service_desc">描述信息：</label>
           <div class="form-group">
-            <textarea class="form-control" rows="3" id="package_desc">[[old_obj.desc]]</textarea>
+            <textarea class="form-control" rows="3" id="service_desc">[[old_obj.desc]]</textarea>
           </div>
 
 
@@ -93,61 +102,78 @@
             display: none;
         }
     </script>
-    <script >
-        $(document).ready(function() {
+   <script >
+    $(document).ready(function() {
+        $("#input_1_error_div").hide();
+        $("#input_2_error_div").hide();
+        $("#form_error_div").hide();
+        $("#package_name").change(function () {
             $("#input_1_error_div").hide();
+            $("#form_error_div").hide();
+        });
+
+        $("#package_path").change(function () {
             $("#input_2_error_div").hide();
             $("#form_error_div").hide();
-            $("#package_name").change(function () {
-                $("#input_1_error_div").hide();
-                $("#form_error_div").hide();
-            });
-            $("#package_path").change(function () {
-                $("#input_2_error_div").hide();
-                $("#form_error_div").hide();
-            });
+        });
 
-            $("#submit_btn").click(function () {
-                console.log("123131");
-                data = {
-                    "package_name":$("#package_name").val(),
-                    "package_path":$("#package_path").val(),
-                    "package_desc":$("#package_desc").val(),
-                };
-                $.post("[[url_for_post]]", data, function(data,status){
-                  console.log(data);
-                  console.log(status);
-                  data = JSON.parse(data);
-                  if(data.status=="success"){
-                    $(location).attr("href","[[ success_url ]]");
-                  }else{
-                    if(data.info!=="failed on clear"){
-                      $("#form_error").text(data.info);
-                      $("#form_error_div").show();
-                    }else{
-                        if(data.info_2.length>0){
-                            $("#input_2_error").text(data.info_2);
-                            $("#input_2_error_div").show();
-                        }
-                        if(data.info_1.length>0){
-                            $("#input_1_error").text(data.info_1);
-                            $("#input_1_error_div").show();
-                        }
+        $("#submit_btn").click(function () {
+            console.log("123131");
+            let formData=new FormData($("#this_form")[0]);
+            formData.append("service_name",$("#service_name").val());
+            formData.append("service_desc",$("#service_desc").val());
+            formData.append("container_id",$("#container_select").val());
+            formData.append("src_method",$("input[name='select_src']:checked").val());
+            formData.append("soft_package_id",$("#soft_package_select").val());
 
-                    }
-                  }
-                });
-            });
-
-            $('input[type=radio][name=select_src]').change(function(){
-                if ($("input[name='select_src']:checked").val() === "select"){
-                    $("#soft_package_select").attr("disabled",false);
+            $.ajax({
+              url:"[[url_for_post]]",
+              type:"post",
+              data:formData,
+              contentType:false,
+              processData:false,
+              success:function(data,status){
+                console.log(data);
+                console.log(status);
+                data = JSON.parse(data);
+                if(data.status=="success"){
+                  $(location).attr("href","[[ success_url ]]");
                 }else{
-                    $("#soft_package_select").attr("disabled",true);
-                }
+                  if(data.info!=="failed on clear"){
+                    $("#form_error").text(data.info);
+                    $("#form_error_div").show();
+                  }else{
+                      if(data.info_2.length>0){
+                          $("#input_2_error").text(data.info_2);
+                          $("#input_2_error_div").show();
+                      }
+                      if(data.info_1.length>0){
+                          $("#input_1_error").text(data.info_1);
+                          $("#input_1_error_div").show();
+                      }
+                  }
+                  }
+              }
+
+
             });
         });
-    </script>
+
+
+        $('input[type=radio][name=select_src]').change(function(){
+            if ($("input[name='select_src']:checked").val() === "select"){
+                $("#soft_package_select").attr("disabled",false);
+                $("#upload_file").attr("disabled",true);
+                $("#upload_submit").attr("disabled",true);
+            }else{
+                $("#soft_package_select").attr("disabled",true);
+                $("#upload_file").attr("disabled",false);
+                $("#upload_submit").attr("disabled",false);
+            }
+        });
+       });
+</script>
+
 
     {%  endblock %}
 

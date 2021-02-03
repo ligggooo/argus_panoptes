@@ -7,6 +7,7 @@ from models import SoftPackage, db
 from operation_utils.file import get_data_dir
 
 _data_dir = get_data_dir()
+
 api_group1 = Blueprint("api_g1",__name__)
 
 @api_group1.route('/')
@@ -14,7 +15,8 @@ def overview():
     # return 'Hello World!'
     # print(url_for("api_g1.get_data", x=123,_external=True))
     print(request.method)
-    return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True)
+    index_readme = open(os.path.join(_data_dir, "readme.txt"),encoding="utf-8").read().replace("\n","<br>").replace(" ","&nbsp")
+    return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True,index_readme=index_readme)
 
 
 @api_group1.route('/products', methods=['GET', 'POST'])
@@ -136,9 +138,11 @@ def upload_products(num):
     sp = SoftPackage.query.filter_by(spid=int(num)).all()[0]
     if request.method == 'POST':
         f = request.files['file']
-        os.makedirs(os.path.join(_data_dir + os.path.sep + sp.file_path))
-        upload_path = os.path.join(_data_dir + os.path.sep + sp.file_path, sp.full_name)
-        f.save(upload_path)
+        upload_path = os.path.join(_data_dir + os.path.sep + sp.file_path)
+        if not os.path.exists(upload_path):
+            os.makedirs(upload_path)
+        upload_full_filename = os.path.join(upload_path, sp.full_name)
+        f.save(upload_full_filename)
         return redirect(url_for('api_g1.get_products'))
     return render_template('file_upload.html')
 
