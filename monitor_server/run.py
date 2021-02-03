@@ -14,5 +14,6 @@ app.register_blueprint(api_group5)
 
 
 if __name__ == '__main__':
-    app.run(host="172.16.5.148",port=5000)
+    # app.run(host="172.16.5.148",port=5000)
+    app.run()
 

@@ -35,22 +35,32 @@
           </div>
           <!--<div class="row">-->
             <div class="input-group col-sm-8">
-              <label for="container_select">软件版本:</label>
+
+                <input type="radio" id="select_check" name="select_src" value="select" aria-label="...">&nbsp
+                <label for="select_check" >从版本库中选择:</label>
+                &nbsp&nbsp
+                <input type="radio" id="upload_check"  name="select_src" value="upload" aria-label="...">&nbsp
+                <label for="upload_check" >临时上传文件:</label> &nbsp <a type="button">12312312</a>
               <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
               <div class="">
-                <select class="form-control" id="soft_package_select">
+                <select class="form-control" id="soft_package_select" disabled>
                   {% for m in soft_packages %}
                     <option value="[[m.spid]]" [[m.selected]]>[[m.full_name]]</option>
                   {% endfor %}
                 </select>
+
               </div>
             </div>
 
-          <div class="input-group col-sm-8">
-              <label for="custom_check" class="form_control">临时自定义:</label>
-              <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
-              <input type="checkbox" id="custom_check" class="form_control">
-            </div>
+<!--          <div class="input-group col-sm-8">-->
+<!--              <label for="custom_check" class="form_control">临时自定义:</label>-->
+<!--              <div class="input-group">-->
+<!--                  <span class="input-group-addon">-->
+<!--                    <input type="checkbox" id="custom_check"  aria-label="...">-->
+<!--                  </span>-->
+<!--                  <a class="form-control" aria-label="..."></a>-->
+<!--              </div>-->
+<!--            </div>-->
 
           <!--</div>-->
 
@@ -127,6 +137,14 @@
                     }
                   }
                 });
+            });
+
+            $('input[type=radio][name=select_src]').change(function(){
+                if ($("input[name='select_src']:checked").val() === "select"){
+                    $("#soft_package_select").attr("disabled",false);
+                }else{
+                    $("#soft_package_select").attr("disabled",true);
+                }
             });
         });
     </script>
