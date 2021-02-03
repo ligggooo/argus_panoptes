@@ -180,7 +180,7 @@ def remove_container(ip, port, container_id):
     try:
         c = __get_container(ip, port, container_id)
         if c:
-            c.remove(v=True)
+            c.remove(v=True,force=True)
         return "success", None
     except Exception as e:
         traceback.print_exc()
