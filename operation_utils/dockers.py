@@ -24,7 +24,7 @@ def get_docker_images():
 
     images = {}
     try:
-        client = docker.DockerClient(base_url="http://172.16.100.51:2375",timeout=2)
+        client = docker.DockerClient(base_url="http://10.130.160.114:2375",timeout=2)
         for img in client.images.list():
             full_name = img.tags[0]
             if "/" in full_name:
@@ -35,7 +35,6 @@ def get_docker_images():
             images[name]=Image(full_name,size_in_MB)
         return images
     except Exception as e:
-        print(img.tags)
         traceback.print_exc()
         return None
 
@@ -72,7 +71,8 @@ def create_container(ip, port, image_name_tag, container_name, command):
         client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
         # images = client.images.list()
         # print(images)
-        c= client.containers.create(stdin_open=True,image=image_name_tag, command=command, name=container_name)
+        c= client.containers.create(stdin_open=True,image=image_name_tag, command=command,
+                                    name=container_name,ports={"60010/tcp":60010, "60020/tcp":60020})
         # print(c, dir(c))
         # c.run()
     except Exception as e:
