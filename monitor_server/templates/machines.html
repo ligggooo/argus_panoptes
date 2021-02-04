@@ -40,9 +40,10 @@
             <th class="col-sm-1 col-sm-offset-0 ">hostname</th>
             <th class="col-sm-1 col-sm-offset-0 ">cpu核数</th>
             <th class="col-sm-1 col-sm-offset-0 ">空闲内存(MB)</th>
-            <th class="col-sm-2 col-sm-offset-0 ">部署点1</th>
+            <th class="col-sm-2 col-sm-offset-0 ">开放端口</th>
+            <th class="col-sm-1 col-sm-offset-0 ">部署点1</th>
             <th class="col-sm-1 col-sm-offset-0 ">部署点1剩余空间(GB)</th>
-            <th class="col-sm-2 col-sm-offset-0 ">部署点2</th>
+            <th class="col-sm-1 col-sm-offset-0 ">部署点2</th>
             <th class="col-sm-1 col-sm-offset-0 ">部署点2剩余空间(GB)</th>
             <th class="col-sm-1 col-sm-offset-0 ">docker服务端口</th>
             <th class="col-sm-1 col-sm-offset-0 ">操作</th>
@@ -59,6 +60,22 @@
                 <td>[[m.host_name]]</td>
                 <td>[[m.cpu_cores]]</td>
                 <td>[[m.free_mem_in_MB]]</td>
+                <td>
+                  <!--<div class="alert alert-info" style="">-->
+                  <a type="button" class="btn btn-default btn-xs [[m.port_btn_class]]" aria-label="Left Align" id="port_[[loop.index]]" href="javascript:void(0)">
+                   查看 &nbsp <span class="badge" >[[m.ports | length]]</span>
+                  </a>
+                    <ul class="list-group " style="display:none">
+                      <!--<li class="list-group-item"> <a type="button" class="btn btn-success btn-xs" aria-label="Left Align" href="[[m.url_check_services]]">-->
+                        <!--查看服务详情 &nbsp &nbsp <span class="glyphicon glyphicon-link" aria-hidden="true"></span>-->
+                        <!--</a>-->
+                      <!--</li>-->
+                      {% for p in m.ports %}
+                      <li class="list-group-item [[p.li_class]]">[[p.port_num]] <span> [[p.info]]</span></li>
+                      {% endfor %}
+                    </ul>
+                  <!--</div>-->
+                </td>
                 <td>[[m.deploy_point_1]]</td>
                 <td>[[m.free_storage_in_GB_1]]</td>
                 <td>[[m.deploy_point_2]]</td>
@@ -97,6 +114,10 @@
                         $(location).attr("href",ret_data.target_url);
                       });
                     }
+                });
+
+                $("a[id^='port_']").click(function (e){
+                  $(this).next().toggle();
                 });
             });
 

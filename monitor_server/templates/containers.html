@@ -39,8 +39,8 @@
                   <a type="button" class="btn btn-default btn-xs" aria-label="Left Align" id="service_[[loop.index]]" href="javascript:void(0)">
                    服务 &nbsp <span class="badge" >[[m.services| length]]</span>
                   </a>
-                  <div class="alert alert-warning" style="display:none">
-                    <ul class="list-group">
+                  <!--<div class="alert alert-warning" >-->
+                    <ul class="list-group" style="display:none">
                       <li class="list-group-item"> <a type="button" class="btn btn-success btn-xs" aria-label="Left Align" href="[[m.url_check_services]]">
                         查看服务详情 &nbsp &nbsp <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
                         </a>
@@ -49,14 +49,21 @@
                       <li class="list-group-item">[[s.name]]</li>
                       {% endfor %}
                     </ul>
-                  </div>
+                  <!--</div>-->
                   <a type="button" class="btn btn-default btn-xs" aria-label="Left Align" id="err_msg_[[loop.index]]" href="javascript:void(0)">
                    [[m.status]] &nbsp <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
                   </a>
                   <div class="alert alert-warning" style="display:none">
                     <p style="word-break: break-all"> [[m.detail|safe]]</p>
                   </div>
-
+                  <a type="button" class="btn btn-default btn-xs" aria-label="Left Align" id="port_mapping_[[loop.index]]" href="javascript:void(0)">
+                   端口映射 &nbsp <span class="badge" >[[m.port_mappings| length]]</span>
+                  </a>
+                    <ul class="list-group " style="display:none">
+                      {% for p in m.port_mappings %}
+                      <li class="list-group-item [[p.li_class]]">[[p.show]]</li>
+                      {% endfor %}
+                    </ul>
                 </td>
                 <td class="col-sm-1 col-sm-offset-0 ">
                   [[m.command]]
@@ -102,6 +109,10 @@
                   $(this).next().toggle();
                 });
 
+                $("a[id^='port_mapping_']").click(function (e){
+                  $(this).next().toggle();
+                });
+
                 $(".remove-btn").click(function (e) {
                     let res=confirm("remove " + $(this).val());
                     let post_data={
@@ -132,6 +143,9 @@
                         ret_data = JSON.parse(ret_data);
                         if(ret_data.status==="success"){
                         $(location).attr("href",ret_data.target_url);}
+                        else{
+                        alert(ret_data.info);
+                        }
                       });
                     }
                 }

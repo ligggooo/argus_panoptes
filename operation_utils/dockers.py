@@ -66,13 +66,13 @@ def __get_container(ip,port,container_id):
     return c
 
 
-def create_container(ip, port, image_name_tag, container_name, command):
+def create_container(ip, port, image_name_tag, container_name, command, port_mapping):
     try:
         client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
         # images = client.images.list()
         # print(images)
         c= client.containers.create(stdin_open=True,image=image_name_tag, command=command,
-                                    name=container_name,ports={"60010/tcp":60010, "60020/tcp":60020})
+                                    name=container_name, ports=port_mapping)
         # print(c, dir(c))
         # c.run()
     except Exception as e:

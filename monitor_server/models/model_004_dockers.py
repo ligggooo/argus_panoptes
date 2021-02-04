@@ -1,5 +1,8 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
+
+from api.api_utils.portmapping_parser import port_mapping_str2list
 from monitor_server import db
+from models import PhysicalPort
 
 
 class Image(db.Model):
@@ -25,6 +28,7 @@ class Container(db.Model):
     command = db.Column(db.String(512), nullable=False, unique=False)
     image_id = db.Column(db.Integer, nullable=False, unique=False)
     machine_id = db.Column(db.Integer, nullable=False, unique=False)
+    port_mapping = db.Column(db.String(128), nullable=True, unique=False)
 
     def __repr__(self):
         return "<%s %s>" % (self.machine_id, self.container_name)
@@ -33,6 +37,27 @@ class Container(db.Model):
     def full_name(self):
         return "%s[ %s ]" % (self.ip_addr, self.host_name)
 
+    @staticmethod
+    def remove(container):
+        db.session.delete(container)
+        port_mapping_to_release, _ = port_mapping_str2list(container.port_mapping)
+        ports_to_release = [pp.to_port for pp in port_mapping_to_release]
+        ports_obj_to_release = PhysicalPort.query.filter(PhysicalPort.machine_id == container.machine_id,
+                                                         PhysicalPort.port_num.in_(ports_to_release)).all()
+        for x in ports_obj_to_release:
+            x.available = 1
+        db.session.commit()
+
+    @staticmethod
+    def add(container):
+        db.session.add(container)
+        port_mapping_to_possess, _ = port_mapping_str2list(container.port_mapping)
+        ports_to_possess= [pp.to_port for pp in port_mapping_to_possess]
+        ports_obj_to_release = PhysicalPort.query.filter(PhysicalPort.machine_id == container.machine_id,
+                                                         PhysicalPort.port_num.in_(ports_to_possess)).all()
+        for x in ports_obj_to_release:
+            x.available = 0
+        db.session.commit()
 
 
 if __name__ == "__main__":

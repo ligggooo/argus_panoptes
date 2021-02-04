@@ -21,11 +21,15 @@
                 <p style="display: inline" id="input_1_error"></p>
             </div>
 
-          <label for="command">启动命令：建议 [ /launch_test.sh ]</label>
+          <label for="command">启动命令：</label>
           <div class="form-group">
-            <textarea class="form-control" rows="3" id="command" [[command_ip_disabled]]="[[command_ip_disabled]]">[[old_obj.command]]</textarea>
+            <textarea class="form-control" rows="3" id="command" placeholder="/launch_test.sh" [[command_ip_disabled]]="[[command_ip_disabled]]">[[old_obj.command]]</textarea>
           </div>
 
+          <label for="command">端口映射：逗号隔开</label>
+          <div class="form-group">
+            <textarea class="form-control" rows="3" id="port_mapping" placeholder="60010,60020" [[command_ip_disabled]]="[[command_ip_disabled]]">[[old_obj.port_mapping]]</textarea>
+          </div>
 
           <div class="input-group col-sm-5">
             <label for="machine_select">host机器</label>
@@ -92,13 +96,15 @@
             $("#submit_btn").click(function () {
                 console.log("start posting data to "+"[[url_for_post]]");
                 let command = $("#command").val();
+                let port_mapping = $("#port_mapping").val();
                 data = {
                     "container_name":$("#container_name").val(),
                     "command":command,
                     "host_ip":$("#machine_select option:selected").text(),
                     "machine_id":$("#machine_select option:selected").val(),
                     "image_name":$("#image_select option:selected").text(),
-                    "image_id":$("#image_select option:selected").val()
+                    "image_id":$("#image_select option:selected").val(),
+                    "port_mapping":port_mapping
                 };
                 if(command===""){
                 alert("命令不能为空");

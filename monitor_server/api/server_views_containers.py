@@ -2,7 +2,9 @@ from flask import Blueprint,request,url_for,render_template
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from models import SoftPackage,db,Image,Machine,Container,Deployment
+from api.api_utils.portmapping_parser import port_mapping_str2list, check_ports, port_mapping_list2dict, update_ports, \
+    port_mapping_str2dict
+from models import SoftPackage,db,Image,Machine,Container,Deployment,PhysicalPort
 from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
     stop_container, restart_container, remove_container
 
@@ -88,6 +90,7 @@ def get_containers():
         #
         m.url_check_services = url_for("api_g4.get_deployments", container_id=m.id)
         m.services = Deployment.query.filter_by(container_id=m.id).all()
+        m.port_mappings,msg = port_mapping_str2list(m.port_mapping)
         m.url_containers_on_image = url_for("api_g3.get_containers", image_id=m.image_id)
         m.url_containers_on_machine = url_for("api_g3.get_containers", machine_id=m.machine_id)
         m.edit_url = url_for("api_g3.edit_containers", num=m.id)
@@ -114,8 +117,7 @@ def activate_containers(num,action):
     elif action == "remove":
         msg["status"], msg["info"] = remove_container(machine.ip_addr, machine.docker_server_port,
                                                        container.container_raw_id)
-        db.session.delete(container)
-        db.session.commit()
+        Container.remove(container)
     return json.dumps(msg)
 
 
@@ -127,16 +129,32 @@ def add_containers():
         container_name = request.form.get("container_name")
         command = request.form.get("command")
         machine_id = request.form.get("machine_id")
+        port_mapping_raw = request.form.get("port_mapping")
+        port_mapping,err_msg = port_mapping_str2list(port_mapping_raw)
+        if port_mapping==-1:
+            msg["info"] = "端口映射填写错误："+err_msg
+            msg['status'] = "failed"
+            return json.dumps(msg)
         image_id = request.form.get("image_id")
         machine = Machine.query.filter_by(id=machine_id).all()[0]
+        available_port_objs = PhysicalPort.query.filter(PhysicalPort.machine_id == machine.id,
+                                                    PhysicalPort.available == 1).all()
+        ret, err_msg = check_ports(available_port_objs, port_mapping)
+        if ret==-1:
+            msg["info"] = "端口映射填写错误：" + err_msg
+            msg['status'] = "failed"
+            return json.dumps(msg)
+
+        port_mapping_dict =port_mapping_list2dict(port_mapping)
         image = Image.query.filter_by(id=image_id).all()[0]
-        c,err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name, command)
+        c,err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name,
+                                     command, port_mapping=port_mapping_dict)
         if not c:
             msg["info"] = err_msg
             msg['status'] = "failed"
         else:
-            db.session.add(Container(container_name=container_name,container_raw_id=c.id,machine_id=machine_id,image_id=image_id,command=command))
-            db.session.commit()
+            Container.add(Container(container_name=container_name,container_raw_id=c.id,machine_id=machine_id,
+                                     image_id=image_id,command=command,port_mapping=port_mapping_raw))
         return json.dumps(msg)
     machines = Machine.query.all()
     machines = sorted(machines, key=lambda x: x.ip_addr)
@@ -165,16 +183,18 @@ def edit_containers(num):
             old_obj.container_name = container_name
         else:
             rm_container(machine.ip_addr, machine.docker_server_port, old_obj.container_raw_id)
-            db.session.delete(old_obj)
+            port_mapping_str = old_obj.port_mapping
+            port_mapping_dict = port_mapping_str2dict(port_mapping_str)
             c, err_msg = create_container(machine.ip_addr, machine.docker_server_port, image.image_name, container_name,
-                                          command)
+                                          command,port_mapping=port_mapping_dict)
             if not c:
                 msg["info"] = err_msg
                 msg['status'] = "failed"
             else:
-                db.session.add(
+                Container.remove(old_obj)
+                Container.add(
                     Container(container_name=container_name, container_raw_id=c.id, machine_id=machine_id, image_id=image_id,
-                              command=command))
+                              command=command,port_mapping=port_mapping_str))
         db.session.commit()
         return json.dumps(msg)
 
