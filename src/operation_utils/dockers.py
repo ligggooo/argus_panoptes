@@ -2,6 +2,8 @@ import requests
 import json
 import docker
 import traceback
+import tarfile
+import os
 
 def get_json_response(url,params={}):
     res = requests.get(url,**params)
@@ -197,6 +199,24 @@ def cp_file_2_container(ip, port, container_id, file_path):
         traceback.print_exc()
         return "success",str(e)
 
+CHUNK_SIZE=2048*1024
+def cp_file_from_container(ip, port, container_id, file_path,tmp_dir="."):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            bits, stat = c.get_archive(file_path,chunk_size=CHUNK_SIZE)
+            name = stat.get("name")
+            tar_name = os.path.join(tmp_dir, name + ".tar")
+            with open(tar_name, "wb") as f:
+                for chunk in bits:
+                    f.write(chunk)
+            tar = tarfile.open(name+".tar",mode="r")
+            tar.extractall(path=".")
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "success",str(e)
+
 if __name__ == '__main__':
     #get_docker_images()
     #
@@ -218,4 +238,5 @@ if __name__ == '__main__':
     #init_docker_container(host, "test005", image, command='/bin/bash')
     # c = create_container(host, 2375, image, "test007", "/bin/bash")
 
-    cp_file_2_container(host, 2375, "test005", "./test/test.tar")
+    # cp_file_2_container(host, 2375, "test005", "./test/test.tar")
+    cp_file_from_container(host, 2375, "jlm", "/run.sh")

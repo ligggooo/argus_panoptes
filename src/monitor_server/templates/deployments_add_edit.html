@@ -138,7 +138,11 @@
                 data = JSON.parse(data);
                 if(data.status=="success"){
                   $(location).attr("href","[[ success_url ]]");
-                }else{
+                }else if(data.status=="warning"){
+                  alert(data.info);
+                  $(location).attr("href","[[ success_url ]]");
+                }
+                else{
                   if(data.info!=="failed on clear"){
                     $("#form_error").text(data.info);
                     $("#form_error_div").show();

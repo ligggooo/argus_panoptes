@@ -4,9 +4,10 @@ import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from models import SoftPackage, db
 
-from operation_utils.file import get_data_dir
+from operation_utils.file import get_data_dir,get_proj_root
 
 _data_dir = get_data_dir()
+_proj_root = get_proj_root()
 
 api_group1 = Blueprint("api_g1",__name__)
 
@@ -15,7 +16,7 @@ def overview():
     # return 'Hello World!'
     # print(url_for("api_g1.get_data", x=123,_external=True))
     print(request.method)
-    index_readme = open(os.path.join(_data_dir, "readme.txt"),encoding="utf-8").read().replace("\n","<br>").replace(" ","&nbsp")
+    index_readme = open(os.path.join(_proj_root, "readme.md"),encoding="utf-8").read().replace("\n","<br>").replace(" ","&nbsp")
     return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True,index_readme=index_readme)
 
 
