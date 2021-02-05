@@ -4,6 +4,13 @@ import docker
 import traceback
 import tarfile
 import os
+from operation_utils.file import get_tmp_data_dir
+import uuid
+
+
+_tmp_data_dir = get_tmp_data_dir()
+CHUNK_SIZE = 2048*1024
+
 
 def get_json_response(url,params={}):
     res = requests.get(url,**params)
@@ -80,7 +87,7 @@ def create_container(ip, port, image_name_tag, container_name, command, port_map
     except Exception as e:
         traceback.print_exc()
         return None, str(e)
-    return c,None
+    return c, None
 
 
 def init_docker_container(host_ip, container_name, dockerimage,command='/bin/bash'):
@@ -117,7 +124,8 @@ def get_container(ip,port,container_id):
     except Exception as e:
         traceback.print_exc()
         return None, str(e)
-    return c,logs
+    return c, logs
+
 
 def rename_container(ip,port,container_id,new_name):
     try:
@@ -129,7 +137,7 @@ def rename_container(ip,port,container_id,new_name):
     except Exception as e:
         traceback.print_exc()
         msg = str(e)
-    return c,msg
+    return c, msg
 
 
 def rm_container(ip,port,container_id):
@@ -153,7 +161,7 @@ def start_container(ip, port, container_id):
         return "success",None
     except Exception as e:
         traceback.print_exc()
-        return "failed",str(e)
+        return "failed", str(e)
 
 
 def stop_container(ip, port, container_id):
@@ -164,7 +172,7 @@ def stop_container(ip, port, container_id):
         return "success", None
     except Exception as e:
         traceback.print_exc()
-        return "failed",str(e)
+        return "failed", str(e)
 
 
 def restart_container(ip, port, container_id):
@@ -175,7 +183,7 @@ def restart_container(ip, port, container_id):
         return "success", None
     except Exception as e:
         traceback.print_exc()
-        return "failed",str(e)
+        return "failed", str(e)
 
 
 def remove_container(ip, port, container_id):
@@ -186,7 +194,8 @@ def remove_container(ip, port, container_id):
         return "success", None
     except Exception as e:
         traceback.print_exc()
-        return "success",str(e)
+        return "success", str(e)
+
 
 def cp_file_2_container(ip, port, container_id, file_path):
     try:
@@ -197,25 +206,69 @@ def cp_file_2_container(ip, port, container_id, file_path):
         return "success", None
     except Exception as e:
         traceback.print_exc()
-        return "success",str(e)
+        return "success", str(e)
 
-CHUNK_SIZE=2048*1024
-def cp_file_from_container(ip, port, container_id, file_path,tmp_dir="."):
+
+def tar_and_cp_file_2_container(ip, port, container_id, file_path):
     try:
         c = __get_container(ip, port, container_id)
         if c:
-            bits, stat = c.get_archive(file_path,chunk_size=CHUNK_SIZE)
+            tmp_tar_name = str(uuid.uuid4())+".tar"
+            tar = tarfile.open(os.path.join(_tmp_data_dir,tmp_tar_name), mode="w")
+
+            os.chdir(_tmp_data_dir)
+            tar.add(file_path)
+            tar.close()
+            data = open(tmp_tar_name,"rb").read()
+            c.put_archive("/",data)
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "success", str(e)
+
+def write_content_2_container(ip, port, container_id, content, file_path="/run.sh"):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            tmp_dir = os.path.join(_tmp_data_dir, str(uuid.uuid4()))
+            os.makedirs(tmp_dir)
+            tmp_tar_name = "data.tar"
+            target_file_name = os.path.split(file_path)[1]
+            os.chdir(tmp_dir)
+
+            with open(target_file_name,"w") as f:
+                f.write(content)
+            tar = tarfile.open(os.path.join(tmp_tar_name), mode="w")
+            tar.add(target_file_name)
+            tar.close()
+            data = open(tmp_tar_name,"rb").read()
+            c.put_archive("/",data)
+        return "success", None
+    except Exception as e:
+        traceback.print_exc()
+        return "failed", str(e)
+
+
+def cp_file_from_container(ip, port, container_id, file_path,tmp_dir_root=_tmp_data_dir):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            bits, stat = c.get_archive(file_path, chunk_size=CHUNK_SIZE)
             name = stat.get("name")
+            tmp_dir = os.path.join(tmp_dir_root, str(uuid.uuid4()))
+            os.makedirs(tmp_dir)
             tar_name = os.path.join(tmp_dir, name + ".tar")
             with open(tar_name, "wb") as f:
                 for chunk in bits:
                     f.write(chunk)
-            tar = tarfile.open(name+".tar",mode="r")
-            tar.extractall(path=".")
-        return "success", None
+            tar = tarfile.open(tar_name, mode="r")
+            tar.extractall(path=tmp_dir)
+            return "success", (tmp_dir, name)
+        else:
+            return "failed", "no such container"
     except Exception as e:
         traceback.print_exc()
-        return "success",str(e)
+        return "failed", str(e)
 
 if __name__ == '__main__':
     #get_docker_images()
@@ -238,5 +291,9 @@ if __name__ == '__main__':
     #init_docker_container(host, "test005", image, command='/bin/bash')
     # c = create_container(host, 2375, image, "test007", "/bin/bash")
 
-    # cp_file_2_container(host, 2375, "test005", "./test/test.tar")
-    cp_file_from_container(host, 2375, "jlm", "/run.sh")
+    #
+    #cp_file_2_container(host, 2375, "mgt2", _tmp_data_dir+"/test.tar")
+    #tar_and_cp_file_2_container(host, 2375, "mgt2", "run.sh")
+    # a,b = cp_file_from_container(host, 2375, "mgt2", "/zzrun.sh")
+    # print(a,b)
+    write_content_2_container(host, 2375, "mgt2", "ls alh\nfind / -name \"*.so\"", "/run.sh")

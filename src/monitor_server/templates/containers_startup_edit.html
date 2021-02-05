@@ -3,57 +3,17 @@
         {% if old_obj %}
           <h1 class="page-header">编辑条目</h1>
         {% else %}
-            <h1 class="page-header">新增条目</h1>
+            <h1 class="page-header">启动脚本编辑</h1>
         {% endif %}
     {% endblock %}
 
     {% block contents %}
-      <div class="col-sm-8 col-sm-offset-2">
+      <div class="col-sm-6 col-sm-offset-2">
         <form method="post" action="[[url_for_post]]">
-          <label for="input1">容器名：</label>
-          <div class="input-group">
-            <span class="input-group-addon" id="input1"> : </span>
-            <input type="text" class="form-control" id="container_name" aria-describedby="input1" value="[[old_obj.container_name]]">
-          </div>
-            <div class="alert alert-danger" role="alert" id="input_1_error_div">
-              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-              <span class="sr-only" >Error:</span>
-                <p style="display: inline" id="input_1_error"></p>
-            </div>
 
-          <label for="command">启动命令：</label>
+          <label for="startup_content">启动脚本（建议以/bin/bash结尾）：</label>
           <div class="form-group">
-            <textarea class="form-control" rows="3" id="command" placeholder="/launch_test.sh" [[command_ip_disabled]]="[[command_ip_disabled]]">[[old_obj.command]]</textarea>
-          </div>
-
-          <label for="command">端口映射：逗号隔开</label>
-          <div class="form-group">
-            <textarea class="form-control" rows="3" id="port_mapping" placeholder="[[port_mapping_placeholder]]" [[command_ip_disabled]]="[[command_ip_disabled]]">[[old_obj.port_mapping]]</textarea>
-          </div>
-
-          <div class="input-group col-sm-5">
-            <label for="machine_select">host机器</label>
-            <!--<textarea class="form-control" rows="3" id="machine_select">[[old_obj.desc]]</textarea>-->
-            <div class="">
-              <select class="form-control" id="machine_select" [[host_ip_disabled]]="[[host_ip_disabled]]">
-                {% for m in machines %}
-                  <option value="[[m.id]]" [[m.selected]]>[[m.ip_addr]]</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-
-
-
-          <div class="input-group col-sm-5">
-            <label for="image_select">docker镜像</label>
-            <div class="">
-              <select class="form-control" id="image_select" [[host_ip_disabled]]="[[host_ip_disabled]]">
-                {% for m in images %}
-                  <option value="[[m.id]]" [[m.selected]]>[[m.image_name]]</option>
-                {% endfor %}
-              </select>
-            </div>
+            <textarea class="form-control" rows="15" id="startup_content" >[[content | safe]]</textarea>
           </div>
 
           <div class="col-sm-10 col-sm-offset-0 " role="alert">
@@ -95,19 +55,12 @@
 
             $("#submit_btn").click(function () {
                 console.log("start posting data to "+"[[url_for_post]]");
-                let command = $("#command").val();
-                let port_mapping = $("#port_mapping").val();
+                let startup_content = $("#startup_content").val();
                 data = {
-                    "container_name":$("#container_name").val(),
-                    "command":command,
-                    "host_ip":$("#machine_select option:selected").text(),
-                    "machine_id":$("#machine_select option:selected").val(),
-                    "image_name":$("#image_select option:selected").text(),
-                    "image_id":$("#image_select option:selected").val(),
-                    "port_mapping":port_mapping
+                    "startup_content":startup_content,
                 };
-                if(command===""){
-                alert("命令不能为空");
+                if(startup_content===""){
+                alert("启动脚本不能为空");
                 return;
                 }
                 console.log(data);

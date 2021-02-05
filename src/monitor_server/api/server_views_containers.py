@@ -6,9 +6,13 @@ from api.api_utils.portmapping_parser import port_mapping_str2list, check_ports,
     port_mapping_str2dict
 from models import SoftPackage,db,Image,Machine,Container,Deployment,PhysicalPort
 from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
-    stop_container, restart_container, remove_container
+    stop_container, restart_container, remove_container, cp_file_from_container, write_content_2_container
+from operation_utils.file import get_tmp_data_dir
+
 
 api_group3 = Blueprint("api_g3",__name__)
+
+_tmp_data_dir = get_tmp_data_dir()
 
 
 @api_group3.route('/images', methods=['GET', 'POST'])
@@ -98,6 +102,7 @@ def get_containers():
         m.stop_url = url_for("api_g3.activate_containers", num=m.id, action="stop")
         m.restart_url = url_for("api_g3.activate_containers", num=m.id, action="restart")
         m.remove_url = url_for("api_g3.activate_containers", num=m.id, action="remove")
+        m.edit_startup_url = url_for("api_g3.edit_startup_script", num=m.id, action="remove")
     return render_template("containers.html", containers_class="active", members=members,
                            url_for_add=url_for_add, url_for_search=url_for_search,url_base=url_for("api_g3.get_containers"))
 
@@ -161,7 +166,8 @@ def add_containers():
     images = Image.query.all()
     this_page = url_for("api_g3.add_containers")
     dest_page = url_for("api_g3.get_containers")
-    return render_template("containers_add_edit.html", machines=machines, images=images, old_obj=None,
+    return render_template("containers_add_edit.html", machines=machines, images=images,
+                           old_obj=None, port_mapping_placeholder="60020,60030",
                            host_ip_disabled="", url_for_post=this_page, success_url=dest_page)
 
 
@@ -208,11 +214,31 @@ def edit_containers(num):
     for i in images:
         if i.id == old_obj.image_id:
             i.selected="selected"
-    # @todo
+
     this_page = url_for("api_g3.edit_containers", num=num)
     dest_page = url_for("api_g3.get_containers")
     return render_template("containers_add_edit.html", machines=machines, images=images, old_obj=old_obj,
                            host_ip_disabled="disabled",command_ip_disabled="disabled", url_for_post=this_page,success_url=dest_page)
+
+
+@api_group3.route('/containers/startup_edit/<num>', methods=['GET', 'POST'])
+def edit_startup_script(num):
+    container = Container.query.filter_by(id=num).all()[0]
+    machine = Machine.query.filter_by(id=container.machine_id).all()[0]
+    if request.method== "POST":
+        msg = {"status": "success", "info": "ok"}
+        content = request.form.get("startup_content")
+        msg["status"], msg["info"]= write_content_2_container(machine.ip_addr, machine.docker_server_port, container.container_raw_id, content, file_path="/run.sh")
+        return json.dumps(msg)
+    status, info = cp_file_from_container(machine.ip_addr, machine.docker_server_port, container.container_raw_id, "/run.sh")
+    if status == "success":
+        tmp_dir,name = info
+        content = open(os.path.join(tmp_dir,name)).read()
+    else:
+        content = "/bin/bash\n"
+    this_page = url_for("api_g3.edit_startup_script", num=num)
+    dest_page = url_for("api_g3.get_containers")
+    return render_template("containers_startup_edit.html", content=content, url_for_post=this_page,success_url=dest_page)
 
 
 @api_group3.route('/containers/search', methods=['GET', 'POST'])
