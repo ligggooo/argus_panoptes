@@ -236,9 +236,9 @@ def write_content_2_container(ip, port, container_id, content, file_path="/run.s
             target_file_name = os.path.split(file_path)[1]
             os.chdir(tmp_dir)
 
-            with open(target_file_name,"w") as f:
+            with open(target_file_name, "w", newline="\n") as f:
                 f.write(content)
-            tar = tarfile.open(os.path.join(tmp_tar_name), mode="w")
+            tar = tarfile.open(os.path.join(tmp_tar_name), mode="w:tar")
             tar.add(target_file_name)
             tar.close()
             data = open(tmp_tar_name,"rb").read()
@@ -296,4 +296,4 @@ if __name__ == '__main__':
     #tar_and_cp_file_2_container(host, 2375, "mgt2", "run.sh")
     # a,b = cp_file_from_container(host, 2375, "mgt2", "/zzrun.sh")
     # print(a,b)
-    write_content_2_container(host, 2375, "mgt2", "ls alh\nfind / -name \"*.so\"", "/run.sh")
+    write_content_2_container(host, 2375, "test_copy", "sleep 100\n", "/run.sh")

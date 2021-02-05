@@ -16,9 +16,12 @@ def overview():
     # return 'Hello World!'
     # print(url_for("api_g1.get_data", x=123,_external=True))
     print(request.method)
-    os.path.join(_proj_root, "README.md")
-    index_readme = open(os.path.join(_proj_root, "readme.md"),encoding="utf-8").read().replace("\n","<br>").replace(" ","&nbsp")
-    return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True,index_readme=index_readme)
+    readme = os.path.join(_proj_root, "README.md")
+    if os.path.exists(readme):
+        content =open(readme, encoding="utf-8").read().replace("\n", "<br>").replace(" ", "&nbsp")
+    else:
+        content = "README.md文件不存在"
+    return render_template("index.html",overview_class="active", pageheadershow=True, show_boards=True,index_readme=content)
 
 
 @api_group1.route('/products', methods=['GET', 'POST'])

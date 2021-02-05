@@ -227,13 +227,13 @@ def edit_startup_script(num):
     machine = Machine.query.filter_by(id=container.machine_id).all()[0]
     if request.method== "POST":
         msg = {"status": "success", "info": "ok"}
-        content = request.form.get("startup_content")
+        content = request.form.get("startup_content").replace("\r\n","\n")
         msg["status"], msg["info"]= write_content_2_container(machine.ip_addr, machine.docker_server_port, container.container_raw_id, content, file_path="/run.sh")
         return json.dumps(msg)
     status, info = cp_file_from_container(machine.ip_addr, machine.docker_server_port, container.container_raw_id, "/run.sh")
     if status == "success":
         tmp_dir,name = info
-        content = open(os.path.join(tmp_dir,name)).read()
+        content = open(os.path.join(tmp_dir,name),newline="\n").read().replace("\r","")
     else:
         content = "/bin/bash\n"
     this_page = url_for("api_g3.edit_startup_script", num=num)
