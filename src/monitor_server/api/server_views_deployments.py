@@ -45,7 +45,9 @@ def get_deployments():
             else:
                 m.package_name = "错误，找不到此软件版本"
                 m.tr_class = "danger"
-    return render_template("deployments.html", deployment_class="active",members=members,url_for_add=url_for("api_g4.add_deployments"))
+    return render_template("deployments.html", deployment_class="active",members=members,
+                           url_for_add=url_for("api_g4.add_deployments"), url_for_rm_post=
+                           url_for("api_g4.rm_deployments"))
 
 
 @api_group4.route('/deployments/add', methods=['GET', 'POST'])
@@ -103,5 +105,14 @@ def upload_deployments():
     pass
 
 
-
+@api_group4.route('/deployments/remove', methods=['POST'])
+def rm_deployments():
+    num = int(request.form.get("remove"))
+    sess = db.session()
+    sess.query(Deployment).filter(Deployment.id == num).delete()
+    sess.commit()
+    # todo
+    # 容器清理逻辑，需要每个服务包配置一个install一个uninstall脚本
+    msg = {"status": "success","target_url":url_for("api_g4.get_deployments")}
+    return json.dumps(msg)
 

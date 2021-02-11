@@ -7,6 +7,8 @@ import os
 from operation_utils.file import get_tmp_data_dir
 import uuid
 
+repo_addr = "http://10.130.160.114:2375"
+repo_addr = "http://192.168.31.110:2375"
 
 _tmp_data_dir = get_tmp_data_dir()
 CHUNK_SIZE = 2048*1024
@@ -33,7 +35,7 @@ def get_docker_images():
 
     images = {}
     try:
-        client = docker.DockerClient(base_url="http://10.130.160.114:2375",timeout=2)
+        client = docker.DockerClient(base_url=repo_addr,timeout=2)
         for img in client.images.list():
             full_name = img.tags[0]
             if "/" in full_name:
@@ -45,7 +47,7 @@ def get_docker_images():
         return images
     except Exception as e:
         traceback.print_exc()
-        return None
+        return {}
 
 
 def get_docker_containers(ip,port):
@@ -56,7 +58,7 @@ def get_docker_containers(ip,port):
 
 
 def docker_clients():
-    client = docker.DockerClient(base_url="http://172.16.100.52:2375")
+    client = docker.DockerClient(base_url=repo_addr)
     docker_version = client.version()
     #print(docker_version)
     #for cont in client.containers.list():
@@ -69,10 +71,7 @@ def docker_clients():
     # client.images.pull("172.16.100.51:5000/hello-world","v1")
 
 
-def __get_container(ip,port,container_id):
-    client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
-    c = client.containers.get(container_id=container_id)
-    return c
+
 
 
 def create_container(ip, port, image_name_tag, container_name, command, port_mapping):
@@ -110,14 +109,17 @@ def init_docker_container(host_ip, container_name, dockerimage,command='/bin/bas
     client.start(container_name)
 
 
-
+def __get_container(ip,port,container_id):
+    client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+    c = client.containers.get(container_id=container_id)
+    return c
 
 def get_container(ip,port,container_id):
     try:
-        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port), timeout=0.5)
         # images = client.images.list()
         # print(images)
-        c= client.containers.get(container_id=container_id)
+        c= client.containers.get(container_id=container_id,)
         logs = c.logs(timestamps=True, tail=20).decode("utf-8")
         # print(c, dir(c))
         # c.run()
@@ -296,4 +298,6 @@ if __name__ == '__main__':
     #tar_and_cp_file_2_container(host, 2375, "mgt2", "run.sh")
     # a,b = cp_file_from_container(host, 2375, "mgt2", "/zzrun.sh")
     # print(a,b)
-    write_content_2_container(host, 2375, "test_copy", "sleep 100\n", "/run.sh")
+    # write_content_2_container(host, 2375, "test_copy", "sleep 100\n", "/run.sh")
+
+    docker_clients()
