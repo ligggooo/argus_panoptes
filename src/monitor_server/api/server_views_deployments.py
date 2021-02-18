@@ -82,7 +82,7 @@ def add_deployments():
         if msg["info"] is not None:
             return json.dumps(msg)
         # 安装服务
-        cmd = "sh /install_%s.sh"%sp.full_name_no_suffix_no_version
+        cmd = "sh /%s/deploy/install.sh"%sp.full_name_no_suffix_no_version
         msg["status"], msg["info"] = container_exec(machine.ip_addr, machine.docker_server_port,
                                                          container.container_raw_id, cmd)
         if msg["status"] != "success":
@@ -126,10 +126,7 @@ def rm_deployments():
         sp = SoftPackage.query.filter_by(spid=soft_package_id).limit(1).all()[0]
         container = Container.query.filter_by(id=container_id).all()[0]
         machine = Machine.query.filter_by(id=container.machine_id).all()[0]
-        cmd = "sh /remove_%s.sh" % sp.full_name_no_suffix_no_version
-        msg["status"], msg["info"] = container_exec(machine.ip_addr, machine.docker_server_port,
-                                                    container.container_raw_id, cmd)
-        cmd = "rm /remove_%s.sh && rm /install_%s.sh " % (sp.full_name_no_suffix_no_version,sp.full_name_no_suffix_no_version)
+        cmd = "sh /%s/deploy/remove.sh" % sp.full_name_no_suffix_no_version
         msg["status"], msg["info"] = container_exec(machine.ip_addr, machine.docker_server_port,
                                                     container.container_raw_id, cmd)
     obj.delete()
