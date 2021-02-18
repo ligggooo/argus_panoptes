@@ -11,6 +11,7 @@ _proj_root = get_proj_root()
 
 api_group1 = Blueprint("api_g1",__name__)
 
+
 @api_group1.route('/')
 def overview():
     # return 'Hello World!'

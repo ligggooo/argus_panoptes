@@ -20,7 +20,12 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
 
-class TestingConfig(Config):
+# class TestingConfig(Config):
+#     TESTING = True
+#     SQLALCHEMY_DATABASE_URI="sqlite:///my_db.sqlite"
+#     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+class TestingConfig2(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI="sqlite:///my_db.sqlite"
+    SQLALCHEMY_DATABASE_URI="postgresql://postgres:123456@10.130.160.114:60030/my_test"
     SQLALCHEMY_TRACK_MODIFICATIONS = False

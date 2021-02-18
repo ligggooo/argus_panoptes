@@ -37,6 +37,6 @@ class ProcessState(db.Model):
 
 
 if __name__ == "__main__":
-    # create_all()
+    db.create_all()
     user = ProcessState.query.all()
     print(user)

@@ -8,7 +8,7 @@ from operation_utils.file import get_tmp_data_dir
 import uuid
 
 repo_addr = "http://10.130.160.114:2375"
-repo_addr = "http://192.168.31.110:2375"
+# repo_addr = "http://192.168.31.110:2375"
 
 _tmp_data_dir = get_tmp_data_dir()
 CHUNK_SIZE = 2048*1024
@@ -208,6 +208,25 @@ def cp_file_2_container(ip, port, container_id, file_path):
         return "success", None
     except Exception as e:
         traceback.print_exc()
+        return "failed", str(e)
+
+
+def container_exec(ip, port, container_id, command):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            # exec_run(self, cmd, stdout=True, stderr=True, stdin=False, tty=False,
+            #          privileged=False, user='', detach=False, stream=False,
+            #          socket=False, environment=None, workdir=None, demux=False)
+            ret = c.exec_run(command)
+            if ret.exit_code==0:
+                return "success", ret.output.decode("utf-8")
+            else:
+                return "failed", ret.output.decode("utf-8")
+        else:
+            return "failed", "cannot find this container"
+    except Exception as e:
+        traceback.print_exc()
         return "success", str(e)
 
 
@@ -300,4 +319,4 @@ if __name__ == '__main__':
     # print(a,b)
     # write_content_2_container(host, 2375, "test_copy", "sleep 100\n", "/run.sh")
 
-    docker_clients()
+    container_exec(host, 2375, "jlmonitor", "lx")

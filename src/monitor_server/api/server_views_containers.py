@@ -80,11 +80,18 @@ def get_containers():
     for m in members:
         machine = Machine.query.filter_by(id=m.machine_id).all()[0]
         m.host_ip = machine.ip_addr
-        m.image_name = Image.query.filter_by(id=m.image_id).all()[0].image_name
-        # 下面这一行在机器下线之后非常慢，考虑两个思路解决
-        # 1 多线程并行 2 将下线机器登记，不再尝试连接和等待  todo
-        c, err_msg = get_container(machine.ip_addr,machine.docker_server_port, m.container_raw_id)
-        m.detail = err_msg.replace("\n","<br>")
+        image_q = Image.query.filter_by(id=m.image_id).limit(1).all()
+        if len(image_q)==0:
+            m.image_name = "NULL"
+            # 下面这一行在机器下线之后非常慢，考虑两个思路解决
+            # 1 多线程并行 2 将下线机器登记，不再尝试连接和等待  todo
+            m.detail = "无效的镜像"
+        else:
+            m.image_name = image_q[0].image_name
+            # 下面这一行在机器下线之后非常慢，考虑两个思路解决
+            # 1 多线程并行 2 将下线机器登记，不再尝试连接和等待  todo
+            c, err_msg = get_container(machine.ip_addr,machine.docker_server_port, m.container_raw_id)
+            m.detail = err_msg.replace("\n","<br>")
         if not c:
             m.status = "error"
             m.tr_class = "danger"

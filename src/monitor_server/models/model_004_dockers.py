@@ -4,7 +4,7 @@ from api.api_utils.portmapping_parser import port_mapping_str2list
 from monitor_server import db
 from models import PhysicalPort
 
-
+db.metadata.clear()
 class Image(db.Model):
     __tablename__ = "images"
     __table_args__ = (
@@ -61,6 +61,7 @@ class Container(db.Model):
 
 
 if __name__ == "__main__":
+
     db.create_all()
     sess = db.session()
     new_obj1 = Image(desc="demo ：支持ta sa", image_name="pytorch_gis_sa_ta_v202101.1", size_in_MB=321)

@@ -27,6 +27,15 @@ class SoftPackage(db.Model):
         return "%s_v%d.%d.%d.%s" % (self.package_name,self.main_version,
                                     self.second_version,self.third_version,self.suffix)
 
+    @property
+    def full_name_no_suffix(self):
+        return "%s_v%d.%d.%d" % (self.package_name, self.main_version,
+                                    self.second_version, self.third_version)
+
+    @property
+    def full_name_no_suffix_no_version(self):
+        return "%s" % (self.package_name)
+
 
 if __name__ == "__main__":
     db.create_all()
