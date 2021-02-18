@@ -1,5 +1,6 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
 from monitor_server import db
+from models.model_002_package import SoftPackage
 
 
 class Deployment(db.Model):
@@ -14,11 +15,30 @@ class Deployment(db.Model):
     soft_package_id = db.Column(db.Integer, nullable=False, unique=False)
 
     def __repr__(self):
-        return "<%s %s>" % (self.ip_addr, self.host_name)
+        return "<%s %s>" % (self.name, self.desc)
 
     @property
     def full_name(self):
         return "%s[ %s ]" % (self.ip_addr, self.host_name)
 
+    @staticmethod
+    def is_record_exist(container_id=container_id,soft_package_id=soft_package_id):
+        sp = SoftPackage.query.filter_by(spid=soft_package_id).limit(2).all()
+        if len(sp) == 0:
+            return False, None
+        else:
+            records = Deployment.query.filter_by(container_id=container_id).join(SoftPackage,
+                                                            SoftPackage.spid == Deployment.soft_package_id). \
+                filter(SoftPackage.package_name == sp[0].package_name).all()
+            if len(records) > 0:
+                return True, records[0]
+            else:
+                return False, None
+
+
 if __name__ == "__main__":
-    db.create_all()
+    # db.create_all()
+    xx = Deployment.query.filter_by(container_id=1).join(SoftPackage, SoftPackage.spid==Deployment.soft_package_id).\
+        filter(SoftPackage.package_name=="jiliang_monitor").all()
+    for x in xx:
+        print(x)

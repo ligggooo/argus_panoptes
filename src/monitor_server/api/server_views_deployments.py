@@ -87,16 +87,23 @@ def add_deployments():
                                                          container.container_raw_id, cmd)
         if msg["status"] != "success":
             return json.dumps(msg)
-        record_may_exist = Deployment.query.filter_by(container_id=container_id,soft_package_id=soft_package_id).limit(1).all()
-        record_does_not_exists = (len(record_may_exist)==0)
-        # 非调试目的，通过选择而部署的服务不允许存在多个拷贝
-        if soft_package_id==-11 or (int(soft_package_id)>0 and record_does_not_exists):
+        # record_may_exist = if_record_may_exist(container_id=container_id,soft_package_id=soft_package_id)
+        # Deployment.query.filter_by(container_id=container_id,soft_package_id=soft_package_id).limit(1).all()
+        # record_does_not_exists = (len(record_may_exist)==0)
+        record_does_exists,deployment_old = Deployment.is_record_exist(container_id=container_id,soft_package_id=soft_package_id)
+
+        # 非调试目的，通过选择而部署的服务不允许存在多个拷贝(而且不允许同时存在多个版本)
+        if soft_package_id == -11 or (int(soft_package_id)>0 and not record_does_exists):
             new_service = Deployment(name=service_name,desc=service_desc,container_id=container_id,soft_package_id=soft_package_id)
             db.session.add(new_service)
             db.session.commit()
         else: # 若存在则不新增记录，而是通知用户，旧服务被覆盖了
             msg["status"] = "warning"
             msg["info"] = "旧的服务已被覆盖"
+            deployment_old.soft_package_id = soft_package_id
+            deployment_old.name = service_name
+            deployment_old.desc = service_desc
+            db.session.commit()
 
         return json.dumps(msg)
     containers = Container.query.order_by("machine_id","container_name").all()
