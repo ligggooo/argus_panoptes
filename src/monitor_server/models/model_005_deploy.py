@@ -19,7 +19,7 @@ class Deployment(db.Model):
 
     @property
     def full_name(self):
-        return "%s[ %s ]" % (self.ip_addr, self.host_name)
+        return "%s[ %s ]" % (self.name, self.desc)
 
     @staticmethod
     def is_record_exist(container_id=container_id,soft_package_id=soft_package_id):

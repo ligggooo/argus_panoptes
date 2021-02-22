@@ -80,7 +80,9 @@ def create_container(ip, port, image_name_tag, container_name, command, port_map
         # images = client.images.list()
         # print(images)
         c= client.containers.create(stdin_open=True,image=image_name_tag, command=command,
-                                    name=container_name, ports=port_mapping)
+                                    name=container_name, ports=port_mapping,
+                                    environment={"HOST_IP": ip,
+                                         "PATH_MAP": "/app/inte_dir/" + container_name},)
         # print(c, dir(c))
         # c.run()
     except Exception as e:
