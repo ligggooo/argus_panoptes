@@ -1,9 +1,9 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
 from monitor_server import db
-from jiliang_process.process_monitor import CallCategory,States
+from jiliang_process.process_monitor import CallCategory,StatePoint
 
 
-class TaskTrack(db.Model):
+class TaskTrackingRecord(db.Model):
     __tablename__ = "task_track"
     __table_args__ = ()
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -17,7 +17,7 @@ class TaskTrack(db.Model):
     desc = db.Column(db.String(1024), nullable=True, unique=False)
 
     def __repr__(self):
-        return "<%s:%s %s:%s %s>" % (self.parent_id, self.sub_id, CallCategory(self.call_category).name, self.name, States(self.state).name)
+        return "<%s:%s %s:%s %s>" % (self.parent_id, self.sub_id, CallCategory(self.call_category).name, self.name, StatePoint(self.state).name)
 
     @property
     def full_name(self):

@@ -1,4 +1,4 @@
-from jiliang_process.process_monitor import task_monitor,States
+from jiliang_process.process_monitor import task_monitor,StatePoint
 from jiliang_process.workloads import A,B,C
 import traceback
 
@@ -22,15 +22,15 @@ def main(sub_id, parent_id=""):  # 跨系统调用关联
 
 
 def call(id): # 模拟jiliang系统调用语义脚本的过程
-    task_monitor.root_log(id=id, state=States.start.value)
+    task_monitor.root_log(id=id, state=StatePoint.start.value)
     try:
         main(sub_id="1", parent_id=id)
         main(sub_id="2", parent_id=id)
         main(sub_id="3", parent_id=id)
     except Exception as e:
-        task_monitor.root_log(id=id, state=States.error.value, desc=traceback.format_exc())
+        task_monitor.root_log(id=id, state=StatePoint.error.value, desc=traceback.format_exc())
         raise e
-    task_monitor.root_log(id=id, state=States.end.value)
+    task_monitor.root_log(id=id, state=StatePoint.end.value)
 
 
 call("20200413004000_20201110232523_20201114112585")

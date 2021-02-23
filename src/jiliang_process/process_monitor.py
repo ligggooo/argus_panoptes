@@ -5,19 +5,30 @@ import traceback
 import enum
 
 
-class States(enum.Enum):
+class StatePoint(enum.Enum):
     start = 0
     end = 1
     error = 2
 
 
+class ProcessState(enum.Enum):
+    record_incomplete = -2
+    not_started_yet = -1
+    running = 0
+    # running_with_error = 0
+    finished = 1
+    # finished_with_error = 2
+    failed = 2
+    partially_finished = 3
+
+
 class CallCategory(enum.Enum):
+    root = -1
     normal = 0
     loop = 1
     concurrent = 2
     cross_system = 3
     branch = 4
-
 
 
 class ProcessMonitor:
@@ -45,16 +56,16 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=States.start.value, desc="")
+                                 state=StatePoint.start.value, desc="")
                 try:
                     res = func(*args, **kwargs)
                 except Exception as e:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.normal.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                     state=States.error.value, desc=err_msg[-1000:])
+                                     state=StatePoint.error.value, desc=err_msg[-1000:])
                     raise e
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=States.end.value, desc="")
+                                 state=StatePoint.end.value, desc="")
                 return res
 
             return wrapper
@@ -68,11 +79,11 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=States.start.value,
+                                 state=StatePoint.start.value,
                                  index=self.index_holder[func.__name__])
                 res = func(*args, **kwargs)
                 self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=States.end.value,
+                                 state=StatePoint.end.value,
                                  index=self.index_holder[func.__name__])
                 self.index_holder[func.__name__] += 1
                 return res
@@ -85,11 +96,11 @@ class ProcessMonitor:
             def wrapper(*args, **kwargs):
                 this_id = Unique_id.get()
                 self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=States.start.value,
+                                 state=StatePoint.start.value,
                                  index=this_id)
                 res = func(*args, **kwargs)
                 self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=States.end.value,
+                                 state=StatePoint.end.value,
                                  index=this_id)
                 return res
             return wrapper
@@ -105,12 +116,12 @@ class ProcessMonitor:
                 self.logger.info(call_category=CallCategory.cross_system.value, sub_id=self.sub_id,
                                  parent_id=self.parent_id,
                                  name=name,
-                                 state=States.start.value)
+                                 state=StatePoint.start.value)
                 res = func(*args, **kwargs)
                 self.logger.info(call_category=CallCategory.cross_system.value, sub_id=self.sub_id,
                                  parent_id=self.parent_id,
                                  name=name,
-                                 state=States.end.value)
+                                 state=StatePoint.end.value)
                 return res
             return wrapper
         return deco

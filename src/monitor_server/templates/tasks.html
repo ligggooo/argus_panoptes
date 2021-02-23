@@ -38,8 +38,8 @@
             <th class="hidden">real id</th>
             <th class="col-sm-0 col-sm-offset-0 ">#</th>
             <th class="col-sm-2 col-sm-offset-0 ">任务id</th>
-            <th class="col-sm-3 col-sm-offset-0 ">状态</th>
-            <th class="col-sm-5 col-sm-offset-0 ">描述</th>
+            <th class="col-sm-5 col-sm-offset-0 ">状态</th>
+            <th class="col-sm-3 col-sm-offset-0 ">描述</th>
             <!--<th class="col-sm-2 col-sm-offset-0 ">操作</th>-->
           </tr>
         </thead>
@@ -49,7 +49,25 @@
                 <td class="hidden">[[m.id]]</td>
                 <td >[[loop.index]]</td>
                 <td>[[m.task_id]]</td>
-                <td>[[m.state_track.status]]</td>
+                <td>
+                    <ul >
+                        {% for b in m.state_track.subtasks.blocks %}
+                        <li style="display: inline">
+                        {% if b.type=="N" %}
+                            <span class="btn-xs btn-circle btn-info">[[b.content]]</span>
+                        {% else %}
+                            <span class="btn-danger">
+                                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                                [[b.content]]
+                                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                            </span>
+                        {% endif %}
+                        &nbsp;
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                </td>
                 <td>[[m.desc]]</td>
               </tr>
 
