@@ -49,11 +49,7 @@
                 <td class="hidden">[[m.id]]</td>
                 <td >[[loop.index]]</td>
                 <td>[[m.task_id]]</td>
-                <td>
-                  {% for b in m.state_track.subtasks %}
-                    <span>[[b.state_track.status]]</span>&nbsp;
-                  {% endfor %}
-                </td>
+                <td>[[m.state_track.status]]</td>
                 <td>[[m.desc]]</td>
               </tr>
 
