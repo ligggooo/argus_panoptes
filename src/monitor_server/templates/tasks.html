@@ -1,0 +1,86 @@
+{% extends "base_show_template.html" %}
+  {% block boards %}
+    {% if show_boards %}
+          <div class="row placeholders">
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+          </div>
+    {% endif %}
+  {% endblock %}
+
+    {% block contents %}
+      <h2 class="sub-header">任务列表
+        <!--<a href="[[url_for_add]]" class="btn btn-success btn-sm" aria-label="Left Align" style="margin-left:30px">-->
+                    <!--新增项目<span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>-->
+      </h2>
+      <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th class="hidden">real id</th>
+            <th class="col-sm-0 col-sm-offset-0 ">#</th>
+            <th class="col-sm-2 col-sm-offset-0 ">任务id</th>
+            <th class="col-sm-3 col-sm-offset-0 ">状态</th>
+            <th class="col-sm-5 col-sm-offset-0 ">描述</th>
+            <!--<th class="col-sm-2 col-sm-offset-0 ">操作</th>-->
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in tasks %}
+              <tr class="[[m.tr_class]]">
+                <td class="hidden">[[m.id]]</td>
+                <td >[[loop.index]]</td>
+                <td>[[m.task_id]]</td>
+                <td>
+                  {% for b in m.state_track.subtasks %}
+                    <span>[[b.state_track.status]]</span>&nbsp;
+                  {% endfor %}
+                </td>
+                <td>[[m.desc]]</td>
+              </tr>
+
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  <script>
+            $(document).ready(function() {
+                $(".remove-btn").click(function (e) {
+                    let res=confirm("remove " + $(this).val());
+                    let post_data={
+                      "remove":$(this).val(),
+                    };
+                    if(res){
+                      $.post("[[url_for_rm_post]]",
+                              post_data,
+                              function(ret_data,status){
+                        console.log(ret_data);
+                        console.log(status);
+                        ret_data = JSON.parse(ret_data);
+                        $(location).attr("href",ret_data.target_url);
+                      });
+                    }
+                });
+            });
+
+  </script>
+  {% endblock %}
+
