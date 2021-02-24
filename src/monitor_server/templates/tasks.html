@@ -51,16 +51,16 @@
                 <td>[[m.task_id]]</td>
                 <td>
                     <ul >
-                        {% for b in m.state_track.subtasks.blocks %}
+                        {% for b in m.state_track %}
                         <li style="display: inline">
                         {% if b.type=="N" %}
                             <span class="btn-xs btn-circle btn-info">[[b.content]]</span>
                         {% else %}
-                            <span class="btn-danger">
+                            <a class="[[ b.html_class ]]" href="[[ b.url ]]">
                                 <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
                                 [[b.content]]
                                 <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-                            </span>
+                            </a>
                         {% endif %}
                         &nbsp;
                         </li>

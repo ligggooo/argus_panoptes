@@ -2,7 +2,7 @@ from flask import Blueprint,request, url_for, render_template, redirect, send_fr
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from models import SoftPackage, db
+from models.model_002_package import SoftPackage, db
 
 from operation_utils.file import get_data_dir,get_proj_root
 

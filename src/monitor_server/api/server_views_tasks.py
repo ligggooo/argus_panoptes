@@ -2,8 +2,10 @@ from flask import Blueprint,request,url_for,render_template
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from api.api_utils.task_analysis import get_status
-from models import SoftPackage,db,Image,Machine,Container,Deployment,TaskTrack,Task
+from api.api_utils.task_analysis import get_status, get_tasks_from_redis
+from models.model_006_tasks import Task,TaskTrackingRecord
+from monitor_server import db
+
 from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
     stop_container, restart_container, remove_container
 
@@ -15,12 +17,24 @@ api_group5 = Blueprint("api_g5",__name__)
 
 @api_group5.route('/tasks', methods=['GET', 'POST'])
 def get_tasks():
-    from jiliang_process.graph_test import state_graph
-    tasks = Task.query.all()
+    batch_id = request.args.get("batch_id")
+    parent_id = request.args.get("parent_id")
+    if not batch_id:
+        tasks = Task.query.all()
 
-    for t in tasks:
-        t.state_track = get_status(tag="root")
-    return render_template("tasks.html", tasks=tasks)
+        for t in tasks:
+            t.state_track = get_status(batch_id=t.task_id,parent_id=t.task_id)
+            for b in t.state_track:
+                b.url = url_for("api_g5.get_tasks",batch_id=t.task_id,parent_id=b.parent_id)
+        return render_template("tasks.html", tasks=tasks)
+    else:
+        tasks = get_tasks_from_redis(batch_id=batch_id,parent_id=parent_id)
+        for t in tasks:
+            t.task_id = str(t)
+            t.state_track = get_status(batch_id=batch_id,parent_id=t.sub_id)
+            for b in t.state_track:
+                b.url = url_for("api_g5.get_tasks",batch_id=batch_id, parent_id=b.parent_id)
+        return render_template("tasks.html", tasks=tasks)
 
 
 @api_group5.route('/record_tasks', methods=['POST', "GET"])
@@ -28,7 +42,7 @@ def record_tasks():
     raw_data = request.values['msg']
     print(raw_data)
     data = json.loads(raw_data)
-    new_obj = TaskTrack(**data)
+    new_obj = TaskTrackingRecord(**data)
     print(new_obj)
     sess = db.session()
     sess.add(new_obj)

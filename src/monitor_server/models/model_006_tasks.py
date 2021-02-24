@@ -9,11 +9,11 @@ class TaskTrackingRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     sub_id = db.Column(db.String(128), nullable=False, unique=False)
     parent_id = db.Column(db.String(128), nullable=True, unique=False)
+    batch_id = db.Column(db.String(128), nullable=False, unique=False)
     name = db.Column(db.String(128), nullable=False, unique=False)
     call_category = db.Column(db.Integer, nullable=False, unique=False)
     state = db.Column(db.Integer, nullable=False, unique=False)
     timestamp = db.Column(db.Float, nullable=False, unique=False)
-    index = db.Column(db.Integer, nullable=False, unique=False, default=0)
     desc = db.Column(db.String(1024), nullable=True, unique=False)
 
     def __repr__(self):

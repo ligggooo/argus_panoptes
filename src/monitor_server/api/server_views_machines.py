@@ -2,7 +2,8 @@ from flask import Blueprint,request,url_for,render_template
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from models import SoftPackage,db,Machine,PhysicalPort
+from models.model_002_package import SoftPackage,db
+from models.model_003_machines import  Machine,PhysicalPort
 from operation_utils.file import get_data_dir
 
 _data_dir = get_data_dir()

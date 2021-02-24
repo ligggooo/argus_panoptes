@@ -2,7 +2,11 @@ from flask import Blueprint,request,url_for,render_template,redirect
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from models import SoftPackage,db,Image,Machine,Container,Deployment
+from models.model_002_package import SoftPackage,db
+from models.model_003_machines import Machine
+from models.model_004_dockers import  Image,Container
+from models.model_005_deploy import Deployment
+
 from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
     stop_container, restart_container, remove_container, cp_file_2_container, container_exec
 from operation_utils.file import get_tmp_data_dir,get_data_dir
