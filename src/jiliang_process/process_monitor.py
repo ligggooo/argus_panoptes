@@ -1,8 +1,11 @@
 from functools import wraps
 from jiliang_process.process_logger import get_logger,get_web_logger
+from jiliang_process.call_track import IdTree
 import threading
 import traceback
 import enum
+import threading
+
 
 
 class todo:
@@ -38,102 +41,191 @@ class ProcessState(enum.Enum):
 class CallCategory(enum.Enum):
     root = -1
     normal = 0
-    loop = 1
-    concurrent = 2
-    cross_system = 3
-    branch = 4
+    # loop = 1
+    cross_thread = 2
+    cross_process = 3
+    # branch = 4
+
+
+
 
 
 class ProcessMonitor:
-
     def __init__(self, sub_id=None,parent_id=None):
-        self.sub_id = sub_id
-        self.parent_id = parent_id
+        # self.sub_id = sub_id
+        # self.parent_id = parent_id
         # self.logger = get_logger()
         self.logger = get_web_logger()
-        self.index_holder = {}
+        # self.index_holder = {}
         self.normal_task_deco = self.normal_task()
-        self.loop_task_deco = self.loop_task()
-        self.concurrent_task_deco = self.concurrent_task()
+        # self.loop_task_deco = self.loop_task()
+        # self.concurrent_task_deco = self.concurrent_task()
+        self.call_stack_tree = None
+        self.current_call_stack_node = None
+        self.main_thread_id = threading.current_thread().ident
+        self.batch_id = None
 
-    def _re_init(self,sub_id=None, parent_id=None):
-        self.sub_id = sub_id
-        self.parent_id = parent_id
-        # 重置循环计数变量
-        for k in self.index_holder:
-            self.index_holder[k] = 0
-        # 重置并发计数变量
-        Unique_id.reset()
+    def _re_init(self,sub_id, parent_id, batch_id, root_tag_name):
+        # self.sub_id = sub_id
+        # self.parent_id = parent_id
+        self.batch_id = batch_id
+        self.call_stack_tree = IdTree(parent_id, sub_id, tag=root_tag_name)
+        self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree._root}
+
+        # # 重置循环计数变量
+        # for k in self.index_holder:
+        #     self.index_holder[k] = 0
+        # # 重置并发计数变量
+        # Unique_id.reset()
+
+    def get_current_call_stack_node(self):
+        current_thread = threading.current_thread().ident
+        current_call_stack_node = self.current_call_stack_node_dict.get(current_thread)
+        if not current_call_stack_node:
+            current_call_stack_node = self.current_call_stack_node_dict.get(self.main_thread_id)
+            self.current_call_stack_node_dict[current_thread] = current_call_stack_node
+        return current_call_stack_node
+
+    def set_current_call_stack_node(self,node):
+        current_thread = threading.current_thread().ident
+        if not current_thread in self.current_call_stack_node_dict:
+            raise Exception("this thread has not been registered")
+        self.current_call_stack_node_dict[current_thread] = node
+
+    def id_tree_grow(self, func,this_id):
+        # id树生长，指针下移
+        parent_node = self.get_current_call_stack_node()
+        parent_id = parent_node.this_id
+        this_node_in_id_tree = self.call_stack_tree.append(parent_id, this_id, func.__name__)
+        self.set_current_call_stack_node(this_node_in_id_tree)
+        return parent_node,this_node_in_id_tree
+        # id树生长 -------
 
     def normal_task(self):
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                self.logger.info(call_category=CallCategory.normal.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
+                this_id = Unique_id.get()
+                parent_node, this_node = self.id_tree_grow(func, this_id)
+                parent_id = parent_node.this_id
+
+                self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
+                                 name=func.__name__, batch_id=self.batch_id,
                                  state=StatePoint.start.value, desc="")
+                try:
+                    res = func(*args, **kwargs)
+
+                except Exception as e:
+                    err_msg = traceback.format_exc()
+                    self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
+                                     name=func.__name__, batch_id=self.batch_id,
+                                     state=StatePoint.error.value, desc=err_msg[-1000:])
+                    # 任务失败 id树指针上移
+                    self.set_current_call_stack_node(parent_node)
+                    raise e
+                self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
+                                 name=func.__name__, batch_id=self.batch_id,
+                                 state=StatePoint.end.value, desc="")
+                #   任务成功 id树指针上移
+                self.set_current_call_stack_node(parent_node)
+                return res
+
+            return wrapper
+
+        return deco
+
+    # def loop_task(self):
+    #     def deco(func):
+    #         self.index_holder[func.__name__] = 0
+    #
+    #         @wraps(func)
+    #         def wrapper(*args, **kwargs):
+    #             self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
+    #                              state=StatePoint.start.value,
+    #                              index=self.index_holder[func.__name__])
+    #             res = func(*args, **kwargs)
+    #             self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
+    #                              state=StatePoint.end.value,
+    #                              index=self.index_holder[func.__name__])
+    #             self.index_holder[func.__name__] += 1
+    #             return res
+    #         return wrapper
+    #     return deco
+
+    # def concurrent_task(self):
+    #     def deco(func):
+    #         @wraps(func)
+    #         def wrapper(*args, **kwargs):
+    #             this_id = Unique_id.get()
+    #             self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
+    #                              state=StatePoint.start.value,
+    #                              index=this_id)
+    #             res = func(*args, **kwargs)
+    #             self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
+    #                              state=StatePoint.end.value,
+    #                              index=this_id)
+    #             return res
+    #         return wrapper
+    #     return deco
+
+    def cross_thread_deco(self, name):
+        def deco(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                this_id = Unique_id.get()
+                parent_node, this_node = self.id_tree_grow(func, this_id)
+                parent_id = parent_node.this_id
+                print(threading.current_thread().ident, threading.current_thread().name)
+                self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
+                                 parent_id=parent_id,batch_id =self.batch_id,
+                                 name=name,
+                                 state=StatePoint.start.value)
                 try:
                     res = func(*args, **kwargs)
                 except Exception as e:
                     err_msg = traceback.format_exc()
-                    self.logger.info(call_category=CallCategory.normal.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
+                    self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id, parent_id=parent_id,
+                                     name=name,batch_id =self.batch_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
+                    # 任务失败 id树指针上移
+                    self.set_current_call_stack_node(parent_node)
                     raise e
-                self.logger.info(call_category=CallCategory.normal.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=StatePoint.end.value, desc="")
-                return res
-
-            return wrapper
-
-        return deco
-
-    def loop_task(self):
-        def deco(func):
-            self.index_holder[func.__name__] = 0
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=StatePoint.start.value,
-                                 index=self.index_holder[func.__name__])
-                res = func(*args, **kwargs)
-                self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=StatePoint.end.value,
-                                 index=self.index_holder[func.__name__])
-                self.index_holder[func.__name__] += 1
+                self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
+                                 parent_id=parent_id,batch_id =self.batch_id,
+                                 name=name,
+                                 state=StatePoint.end.value)
+                # 任务完成 id树指针上移
+                self.set_current_call_stack_node(parent_node)
                 return res
             return wrapper
         return deco
+        pass
 
-    def concurrent_task(self):
+
+    def cross_process_deco(self, name):
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
+                parent_id, batch_id = ProcessMonitor.get_parent_id(kwargs)
                 this_id = Unique_id.get()
-                self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=StatePoint.start.value,
-                                 index=this_id)
-                res = func(*args, **kwargs)
-                self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-                                 state=StatePoint.end.value,
-                                 index=this_id)
-                return res
-            return wrapper
-        return deco
-
-    def cross_system_deco(self, name):
-        def deco(func):
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                sub_id,parent_id = ProcessMonitor.get_id(kwargs)
-                self._re_init(sub_id, parent_id)  # 任务拆分跨系统调用，需要用这种方式人工建立关联
-                this_id = Unique_id.get()
-                self.logger.info(call_category=CallCategory.cross_system.value, sub_id=self.sub_id,
-                                 parent_id=self.parent_id,
+                self._re_init(this_id, parent_id,batch_id, func.__name__)  # 任务拆分跨系统调用，需要用这种方式人工建立关联
+                self.id_tree_grow(func,this_id)
+                self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
+                                 parent_id=parent_id, batch_id =self.batch_id,
                                  name=name,
                                  state=StatePoint.start.value)
-                res = func(*args, **kwargs)
-                self.logger.info(call_category=CallCategory.cross_system.value, sub_id=self.sub_id,
-                                 parent_id=self.parent_id,
+                try:
+                    res = func(*args, **kwargs)
+                except Exception as e:
+                    err_msg = traceback.format_exc()
+                    self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id, parent_id=parent_id,
+                                     name=name,batch_id =self.batch_id,
+                                     state=StatePoint.error.value, desc=err_msg[-1000:])
+                    # 任务失败 此子进程直接退出，id树不需要再维护了
+                    self.current_call_stack_node = None
+                    raise e
+                self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
+                                 parent_id=parent_id, batch_id =self.batch_id,
                                  name=name,
                                  state=StatePoint.end.value)
                 return res
@@ -141,16 +233,16 @@ class ProcessMonitor:
         return deco
 
     @staticmethod
-    def get_id(in_dict):
-        if ("sub_id" not in in_dict) or ("parent_id" not in in_dict):
-            raise Exception("main 函数必须包含sub_id和parent_id两个关键字参数")
+    def get_parent_id(in_dict):
+        if ("parent_id" not in in_dict) or ("batch_id" not in in_dict):
+            raise Exception("跨进程调用接口必须提供（parent_id）(batch_id)关键字参数，否则无法获得进程关系")
         else:
-            return in_dict["sub_id"], in_dict["parent_id"]
+            return in_dict["parent_id"], in_dict["batch_id"]
 
-    def root_log(self, id, state,desc="",name="root"):
-        self.logger.info(call_category=CallCategory.cross_system.value, sub_id=id,
-                         parent_id=None,
-                         name=name,
+    def manual_log(self, id, state,desc="",name="root",batch_id=None):
+        self.logger.info(call_category=CallCategory.cross_process.value, sub_id=id,
+                         parent_id=None,batch_id=batch_id,
+                         name=name,desc= desc,
                          state=state)
 
 class Unique_id:

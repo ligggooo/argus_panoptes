@@ -29,12 +29,20 @@ def C(b):
     return b+"C"
 
 
-@task_monitor.concurrent_task_deco
+@task_monitor.cross_thread_deco("E")
 def E(c):
     time.sleep(1)
     print(c)
 
-
-@task_monitor.loop_task_deco
+@task_monitor.normal_task_deco
+# @task_monitor.loop_task_deco
 def D(x):
     return "D%d"%x
+
+@task_monitor.cross_process_deco("test_cross_process")
+def xp_test(parent_id,batch_id):
+    try:
+        A()
+    except Exception as e:
+        print(e)
+    B("xp_test")

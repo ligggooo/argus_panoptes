@@ -7,20 +7,25 @@ from datetime import datetime
 import json
 import time
 
-def get_logger(fname="test.log"):
-    proc_mon_logger = logging.getLogger()
-    proc_mon_logger.setLevel(logging.DEBUG)
 
-    fh = logging.handlers.TimedRotatingFileHandler(filename=fname, encoding="utf-8")
-    sh = logging.StreamHandler()
+class MyFileLogger:
+    def __init__(self, file_name):
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
 
-    fmt = logging.Formatter("%(asctime)s - %(levelname)s: %(message)s")
-    fh.setFormatter(fmt)
-    sh.setFormatter(fmt)
+        fh = logging.FileHandler(filename=file_name, encoding="utf-8")
+        sh = logging.StreamHandler()
 
-    proc_mon_logger.addHandler(fh)
-    proc_mon_logger.addHandler(sh)
-    return proc_mon_logger
+        fmt = logging.Formatter("%(asctime)s - %(levelname)s: %(message)s")
+        fh.setFormatter(fmt)
+        sh.setFormatter(fmt)
+
+        self.logger.addHandler(fh)
+        self.logger.addHandler(sh)
+
+    def info(self, **kwargs):
+        msg = json.dumps(kwargs)
+        self.logger.info(msg)
 
 
 class HttpLogger:
@@ -49,8 +54,12 @@ def get_web_logger(url="http://127.0.0.1:60010/record_tasks"):
     return proc_mon_logger
 
 
-
+def get_logger(fname="test.log"):
+    logger = MyFileLogger(fname)
+    return logger
 
 if __name__ == "__main__":
-    req = requests.get("http://127.0.0.1:60010/record_tasks",params={"msg":"123"})
-    print(req.content.decode("utf-8"))
+    # req = requests.get("http://127.0.0.1:60010/record_tasks",params={"msg":"123"})
+    # print(req.content.decode("utf-8"))
+    x = get_logger()
+    pass
