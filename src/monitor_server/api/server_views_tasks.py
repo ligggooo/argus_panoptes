@@ -2,23 +2,26 @@ from flask import Blueprint,request,url_for,render_template
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from api.api_utils.task_analysis import get_status, get_tasks_from_redis
+from api.api_utils.task_analysis import get_status, get_tasks_from_redis, load_records_to_redis
 from models.model_006_tasks import Task,TaskTrackingRecord
 from monitor_server import db
+from flask_apscheduler import APScheduler
 
-from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
-    stop_container, restart_container, remove_container
 
 api_group5 = Blueprint("api_g5",__name__)
 
-
+scheduler = APScheduler()
 # 定时任务周期性地读取数据库,将分析结果读入redis
+scheduler.add_job(func=load_records_to_redis, id="load_records_to_redis", args=(), trigger='interval',
+                  seconds=15, replace_existing=True)
+scheduler.start()
 # get_task 从redis中读取分析结果，呈现到前端
 
 @api_group5.route('/tasks', methods=['GET', 'POST'])
 def get_tasks():
     batch_id = request.args.get("batch_id")
     parent_id = request.args.get("parent_id")
+
     if not batch_id:
         tasks = Task.query.all()
 

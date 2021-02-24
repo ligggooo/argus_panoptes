@@ -5,6 +5,7 @@ import time
 
 @task_monitor.normal_task_deco
 def A():
+    time.sleep(120)
     raise Exception("test exception")
     return "A"
 
@@ -31,12 +32,13 @@ def C(b):
 
 @task_monitor.cross_thread_deco("E")
 def E(c):
-    time.sleep(1)
+    time.sleep(20)
     print(c)
 
 @task_monitor.normal_task_deco
 # @task_monitor.loop_task_deco
 def D(x):
+    time.sleep(10)
     return "D%d"%x
 
 @task_monitor.cross_process_deco("test_cross_process")

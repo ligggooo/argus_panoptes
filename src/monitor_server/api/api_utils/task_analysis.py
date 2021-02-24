@@ -2,7 +2,10 @@ from models.model_006_tasks import TaskTrackingRecord, Task
 from jiliang_process.process_monitor import CallCategory,StatePoint,ProcessState
 from jiliang_process.status_track import TaskStatusTree,StatusNode
 import pickle
+from operation_utils.file import get_tmp_data_dir,get_data_dir
+import os
 
+_tmp_dir = get_tmp_data_dir()
 
 class GraphBlock:
     def __init__(self, type="N", content="",html_class=""):
@@ -95,26 +98,28 @@ def merge_status(records, multi_task = False, regroup_index="index"):
         return ProcessState.finished,desc
 
 
-def get_records():
+def load_records_to_redis():
     tasks = Task.query.all()
     records = {}
+    print("load_records_to_redis")
+    # raise Exception("load_records_to_redis")
     for t in tasks:
         # root_task_records = TaskTrackingRecord.query.filter_by(sub_id=t.task_id).all()
         task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.batch_id==t.task_id).all()
         records[t.task_id] = task_records
-    # pickle.dump(records, open("task_record.dat","wb"))
+    pickle.dump(records, open(os.path.join(_tmp_dir,"task_record.dat"), "wb"))
     return records
 
 def get_records_for_test():
-    # records = pickle.load(open(r"E:\workspace\jiliang_monitor_pr\src\monitor_server\api\api_utils\task_record.dat", 'rb'))
-    records = get_records()
+    records = pickle.load(open(os.path.join(_tmp_dir,"task_record.dat"), 'rb'))
+    # records = get_records()
     for batch_id in records:
         records = records[batch_id]
         return records
 
 def build_task_status_tree():
-    # records = pickle.load(open(r"E:\workspace\jiliang_monitor_pr\src\monitor_server\api\api_utils\task_record.dat", 'rb'))
-    records = get_records()
+    records = pickle.load(open(os.path.join(_tmp_dir,"task_record.dat"), 'rb'))
+    # records = get_records()
     res = {}
     for batch_id in records:
         batch_records = records[batch_id]
