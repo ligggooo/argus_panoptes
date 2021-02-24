@@ -5,6 +5,19 @@ import traceback
 import enum
 
 
+class todo:
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print(self.msg)
+            res = func(*args, **kwargs)
+            return res
+        return wrapper
+
+
 class StatePoint(enum.Enum):
     start = 0
     end = 1
@@ -32,6 +45,7 @@ class CallCategory(enum.Enum):
 
 
 class ProcessMonitor:
+
     def __init__(self, sub_id=None,parent_id=None):
         self.sub_id = sub_id
         self.parent_id = parent_id

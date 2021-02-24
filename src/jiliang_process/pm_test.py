@@ -10,12 +10,11 @@ __version__ = "语义算法v 1.0.0"
 
 @task_monitor.cross_system_deco(__version__)
 def main(sub_id, parent_id=""):  # 跨系统调用关联
-
     try:
         a = A()
     except Exception as e:
         print(e)
-        a="error"
+        a = "error"
     b = B(a)
     c = C(b)
     print(c)
