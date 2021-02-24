@@ -99,7 +99,7 @@ def merge_status(records, multi_task = False, regroup_index="index"):
 
 
 def load_records_to_redis():
-    tasks = Task.query.all()
+    tasks = Task.query.order_by(Task.id.desc()).limit(6).all()
     records = {}
     print("load_records_to_redis")
     # raise Exception("load_records_to_redis")

@@ -25,7 +25,7 @@ def get_tasks():
     test_url = url_for("api_g5.test_tasks")
 
     if not batch_id:
-        tasks = Task.query.all()
+        tasks = Task.query.order_by(Task.id.desc()).limit(5).all()
 
         for t in tasks:
             t.state_track = get_status(batch_id=t.task_id,parent_id=t.task_id)

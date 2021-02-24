@@ -84,7 +84,8 @@ class TaskStatusTree:
         else:
             node_to_attach_to = self.find_node_by_sub_id(parent_id)
             if not node_to_attach_to:
-                raise Exception("cannot find parent node to attach <%s> to"%new_node)
+                pass
+                # raise Exception("cannot find parent node to attach <%s> to"%new_node)  # todo  如果中间记录丢失怎么办？
             else:
                 node_to_attach_to.children.append(new_node)
                 new_node.parent = node_to_attach_to
