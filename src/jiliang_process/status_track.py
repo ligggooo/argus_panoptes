@@ -14,6 +14,8 @@ class TaskTrackingRecord(db.Model):
     timestamp = db.Column(db.Float, nullable=False, unique=False)
     desc = db.Column(db.String(1024), nullable=True, unique=False)
 '''
+from jiliang_process.process_monitor import ProcessState
+
 
 class StatusRecord:
     # 模仿适配falsk ORM对象
@@ -37,10 +39,13 @@ class StatusNode:
         self.sub_id = sub_id
         self.tag = tag
         self.records = []
-        self.status = None
+        self.status = None # 节点日志中反映出的完成情况
+        self.desc = None
+        self.sub_success_rate = [0, 0] # 子节点日志中反映出的完成情况( 完成数/总数 )
 
     def __repr__(self):
-        return "%s<%s>%s"%(self.tag,self.sub_id,self.status)
+        return "%s<%s>%s<%d/%d>"%(self.tag,self.sub_id,self.status.name, self.sub_success_rate[0], self.sub_success_rate[1])
+
 
     @staticmethod
     def create_node_from_record(record):
@@ -66,7 +71,7 @@ class TaskStatusTree:
 
     def find_node_by_parent_id(self, parent_id):
         if parent_id is None:
-            return self.root
+            return [self.root]
         parent_node = self.find_node_by_sub_id(parent_id)
         if not parent_id:
             return []
@@ -82,6 +87,7 @@ class TaskStatusTree:
                 raise Exception("cannot find parent node to attach <%s> to"%new_node)
             else:
                 node_to_attach_to.children.append(new_node)
+                new_node.parent = node_to_attach_to
 
     def add_record(self, record):
         if not self.root:
@@ -99,12 +105,26 @@ class TaskStatusTree:
         t = TaskStatusTree()
         for r in records:
             t.add_record(r)
+        # 后续遍历树
         stack = [t.root]
+        stack_rev = []
         while stack:
-            tmp = stack.pop(0)
-            tmp.status = status_merger(tmp.records)
-            if len(tmp.children) >0:
+            tmp = stack.pop()
+            tmp.status,tmp.desc = status_merger(tmp.records)
+            stack_rev.append(tmp)
+            if tmp.children:
                 stack.extend(tmp.children)
+        for node in reversed(stack_rev): # 从后往前，先序遍历，刷新
+            if not node.children:
+                if node.status==ProcessState.finished:
+                    node.sub_success_rate = [1, 1]
+                else:
+                    node.sub_success_rate = [0, 1]
+            if not node.parent:
+                continue
+            node.parent.sub_success_rate[1] += 1
+            if node.sub_success_rate[0]==node.sub_success_rate[1]:
+                node.parent.sub_success_rate[0] += 1
         return t
 
 if __name__ == "__main__":
