@@ -172,6 +172,7 @@ def rm_deployments():
                                                     container.container_raw_id, cmd)
     obj.delete()
     sess.commit()
+    sess.close()
     # 容器清理逻辑，需要每个服务包配置一个install一个uninstall脚本
 
 

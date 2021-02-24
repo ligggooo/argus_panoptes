@@ -13,7 +13,7 @@ api_group5 = Blueprint("api_g5",__name__)
 scheduler = APScheduler()
 # 定时任务周期性地读取数据库,将分析结果读入redis
 scheduler.add_job(func=load_records_to_redis, id="load_records_to_redis", args=(), trigger='interval',
-                  seconds=15, replace_existing=True)
+                  seconds=5, replace_existing=True)
 scheduler.start()
 # get_task 从redis中读取分析结果，呈现到前端
 
@@ -22,6 +22,8 @@ def get_tasks():
     batch_id = request.args.get("batch_id")
     parent_id = request.args.get("parent_id")
 
+    test_url = url_for("api_g5.test_tasks")
+
     if not batch_id:
         tasks = Task.query.all()
 
@@ -29,7 +31,7 @@ def get_tasks():
             t.state_track = get_status(batch_id=t.task_id,parent_id=t.task_id)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks",batch_id=t.task_id,parent_id=b.parent_id)
-        return render_template("tasks.html", tasks=tasks)
+        return render_template("tasks.html", tasks=tasks,test_url=test_url)
     else:
         tasks = get_tasks_from_redis(batch_id=batch_id,parent_id=parent_id)
         for t in tasks:
@@ -37,7 +39,7 @@ def get_tasks():
             t.state_track = get_status(batch_id=batch_id,parent_id=t.sub_id)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks",batch_id=batch_id, parent_id=b.parent_id)
-        return render_template("tasks.html", tasks=tasks)
+        return render_template("tasks.html", tasks=tasks,test_url=test_url)
 
 
 @api_group5.route('/record_tasks', methods=['POST', "GET"])
@@ -49,5 +51,20 @@ def record_tasks():
     print(new_obj)
     sess = db.session()
     sess.add(new_obj)
-    sess.commit()
+    try:
+        sess.commit()
+    except Exception as e:
+        print(data)
+        raise e
+    sess.close()
     return "ok"
+
+
+@api_group5.route('/tasks_start_test', methods=['POST'])
+def test_tasks():
+    from jiliang_process.pm_test import test_main
+    import multiprocessing
+    p=multiprocessing.Process(target=test_main,args=())
+    p.start()
+    msg = {"status": "success", "info": "测试任务已经启动"}
+    return json.dumps(msg)

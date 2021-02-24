@@ -69,6 +69,7 @@ def add_products():
                 sess = db.session()
                 sess.add(new_soft_pack)
                 sess.commit()
+                sess.close()
             else:
                 print(new_soft_pack, "exists")
                 msg['status'] = "fail"
@@ -92,6 +93,7 @@ def rm_products():
     sess = db.session()
     sess.query(SoftPackage).filter(SoftPackage.spid == num).delete()
     sess.commit()
+    sess.close()
     msg = {"status": "success","target_url":url_for("api_g1.get_products")}
     return json.dumps(msg)
 
@@ -136,6 +138,7 @@ def edit_products(num):
     this_page = url_for("api_g1.edit_products", num=num)
     dest_page = url_for("api_g1.get_products")
     old_sp = sess.query(SoftPackage).filter(SoftPackage.spid == num).all()[0]
+    sess.close()
     return render_template("products_add_edit.html", url_for_post=this_page, success_url=dest_page,old_sp=old_sp)
 
 

@@ -38,6 +38,7 @@ def get_images():
         new_obj1.tr_class = "info"
         members.append(new_obj1)
     sess.commit()
+    sess.close()
     for m in members:
         m.edit_url = url_for("api_g3.edit_images", num=m.id)
         m.url_containers = url_for("api_g3.get_containers", image_id=m.id)

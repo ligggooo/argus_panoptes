@@ -28,6 +28,7 @@ class StatePoint(enum.Enum):
 
 
 class ProcessState(enum.Enum):
+    unknown = -3
     record_incomplete = -2
     not_started_yet = -1
     running = 0
@@ -242,7 +243,7 @@ class ProcessMonitor:
     def manual_log(self, id, state,desc="",name="root",batch_id=None):
         self.logger.info(call_category=CallCategory.cross_process.value, sub_id=id,
                          parent_id=None,batch_id=batch_id,
-                         name=name,desc= desc,
+                         name=name,desc= desc[-1000:],
                          state=state)
 
 class Unique_id:

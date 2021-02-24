@@ -5,7 +5,7 @@ import time
 
 @task_monitor.normal_task_deco
 def A():
-    time.sleep(120)
+    time.sleep(1)
     raise Exception("test exception")
     return "A"
 

@@ -71,3 +71,4 @@ if __name__ == "__main__":
     sess.add(new_obj2)
     sess.add(new_obj3)
     sess.commit()
+    sess.close()

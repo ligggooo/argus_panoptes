@@ -52,5 +52,6 @@ if __name__ == "__main__":
         sess = db.session()
         sess.add(new_soft_pack)
         sess.commit()
+        sess.close()
         print(dir(new_soft_pack))
     print(SoftPackage.query.all())

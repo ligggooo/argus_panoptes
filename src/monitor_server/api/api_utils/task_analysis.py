@@ -1,4 +1,4 @@
-from models.model_006_tasks import TaskTrackingRecord, Task
+from models.model_006_tasks import TaskTrackingRecord, Task, db
 from jiliang_process.process_monitor import CallCategory,StatePoint,ProcessState
 from jiliang_process.status_track import TaskStatusTree,StatusNode
 import pickle
@@ -108,6 +108,8 @@ def load_records_to_redis():
         task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.batch_id==t.task_id).all()
         records[t.task_id] = task_records
     pickle.dump(records, open(os.path.join(_tmp_dir,"task_record.dat"), "wb"))
+    db.session.commit()
+    db.session.remove()
     return records
 
 def get_records_for_test():
@@ -129,6 +131,10 @@ def build_task_status_tree():
 
 
 def build_graph_node(x):
+    if x is None:
+        block = GraphBlock(type='E', content="无记录", html_class="btn-default")
+        block.parent_id = "-12"
+        return block
     if not isinstance(x, StatusNode):
         raise Exception("only build_graph_node(StatusNode)")
     success,total = x.sub_success_rate
@@ -141,6 +147,8 @@ def build_graph_node(x):
 
 def get_status(batch_id, parent_id=None, tag="root"):
     tree = build_task_status_tree().get(batch_id)
+    if not tree:
+        return [build_graph_node(None)]
     res = tree.find_node_by_parent_id(parent_id)
     if not res:
         res = [tree.find_node_by_sub_id(parent_id)]
@@ -150,6 +158,8 @@ def get_status(batch_id, parent_id=None, tag="root"):
 
 def get_tasks_from_redis(batch_id, parent_id=None):
     tree = build_task_status_tree().get(batch_id)
+    if not tree:
+        return None
     res = tree.find_node_by_parent_id(parent_id)
     return res
 

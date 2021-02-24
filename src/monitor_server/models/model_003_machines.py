@@ -49,6 +49,7 @@ def init_machines():
         sess = db.session()
         sess.add(new_obj)
         sess.commit()
+        sess.close()
         print(dir(new_obj))
     print(Machine.query.all())
 

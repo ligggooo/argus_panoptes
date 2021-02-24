@@ -39,7 +39,7 @@ class StatusNode:
         self.sub_id = sub_id
         self.tag = tag
         self.records = []
-        self.status = None # 节点日志中反映出的完成情况
+        self.status = ProcessState.unknown # 节点日志中反映出的完成情况
         self.desc = None
         self.sub_success_rate = [0, 0] # 子节点日志中反映出的完成情况( 完成数/总数 )
 
@@ -103,6 +103,8 @@ class TaskStatusTree:
     @staticmethod
     def build_from_records(records,status_merger):
         t = TaskStatusTree()
+        if not records:
+            return None
         for r in records:
             t.add_record(r)
         # 后续遍历树

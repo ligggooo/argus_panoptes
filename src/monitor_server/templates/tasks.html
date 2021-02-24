@@ -28,8 +28,8 @@
 
     {% block contents %}
       <h2 class="sub-header">任务列表
-        <!--<a href="[[url_for_add]]" class="btn btn-success btn-sm" aria-label="Left Align" style="margin-left:30px">-->
-                    <!--新增项目<span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>-->
+        <button class="btn btn-warning btn-sm" aria-label="Left Align" style="margin-left:30px" id="test-btn">
+                    启动测试任务<span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
       </h2>
       <div class="table-responsive">
       <table class="table table-striped">
@@ -77,19 +77,18 @@
     </div>
   <script>
             $(document).ready(function() {
-                $(".remove-btn").click(function (e) {
-                    let res=confirm("remove " + $(this).val());
+                $("#test-btn").click(function (e) {
+                    let res=confirm("启动测试任务");
                     let post_data={
-                      "remove":$(this).val(),
+                      "test":$(this).val(),
                     };
                     if(res){
-                      $.post("[[url_for_rm_post]]",
+                      $.post("[[test_url]]",
                               post_data,
                               function(ret_data,status){
                         console.log(ret_data);
                         console.log(status);
                         ret_data = JSON.parse(ret_data);
-                        $(location).attr("href",ret_data.target_url);
                       });
                     }
                 });

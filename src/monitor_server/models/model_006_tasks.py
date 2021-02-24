@@ -5,7 +5,7 @@ from jiliang_process.process_monitor import CallCategory,StatePoint
 
 class TaskTrackingRecord(db.Model):
     __tablename__ = "task_track"
-    __table_args__ = ()
+    __table_args__ = {"extend_existing":True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     sub_id = db.Column(db.String(128), nullable=False, unique=False)
     parent_id = db.Column(db.String(128), nullable=True, unique=False)
@@ -30,7 +30,7 @@ class TaskTrackingRecord(db.Model):
 
 class Task(db.Model):
     __tablename__ = "task"
-    __table_args__ = ()
+    __table_args__ = {"extend_existing":True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     task_id = db.Column(db.String(128), nullable=False, unique=False)
     desc = db.Column(db.String(256), nullable=False, unique=False)

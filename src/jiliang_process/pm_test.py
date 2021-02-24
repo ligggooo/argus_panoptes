@@ -37,6 +37,14 @@ def main2(sub_id, parent_id="",batch_id=None):  # 跨系统调用关联
     print(c)
 
 def call(id): # 模拟jiliang系统调用语义脚本的过程
+    from monitor_server.models.model_006_tasks import db
+    db.metadata.clear()
+    from monitor_server.models.model_006_tasks import Task
+    new_task = Task(task_id=id,desc="测试任务")
+    sess = db.session()
+    sess.add(new_task)
+    sess.commit()
+    sess.close()
     task_monitor.manual_log(id=id, state=StatePoint.start.value,batch_id=id)
     try:
         main(sub_id="1", parent_id=id, batch_id=id)
@@ -48,5 +56,9 @@ def call(id): # 模拟jiliang系统调用语义脚本的过程
     task_monitor.manual_log(id=id, state=StatePoint.end.value,batch_id=id)
 
 
-call("20200413004000_20201110232523_20201114112585")
-call("20200413004000_20201110232523_20201114112586")
+def test_main():
+    import uuid
+    id1 = str(uuid.uuid4())
+    call(id1)
+    id2 = str(uuid.uuid4())
+    call(id2)
