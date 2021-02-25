@@ -40,8 +40,8 @@ class StatusNode:
         self.tag = tag
         self.records = []
         self.status = ProcessState.unknown # 节点日志中反映出的完成情况
-        self.desc = None
         self.sub_success_rate = [0, 0] # 子节点日志中反映出的完成情况( 完成数/总数 )
+        self.desc = None
 
     def __repr__(self):
         return "%s<%s>%s<%d/%d>"%(self.tag,self.sub_id,self.status.name, self.sub_success_rate[0], self.sub_success_rate[1])

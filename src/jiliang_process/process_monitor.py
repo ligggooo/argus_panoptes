@@ -84,7 +84,7 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 this_id = Unique_id.get()
-                parent_node, this_node = self.id_tree_grow(func, this_id)
+                parent_node, this_node = self.id_tree_grow(func, this_id) # 发起任务，id树生长，id树指针下移
                 parent_id = parent_node.this_id
 
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
