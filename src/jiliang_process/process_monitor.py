@@ -1,6 +1,7 @@
 from functools import wraps
 from jiliang_process.process_logger import get_logger,get_web_logger
 from jiliang_process.call_track import IdTree
+from jiliang_process.process_monitor_types import *
 import threading
 import traceback
 import enum
@@ -21,50 +22,26 @@ class todo:
         return wrapper
 
 
-class StatePoint(enum.Enum):
-    start = 0
-    end = 1
-    error = 2
 
-
-class ProcessState(enum.Enum):
-    unknown = -3
-    record_incomplete = -2
-    not_started_yet = -1
-    running = 0
-    # running_with_error = 0
-    finished = 1
-    # finished_with_error = 2
-    failed = 2
-    partially_finished = 3
-
-
-class CallCategory(enum.Enum):
-    root = -1
-    normal = 0
-    # loop = 1
-    cross_thread = 2
-    cross_process = 3
-    # branch = 4
 
 
 
 
 
 class ProcessMonitor:
-    def __init__(self, sub_id=None,parent_id=None):
+    def __init__(self, sub_id=None, parent_id=None, web_logger=True):
         # self.sub_id = sub_id
         # self.parent_id = parent_id
-        # self.logger = get_logger()
-        self.logger = get_web_logger()
+        self.logger = get_web_logger() if web_logger else get_logger()
         # self.index_holder = {}
-        self.normal_task_deco = self.normal_task()
+        self.normal_task_deco = self._normal_task()
         # self.loop_task_deco = self.loop_task()
         # self.concurrent_task_deco = self.concurrent_task()
-        self.call_stack_tree = None
+        self.call_stack_tree = IdTree(parent_id, sub_id, tag="main")
         self.current_call_stack_node = None
         self.main_thread_id = threading.current_thread().ident
         self.batch_id = None
+        self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree._root}
 
     def _re_init(self,sub_id, parent_id, batch_id, root_tag_name):
         # self.sub_id = sub_id
@@ -102,7 +79,7 @@ class ProcessMonitor:
         return parent_node,this_node_in_id_tree
         # id树生长 -------
 
-    def normal_task(self):
+    def _normal_task(self):
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -134,40 +111,6 @@ class ProcessMonitor:
             return wrapper
 
         return deco
-
-    # def loop_task(self):
-    #     def deco(func):
-    #         self.index_holder[func.__name__] = 0
-    #
-    #         @wraps(func)
-    #         def wrapper(*args, **kwargs):
-    #             self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-    #                              state=StatePoint.start.value,
-    #                              index=self.index_holder[func.__name__])
-    #             res = func(*args, **kwargs)
-    #             self.logger.info(call_category=CallCategory.loop.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-    #                              state=StatePoint.end.value,
-    #                              index=self.index_holder[func.__name__])
-    #             self.index_holder[func.__name__] += 1
-    #             return res
-    #         return wrapper
-    #     return deco
-
-    # def concurrent_task(self):
-    #     def deco(func):
-    #         @wraps(func)
-    #         def wrapper(*args, **kwargs):
-    #             this_id = Unique_id.get()
-    #             self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-    #                              state=StatePoint.start.value,
-    #                              index=this_id)
-    #             res = func(*args, **kwargs)
-    #             self.logger.info(call_category=CallCategory.concurrent.value, sub_id=self.sub_id, parent_id=self.parent_id, name=func.__name__,
-    #                              state=StatePoint.end.value,
-    #                              index=this_id)
-    #             return res
-    #         return wrapper
-    #     return deco
 
     def cross_thread_deco(self, name):
         def deco(func):
@@ -201,7 +144,6 @@ class ProcessMonitor:
             return wrapper
         return deco
         pass
-
 
     def cross_process_deco(self, name):
         def deco(func):
@@ -264,5 +206,6 @@ class Unique_id:
     def reset():
         Unique_id._unique_id = 0
 
-task_monitor = ProcessMonitor(sub_id="default")
+
+task_monitor = ProcessMonitor(sub_id="default", web_logger=False)
 

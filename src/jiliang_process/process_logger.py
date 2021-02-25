@@ -7,6 +7,8 @@ from datetime import datetime
 import json
 import time
 
+from jiliang_process.process_monitor_types import *
+
 
 class MyFileLogger:
     def __init__(self, file_name):
@@ -24,7 +26,12 @@ class MyFileLogger:
         self.logger.addHandler(sh)
 
     def info(self, **kwargs):
-        msg = json.dumps(kwargs)
+        kwargs["state"] = StatePoint(kwargs.get("state")).name
+        kwargs["call_category"] = CallCategory(kwargs.get("call_category")).name
+        # {"call_category": "normal", "sub_id": 3, "parent_id": 1, "name": "normal_task_sleeps", "batch_id": null,
+        #  "state": "start", "desc": ""}
+        msg = "{0} {1}".format(kwargs["name"],kwargs["state"])
+        # msg = json.dumps(kwargs)
         self.logger.info(msg)
 
 
