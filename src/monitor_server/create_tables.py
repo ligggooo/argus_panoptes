@@ -1,10 +1,15 @@
-from monitor_server import db
-from models.model_001_test import ProcessState
-from models.model_002_package import SoftPackage
+'''
 
+'''
+from monitor_server import db
 
 
 def create_all():
+    '''
+
+    :return:
+    '''
     db.create_all()
+
 
 create_all()
