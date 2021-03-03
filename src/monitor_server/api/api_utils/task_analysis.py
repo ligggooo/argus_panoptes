@@ -31,7 +31,7 @@ status_graph = {
             "parent": ("main", "B", CallCategory.normal),
             # (parent_graph, node_name_in_parent_graph, how_sub_graph_is_called)
             "nodes": [(0, 0, 'B_s0'), (1, 1, 'B_s1')],
-            "edges": [(0, 1, "D", CallCategory.loop)],
+            "edges": [(0, 1, "D", CallCategory.normal)],
         },
         "C": {
             "parent": ("main", "C", CallCategory.normal),
