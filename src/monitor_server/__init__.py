@@ -21,5 +21,3 @@ db = SQLAlchemy(app)
 
 
 
-
-

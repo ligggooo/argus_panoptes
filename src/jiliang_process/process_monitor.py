@@ -1,4 +1,8 @@
+import json
 from functools import wraps
+
+import requests
+
 from jiliang_process.process_logger import get_logger,get_web_logger
 from jiliang_process.call_track import IdTree
 from jiliang_process.process_monitor_types import *
@@ -6,6 +10,7 @@ import threading
 import traceback
 import enum
 import threading
+from monitor_server.settings.conf import config
 
 
 
@@ -40,13 +45,13 @@ class ProcessMonitor:
         self.call_stack_tree = IdTree(parent_id, sub_id, tag="main")
         self.current_call_stack_node = None
         self.main_thread_id = threading.current_thread().ident
-        self.batch_id = None
+        self.root_id = None
         self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree._root}
 
-    def _re_init(self,sub_id, parent_id, batch_id, root_tag_name):
+    def _re_init(self,sub_id, parent_id, root_id, root_tag_name):
         # self.sub_id = sub_id
         # self.parent_id = parent_id
-        self.batch_id = batch_id
+        self.root_id = root_id
         self.call_stack_tree = IdTree(parent_id, sub_id, tag=root_tag_name)
         self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree._root}
 
@@ -88,7 +93,7 @@ class ProcessMonitor:
                 parent_id = parent_node.this_id
 
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
-                                 name=func.__name__, batch_id=self.batch_id,
+                                 name=func.__name__, root_id=self.root_id,
                                  state=StatePoint.start.value, desc="")
                 try:
                     res = func(*args, **kwargs)
@@ -96,13 +101,13 @@ class ProcessMonitor:
                 except Exception as e:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
-                                     name=func.__name__, batch_id=self.batch_id,
+                                     name=func.__name__, root_id=self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 id树指针上移
                     self.set_current_call_stack_node(parent_node)
                     raise e
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id, parent_id=parent_id,
-                                 name=func.__name__, batch_id=self.batch_id,
+                                 name=func.__name__, root_id=self.root_id,
                                  state=StatePoint.end.value, desc="")
                 #   任务成功 id树指针上移
                 self.set_current_call_stack_node(parent_node)
@@ -121,7 +126,7 @@ class ProcessMonitor:
                 parent_id = parent_node.this_id
                 print(threading.current_thread().ident, threading.current_thread().name)
                 self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
-                                 parent_id=parent_id,batch_id =self.batch_id,
+                                 parent_id=parent_id,root_id =self.root_id,
                                  name=name,
                                  state=StatePoint.start.value)
                 try:
@@ -129,13 +134,13 @@ class ProcessMonitor:
                 except Exception as e:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id, parent_id=parent_id,
-                                     name=name,batch_id =self.batch_id,
+                                     name=name,root_id =self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 id树指针上移
                     self.set_current_call_stack_node(parent_node)
                     raise e
                 self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
-                                 parent_id=parent_id,batch_id =self.batch_id,
+                                 parent_id=parent_id,root_id =self.root_id,
                                  name=name,
                                  state=StatePoint.end.value)
                 # 任务完成 id树指针上移
@@ -149,12 +154,12 @@ class ProcessMonitor:
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                parent_id, batch_id = ProcessMonitor.get_parent_id(kwargs)
+                parent_id, root_id = ProcessMonitor.make_connection_between_processes(kwargs)
                 this_id = Unique_id.get()
-                self._re_init(this_id, parent_id,batch_id, func.__name__)  # 任务拆分跨系统调用，需要用这种方式人工建立关联
+                self._re_init(this_id, parent_id,root_id, func.__name__)  # 任务拆分跨系统调用，需要用这种方式人工建立关联
                 self.id_tree_grow(func,this_id)
                 self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
-                                 parent_id=parent_id, batch_id =self.batch_id,
+                                 parent_id=parent_id, root_id =self.root_id,
                                  name=name,
                                  state=StatePoint.start.value)
                 try:
@@ -162,13 +167,45 @@ class ProcessMonitor:
                 except Exception as e:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id, parent_id=parent_id,
-                                     name=name,batch_id =self.batch_id,
+                                     name=name,root_id =self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 此子进程直接退出，id树不需要再维护了
                     self.current_call_stack_node = None
                     raise e
                 self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
-                                 parent_id=parent_id, batch_id =self.batch_id,
+                                 parent_id=parent_id, root_id =self.root_id,
+                                 name=name,
+                                 state=StatePoint.end.value)
+                return res
+            return wrapper
+        return deco
+
+    def root_deco(self, name, root_tag_varname=None):
+        def deco(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                this_id = Unique_id.get()
+                root_tag = ProcessMonitor.get_root_tag(kwargs, root_tag_varname)
+                if not root_tag:
+                    root_tag = this_id
+                self._re_init(sub_id=this_id, parent_id=None, root_id=this_id, root_tag_name=func.__name__)
+                self.id_tree_grow(func,this_id)
+                self.logger.info(call_category=CallCategory.root.value, sub_id=this_id,
+                                 parent_id=None, root_id=self.root_id,
+                                 name=name, root_tag=root_tag,
+                                 state=StatePoint.start.value)
+                try:
+                    res = func(*args, **kwargs)
+                except Exception as e:
+                    err_msg = traceback.format_exc()
+                    self.logger.info(call_category=CallCategory.root.value, sub_id=this_id, parent_id=None,
+                                     name=name, root_id=self.root_id,
+                                     state=StatePoint.error.value, desc=err_msg[-1000:])
+                    # 任务失败 此子进程直接退出，id树不需要再维护了
+                    self.current_call_stack_node = None
+                    raise e
+                self.logger.info(call_category=CallCategory.root.value, sub_id=this_id,
+                                 parent_id=None, root_id=self.root_id,
                                  name=name,
                                  state=StatePoint.end.value)
                 return res
@@ -176,17 +213,32 @@ class ProcessMonitor:
         return deco
 
     @staticmethod
-    def get_parent_id(in_dict):
-        if ("parent_id" not in in_dict) or ("batch_id" not in in_dict):
-            raise Exception("跨进程调用接口必须提供（parent_id）(batch_id)关键字参数，否则无法获得进程关系")
+    def make_connection_between_processes(in_dict):
+        if ("parent_id" not in in_dict) or ("root_id" not in in_dict):
+            raise Exception("跨进程调用接口必须提供（parent_id）(root_id)关键字参数，否则无法获得进程关系")
         else:
-            return in_dict["parent_id"], in_dict["batch_id"]
+            return in_dict["parent_id"], in_dict["root_id"]
 
-    def manual_log(self, id, state,desc="",name="root",batch_id=None):
-        self.logger.info(call_category=CallCategory.cross_process.value, sub_id=id,
-                         parent_id=None,batch_id=batch_id,
-                         name=name,desc= desc[-1000:],
-                         state=state)
+    @staticmethod
+    def get_root_tag(in_dict, root_tag_varname):
+        if not root_tag_varname:
+            return None
+        if root_tag_varname not in in_dict:
+            raise Exception("根任务标签必须是有效参数中的一个 %s "%in_dict.keys())
+        return str(in_dict[root_tag_varname])
+
+    @property
+    def current_id(self):
+        return self.get_current_call_stack_node().this_id
+
+
+    # def manual_log(self, id, state,desc="",name="root",root_id=None):
+    #     self.logger.info(call_category=CallCategory.cross_process.value, sub_id=id,
+    #                      parent_id=None,root_id=root_id,
+    #                      name=name,desc= desc[-1000:],
+    #                      state=state)
+
+
 
 class Unique_id:
     '''
@@ -197,15 +249,20 @@ class Unique_id:
 
     @staticmethod
     def get():
-        with Unique_id._lock:
-            ret = Unique_id._unique_id
-            Unique_id._unique_id += 1
-        return ret
+        # with Unique_id._lock:
+        #     ret = Unique_id._unique_id
+        #     Unique_id._unique_id += 1
+        # return ret
+        res = requests.get(url=config.TASK_UNIQUE_ID_URL)
+        data = json.loads(res.content)
+        id = data["task_unique_id"]
+        return id
+
 
     @staticmethod
     def reset():
         Unique_id._unique_id = 0
 
 
-task_monitor = ProcessMonitor(sub_id="default", web_logger=False)
+task_monitor = ProcessMonitor(sub_id="default", web_logger=True)
 

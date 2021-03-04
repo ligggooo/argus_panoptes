@@ -50,7 +50,7 @@ def normal_task_sleeps(x):
     return "D%d"%x
 
 @task_monitor.cross_process_deco("test_cross_process")
-def xp_test(parent_id,batch_id):
+def xp_test(parent_id, root_id):
     try:
         normal_task_throws_exception()
     except Exception as e:

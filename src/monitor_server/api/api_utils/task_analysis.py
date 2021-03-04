@@ -4,7 +4,7 @@ from jiliang_process.status_track import TaskStatusTree,StatusNode
 import pickle
 from operation_utils.file import get_tmp_data_dir,get_data_dir
 import os
-
+from monitor_server.settings.conf import config
 _tmp_dir = get_tmp_data_dir()
 
 class GraphBlock:
@@ -84,15 +84,19 @@ def merge_status(records, multi_task = False, regroup_index="index"):
     '''
     desc = ""
     if len(records) == 0:
+        desc = "尚无记录"
         return ProcessState.not_started_yet,desc
     if len(records) >= 1 and (not start_exists(records)):
+        desc = "记录不完整"
         return ProcessState.record_incomplete,desc
     if len(records) == 1 and start_exists(records):
+        desc = "running"
         return ProcessState.running,desc
     error,desc = error_exists(records)
     if error:
         return ProcessState.failed, desc
     if end_exists(records):
+        desc = "完成"
         return ProcessState.finished,desc
 
 
@@ -102,29 +106,45 @@ def load_records_to_redis():
     print("load_records_to_redis")
     # raise Exception("load_records_to_redis")
     for t in tasks:
-        # root_task_records = TaskTrackingRecord.query.filter_by(sub_id=t.task_id).all()
-        task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.batch_id==t.task_id).all()
-        records[t.task_id] = task_records
+        # root_task_records = TaskTrackingRecord.query.filter_by(sub_id=t.root_id).all()
+        task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.root_id==t.root_id).all()
+        records[t.root_id] = task_records
     pickle.dump(records, open(os.path.join(_tmp_dir,"task_record.dat"), "wb"))
     db.session.commit()
     db.session.remove()
     return records
 
+
+def get_records():
+    tasks = Task.query.order_by(Task.id.desc()).limit(6).all()
+    records = {}
+    print("load_records_to_redis")
+    # raise Exception("load_records_to_redis")
+    for t in tasks:
+        # root_task_records = TaskTrackingRecord.query.filter_by(sub_id=t.root_id).all()
+        task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.root_id == t.root_id).all()
+        records[t.root_id] = task_records
+    return records
+
+
 def get_records_for_test():
-    records = pickle.load(open(os.path.join(_tmp_dir,"task_record.dat"), 'rb'))
-    # records = get_records()
-    for batch_id in records:
-        records = records[batch_id]
+    if config.TASK_TRACK_CACHE:
+        records = pickle.load(open(os.path.join(_tmp_dir,"task_record.dat"), 'rb'))
+    else:
+        records = get_records()
+    for root_id in records:
+        records = records[root_id]
         return records
 
+
 def build_task_status_tree():
-    records = pickle.load(open(os.path.join(_tmp_dir,"task_record.dat"), 'rb'))
-    # records = get_records()
+    #records = pickle.load(open(os.path.join(_tmp_dir,"task_record.dat"), 'rb'))
+    records = get_records()
     res = {}
-    for batch_id in records:
-        batch_records = records[batch_id]
+    for root_id in records:
+        batch_records = records[root_id]
         status_tree = TaskStatusTree.build_from_records(batch_records, status_merger=merge_status)
-        res[batch_id] = status_tree
+        res[root_id] = status_tree
     return res
 
 
@@ -143,8 +163,8 @@ def build_graph_node(x):
     block.parent_id = x.parent_id
     return block
 
-def get_status(batch_id, parent_id=None, tag="root"):
-    tree = build_task_status_tree().get(batch_id)
+def get_status(root_id, parent_id=None, tag="root"):
+    tree = build_task_status_tree().get(root_id)
     if not tree:
         return [build_graph_node(None)]
     res = tree.find_node_by_parent_id(parent_id)
@@ -152,18 +172,18 @@ def get_status(batch_id, parent_id=None, tag="root"):
         res = [tree.find_node_by_sub_id(parent_id)]
 
     res2 = [build_graph_node(x) for x in res]
-    return res2
+    return res2, tree.root.desc
 
-def get_tasks_from_redis(batch_id, parent_id=None):
-    tree = build_task_status_tree().get(batch_id)
+def get_tasks_from_redis(root_id, parent_id=None):
+    tree = build_task_status_tree().get(root_id)
     if not tree:
         return None
     res = tree.find_node_by_parent_id(parent_id)
     return res
 
 if __name__ == "__main__":
-    batch_id = "20200413004000_20201110232523_20201114112585"
-    get_status(batch_id=batch_id)
-    get_status(parent_id=batch_id)
+    root_id = "832"
+    # get_status(root_id=root_id)
+    get_status(root_id=root_id, parent_id="832")
     # s = get_status(sub_id="20200413004000_20201110232523_20201114112585", parent_id=None, tag="root")
     # print(s)

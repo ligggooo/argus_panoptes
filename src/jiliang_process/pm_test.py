@@ -9,7 +9,7 @@ __version__ = "语义算法v 1.0.0"
 
 
 @task_monitor.cross_process_deco(__version__)
-def main(sub_id, parent_id="",batch_id=None):  # 跨系统调用关联
+def sa_celery_main(sub_task, parent_id="",root_id=None):  # 跨系统调用关联
     try:
         a = normal_task_throws_exception()
     except Exception as e:
@@ -18,14 +18,14 @@ def main(sub_id, parent_id="",batch_id=None):  # 跨系统调用关联
     b = normal_task_with_a_loop(a)
     c = normal_task_starts_multiple_threads(b)
     try:
-        xp_test(parent_id=task_monitor.get_current_call_stack_node().this_id,batch_id=batch_id)
+        xp_test(parent_id=task_monitor.get_current_call_stack_node().this_id,root_id=root_id)
     except Exception as e:
         print(e)
         raise e
     print(c)
 
 @task_monitor.cross_process_deco(__version__)
-def main2(sub_id, parent_id="",batch_id=None):  # 跨系统调用关联
+def main2(sub_id, parent_id="",root_id=None):  # 跨系统调用关联
     try:
         a = normal_task_throws_exception()
     except Exception as e:
@@ -36,32 +36,23 @@ def main2(sub_id, parent_id="",batch_id=None):  # 跨系统调用关联
 
     print(c)
 
-def call(id): # 模拟jiliang系统调用语义脚本的过程
-    from monitor_server.models.model_006_tasks import db
-    db.metadata.clear()
-    from monitor_server.models.model_006_tasks import Task
-    new_task = Task(task_id=id,desc="测试任务")
-    sess = db.session()
-    sess.add(new_task)
-    sess.commit()
-    sess.close()
-    task_monitor.manual_log(id=id, state=StatePoint.start.value, batch_id=id)
-    try:
-        main(sub_id="1", parent_id=id, batch_id=id)
-        main(sub_id="2", parent_id=id, batch_id=id)
-        main(sub_id="3", parent_id=id, batch_id=id)
-    except Exception as e:
-        task_monitor.manual_log(id=id, state=StatePoint.error.value, batch_id=id, desc=traceback.format_exc())
-        raise e
-    task_monitor.manual_log(id=id, state=StatePoint.end.value, batch_id=id)
+
+@task_monitor.root_deco("根任务", "batch_id")
+def call(batch_id): # 模拟jiliang启动一个batch之后，发起了三个子任务
+    sa_celery_main(sub_task="1", parent_id=task_monitor.current_id, root_id=task_monitor.root_id)
+    sa_celery_main(sub_task="2", parent_id=task_monitor.current_id, root_id=task_monitor.root_id)
+    sa_celery_main(sub_task="3", parent_id=task_monitor.current_id, root_id=task_monitor.root_id)
 
 
 def test_main():
     import uuid
-    id1 = str(uuid.uuid4())
-    call(id1)
-    id2 = str(uuid.uuid4())
-    call(id2)
+    # 假设这个就是一个批量往rabbit_mq发消息的脚本
+    # 批量发了两个batch，后一个发了两次
+    id1 = "batch 001"
+    call(batch_id=id1)
+    id2 = "batch 002"
+    call(batch_id=id2)
+    call(batch_id=id2)
 
 
 
@@ -78,4 +69,6 @@ def test_main_single_machine_multiple_threads():
 
 # test_main_single_machine_single_thread()
 
-test_main_single_machine_multiple_threads()
+
+# 假设这个就是一个批量往rabbit_mq发消息的脚本
+test_main()

@@ -1,14 +1,20 @@
+import threading
+
 from flask import Blueprint,request,url_for,render_template
 import os
 import json
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from api.api_utils.task_analysis import get_status, get_tasks_from_redis, load_records_to_redis
+
+from jiliang_process.process_monitor_types import StatePoint
 from models.model_006_tasks import Task,TaskTrackingRecord
 from monitor_server import db
 from flask_apscheduler import APScheduler
 
 
 api_group5 = Blueprint("api_g5", __name__)
+
+
 
 # scheduler = APScheduler()
 # # 定时任务周期性地读取数据库,将分析结果读入redis
@@ -20,38 +26,48 @@ api_group5 = Blueprint("api_g5", __name__)
 
 @api_group5.route('/tasks', methods=['GET', 'POST'])
 def get_tasks():
-    batch_id = request.args.get("batch_id")
+    root_id = request.args.get("root_id")
     parent_id = request.args.get("parent_id")
 
     test_url = url_for("api_g5.test_tasks")
 
-    if not batch_id:
+    if not root_id:
         tasks = Task.query.order_by(Task.id.desc()).limit(5).all()
 
         for t in tasks:
-            t.state_track = get_status(batch_id=t.task_id,parent_id=t.task_id)
+            t.note = str(t)
+            t.state_track, t.desc = get_status(root_id=t.root_id,parent_id=t.root_id)
             for b in t.state_track:
-                b.url = url_for("api_g5.get_tasks",batch_id=t.task_id,parent_id=b.parent_id)
+                b.url = url_for("api_g5.get_tasks",root_id=t.root_id,parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks,test_url=test_url)
     else:
-        tasks = get_tasks_from_redis(batch_id=batch_id,parent_id=parent_id)
+        tasks = get_tasks_from_redis(root_id=root_id,parent_id=parent_id)
         for t in tasks:
-            t.task_id = str(t)
-            t.state_track = get_status(batch_id=batch_id,parent_id=t.sub_id)
+            t.note = str(t)
+            t.state_track, t.desc = get_status(root_id=root_id,parent_id=t.sub_id)
             for b in t.state_track:
-                b.url = url_for("api_g5.get_tasks",batch_id=batch_id, parent_id=b.parent_id)
+                b.url = url_for("api_g5.get_tasks",root_id=root_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks,test_url=test_url)
 
 
 @api_group5.route('/record_tasks', methods=['POST', "GET"])
 def record_tasks():
+    from jiliang_process.process_monitor import CallCategory
     raw_data = request.values['msg']
     print(raw_data)
     data = json.loads(raw_data)
-    new_obj = TaskTrackingRecord(**data)
-    print(new_obj)
+
+    root_tag = "unknown "
+    if "root_tag" in data:
+        root_tag = data.pop("root_tag")
+    new_task_track_obj = TaskTrackingRecord(**data)
+
+    print(new_task_track_obj)
     sess = db.session()
-    sess.add(new_obj)
+    sess.add(new_task_track_obj)
+    if new_task_track_obj.call_category == CallCategory.root.value and new_task_track_obj.state==StatePoint.start.value:
+        new_task_obj = Task(root_id=data.get("sub_id"), root_tag=root_tag, desc=data.get("desc"))
+        sess.add(new_task_obj)
     try:
         sess.commit()
     except Exception as e:
@@ -68,4 +84,13 @@ def test_tasks():
     p=multiprocessing.Process(target=test_main,args=())
     p.start()
     msg = {"status": "success", "info": "测试任务已经启动"}
+    return json.dumps(msg)
+
+
+
+@api_group5.route('/task_unique_id', methods=['GET'])
+def task_unique_id():
+    from monitor_server.api.api_utils.task_id_system import g_task_unique_id
+    id = g_task_unique_id.get_id()
+    msg = {"task_unique_id": id}
     return json.dumps(msg)
