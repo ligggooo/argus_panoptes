@@ -1,5 +1,7 @@
-from jiliang_process.process_monitor import task_monitor,StatePoint
-from jiliang_process.workloads import normal_task_throws_exception,normal_task_with_a_loop,normal_task_starts_multiple_threads,xp_test
+"""测试用任务"""
+
+from .process_monitor import task_monitor,StatePoint
+from .workloads import normal_task_throws_exception,normal_task_with_a_loop,normal_task_mult_threds,xp_test
 import traceback
 
 
@@ -16,7 +18,7 @@ def sa_celery_main(sub_task, parent_id="",root_id=None):  # 跨系统调用关�
         print(e)
         a = "error"
     b = normal_task_with_a_loop(a)
-    c = normal_task_starts_multiple_threads(b)
+    c = normal_task_mult_threds(b)
     try:
         xp_test(parent_id=task_monitor.get_current_call_stack_node().this_id,root_id=root_id)
     except Exception as e:
@@ -32,7 +34,7 @@ def main2(sub_id, parent_id="",root_id=None):  # 跨系统调用关联
         print(e)
         a = "error"
     b = normal_task_with_a_loop(a)
-    c = normal_task_starts_multiple_threads(b)
+    c = normal_task_mult_threds(b)
 
     print(c)
 
@@ -64,7 +66,7 @@ def test_main_single_machine_single_thread():
 
 @task_monitor.normal_task_deco
 def test_main_single_machine_multiple_threads():
-    normal_task_starts_multiple_threads("xxxx")
+    normal_task_mult_threds("xxxx")
     normal_task_throws_exception()
 
 # test_main_single_machine_single_thread()

@@ -1,14 +1,12 @@
+"""logger 模块 自定义了一个web logger"""
+
 import logging
-from logging import handlers
-from logging.handlers import HTTPHandler as Hh
-from logging import Formatter
 import requests
-from datetime import datetime
 import json
 import time
 
-from jiliang_process.process_monitor_types import *
-from monitor_server.settings.conf import config
+from .process_monitor_types import *
+from .settings import TASK_RECORDER_URL
 
 
 class MyFileLogger:
@@ -57,7 +55,7 @@ class HttpLogger:
         requests.post(self.url, data={"msg":msg})
 
 
-def get_web_logger(url=config.TASK_RECORDER_URL):
+def get_web_logger(url=TASK_RECORDER_URL):
     proc_mon_logger = HttpLogger(url)
     return proc_mon_logger
 

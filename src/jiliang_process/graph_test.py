@@ -1,4 +1,6 @@
-from jiliang_process.process_monitor import CallCategory
+"""状态转移图，测试用"""
+
+from .process_monitor import CallCategory
 
 '''
 1. a graph calls edges in different ways;

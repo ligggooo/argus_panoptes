@@ -1,4 +1,4 @@
-
+from jiliang_process.process_monitor import ProcessState
 
 '''
 class TaskTrackingRecord(db.Model):
@@ -14,8 +14,6 @@ class TaskTrackingRecord(db.Model):
     timestamp = db.Column(db.Float, nullable=False, unique=False)
     desc = db.Column(db.String(1024), nullable=True, unique=False)
 '''
-from jiliang_process.process_monitor import ProcessState
-
 
 class StatusRecord:
     # 模仿适配falsk ORM对象
@@ -163,6 +161,7 @@ class TaskStatusTree:
             if node.sub_success_rate[0]==node.sub_success_rate[1]:
                 node.parent.sub_success_rate[0] += 1
         return t
+
 
 if __name__ == "__main__":
     t = TaskStatusTree()

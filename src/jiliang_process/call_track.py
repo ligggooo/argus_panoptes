@@ -1,3 +1,4 @@
+"""调用树，monitor装饰器跟踪被监控代码时创建和维护"""
 
 
 class IdNode:
@@ -14,10 +15,10 @@ class IdNode:
 
 class IdTree:
     def __init__(self, parent_id, root_id,tag):
-        self._root = IdNode(parent_id, root_id,tag,)
+        self.root = IdNode(parent_id, root_id, tag, )
 
     def find(self,target_id):
-        stack = [self._root]
+        stack = [self.root]
         while stack:
             tmp = stack.pop(0)
             if tmp.this_id == target_id:
@@ -29,7 +30,7 @@ class IdTree:
 
     @property
     def parent_id(self):
-        return self._root.parent_id
+        return self.root.parent_id
 
     def append(self, parent_id, sub_id, tag=None):
         parent_node = self.find(parent_id)
