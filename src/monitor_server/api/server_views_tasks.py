@@ -1,20 +1,19 @@
 import threading
-
 from flask import Blueprint,request,url_for,render_template
-import os
+import sys
 import json
+from flask_apscheduler import APScheduler
+
+sys.path.append("..")
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from api.api_utils.task_analysis import get_status, get_tasks_from_redis, load_records_to_redis
 
 from jiliang_process.process_monitor_types import StatePoint
-from models.model_006_tasks import Task,TaskTrackingRecord
+from models.model_006_tasks import Task, TaskTrackingRecord
 from monitor_server import db
-from flask_apscheduler import APScheduler
 
 
 api_group5 = Blueprint("api_g5", __name__)
-
-
 
 # scheduler = APScheduler()
 # # 定时任务周期性地读取数据库,将分析结果读入redis
@@ -44,7 +43,7 @@ def get_tasks():
         tasks = get_tasks_from_redis(root_id=root_id,parent_id=parent_id)
         for t in tasks:
             t.note = str(t)
-            t.state_track, t.desc = get_status(root_id=root_id,parent_id=t.sub_id)
+            t.state_track, _ = get_status(root_id=root_id,parent_id=t.sub_id)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks",root_id=root_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks,test_url=test_url)
@@ -66,7 +65,7 @@ def record_tasks():
     sess = db.session()
     sess.add(new_task_track_obj)
     if new_task_track_obj.call_category == CallCategory.root.value and new_task_track_obj.state==StatePoint.start.value:
-        new_task_obj = Task(root_id=data.get("sub_id"), root_tag=root_tag, desc=data.get("desc"))
+        new_task_obj = Task(name=data.get("name"), root_id=data.get("sub_id"), root_tag=root_tag, desc=data.get("desc"))
         sess.add(new_task_obj)
     try:
         sess.commit()
@@ -85,7 +84,6 @@ def test_tasks():
     p.start()
     msg = {"status": "success", "info": "测试任务已经启动"}
     return json.dumps(msg)
-
 
 
 @api_group5.route('/task_unique_id', methods=['GET'])

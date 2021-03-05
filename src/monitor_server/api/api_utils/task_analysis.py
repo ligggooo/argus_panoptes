@@ -1,10 +1,17 @@
+import sys
+sys.path.append("../../")
 from models.model_006_tasks import TaskTrackingRecord, Task, db
-from jiliang_process.process_monitor import CallCategory,StatePoint,ProcessState
-from jiliang_process.status_track import TaskStatusTree,StatusNode
+
+
 import pickle
-from operation_utils.file import get_tmp_data_dir,get_data_dir
 import os
+
+from jiliang_process.process_monitor_types import CallCategory, StatePoint, ProcessState
+from jiliang_process.status_track import TaskStatusTree, StatusNode
+from operation_utils.file import get_tmp_data_dir, get_data_dir
 from monitor_server.settings.conf import config
+
+
 _tmp_dir = get_tmp_data_dir()
 
 class GraphBlock:

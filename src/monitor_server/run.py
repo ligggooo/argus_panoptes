@@ -1,9 +1,8 @@
-from flask import Flask, url_for
-from flask import render_template
-from flask import request
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+src_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(src_path)
+sys.path.append(os.path.join(src_path, "monitor_server"))
 
 from monitor_server import app
 

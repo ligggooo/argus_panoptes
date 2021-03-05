@@ -5,11 +5,14 @@ import requests
 import json
 import time
 
-from .process_monitor_types import *
+from .process_monitor_types import CallCategory,StatePoint
 from .settings import TASK_RECORDER_URL
 
 
 class MyFileLogger:
+    """
+    文件logger
+    """
     def __init__(self, file_name):
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
@@ -27,14 +30,18 @@ class MyFileLogger:
     def info(self, **kwargs):
         kwargs["state"] = StatePoint(kwargs.get("state")).name
         kwargs["call_category"] = CallCategory(kwargs.get("call_category")).name
-        # {"call_category": "normal", "sub_id": 3, "parent_id": 1, "name": "normal_task_sleeps", "root_id": null,
+        # {"call_category": "normal", "sub_id": 3, "parent_id": 1,
+        #  "name": "normal_task_sleeps", "root_id": null,
         #  "state": "start", "desc": ""}
-        msg = "{0} {1}".format(kwargs["name"],kwargs["state"])
+        msg = "{0} {1}".format(kwargs["name"], kwargs["state"])
         # msg = json.dumps(kwargs)
         self.logger.info(msg)
 
 
 class HttpLogger:
+    """
+        文件logger
+    """
     def __init__(self, url):
         proc_mon_logger = logging.getLogger()
         proc_mon_logger.setLevel(logging.INFO)
@@ -68,4 +75,3 @@ if __name__ == "__main__":
     # req = requests.get("http://127.0.0.1:60010/record_tasks",params={"msg":"123"})
     # print(req.content.decode("utf-8"))
     x = get_logger()
-    pass

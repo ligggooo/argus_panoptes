@@ -34,10 +34,11 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     root_id = db.Column(db.String(128), nullable=False, unique=False)
     root_tag = db.Column(db.String(128), nullable=False, unique=False)
-    desc = db.Column(db.String(256), nullable=True, unique=False)
+    name = db.Column(db.String(128), nullable=False, unique=False,default="测试")
+    desc = db.Column(db.String(1024), nullable=True, unique=False)
 
     def __repr__(self):
-        return "<%s:%s>"%(self.root_tag,self.root_id)
+        return "%s <%s:%s>"%(self.name, self.root_tag,self.root_id)
 
 if __name__ == "__main__":
     db.create_all()

@@ -1,4 +1,4 @@
-from jiliang_process.process_monitor import ProcessState
+from jiliang_process.process_monitor_types import ProcessState
 
 '''
 class TaskTrackingRecord(db.Model):
