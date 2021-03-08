@@ -52,7 +52,7 @@
                 <td>
                     <ul >
                         {% for b in m.state_track %}
-                        <li style="display: inline">
+                        <li>
                         {% if b.type=="N" %}
                             <span class="btn-xs btn-circle btn-info">[[b.content]]</span>
                         {% else %}
@@ -68,7 +68,7 @@
                     </ul>
 
                 </td>
-                <td>[[m.desc]]</td>
+                <td>[[m.desc|safe]]</td>
               </tr>
 
           {% endfor %}

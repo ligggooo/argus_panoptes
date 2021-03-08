@@ -4,6 +4,8 @@ import sys
 import json
 from flask_apscheduler import APScheduler
 
+from status_track import StatusRecord
+
 sys.path.append("..")
 from api.api_utils.clear_package import clear_package_name, clear_package_path
 from api.api_utils.task_analysis import get_status, get_tasks_from_redis, load_records_to_redis,task_record_cache
@@ -46,9 +48,9 @@ def get_tasks():
         for t in tasks:
             t.note = str(t)
             t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
-            t.state_track, _ = get_status(root_id=root_id, parent_id=t.sub_id,tree=tree)
+            t.state_track, _ = get_status(root_id=root_id, parent_id=t.sub_id, tree=tree)
             for b in t.state_track:
-                b.url = url_for("api_g5.get_tasks", root_id=root_id, parent_id=b.parent_id)
+                b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks, test_url=test_url)
 
 
@@ -58,16 +60,22 @@ def record_tasks():
     raw_data = request.values['msg']
     print(raw_data)
     data = json.loads(raw_data)
+    if data.get("sub_id"):
+        data["sub_id"] = str(data.get("sub_id"))
+    if data.get("parent_id"):
+        data["parent_id"] = str(data.get("parent_id"))
+    if data.get("root_id"):
+        data["root_id"] = str(data.get("root_id"))
 
     root_tag = "unknown "
     if "root_tag" in data:
         root_tag = data.pop("root_tag")
     new_task_track_obj = TaskTrackingRecord(**data)
-
+    new_task_track_obj_shadow = StatusRecord(**data) # 不然会报错 orm对象非常讨厌
     print(new_task_track_obj)
     sess = db.session()
     sess.add(new_task_track_obj)
-    task_record_cache.insert(new_task_track_obj)
+    task_record_cache.insert(new_task_track_obj_shadow)
     if new_task_track_obj.call_category == CallCategory.root.value and new_task_track_obj.state == StatePoint.start.value:
         new_task_obj = Task(name=data.get("name"), root_id=data.get("sub_id"), root_tag=root_tag, desc=data.get("desc"))
         sess.add(new_task_obj)

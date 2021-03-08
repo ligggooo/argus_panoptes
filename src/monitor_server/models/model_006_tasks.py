@@ -1,6 +1,7 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
 from monitor_server import db
 from jiliang_process.process_monitor import CallCategory,StatePoint
+from jiliang_process.status_track import StatusRecord
 
 
 class TaskTrackingRecord(db.Model):
@@ -27,6 +28,20 @@ class TaskTrackingRecord(db.Model):
     def is_record_exist():
         pass
 
+    def freeze(self):
+        """
+        :return:
+        """
+        db.session.refresh(self)
+        record = StatusRecord()
+        record.sub_id = self.sub_id
+        record.root_id = self.root_id
+        record.parent_id = self.parent_id
+        record.desc = self.desc
+        record.state = self.state
+        record.call_category = self.call_category
+        record.timestamp = self.timestamp
+        return record
 
 class Task(db.Model):
     __tablename__ = "task"

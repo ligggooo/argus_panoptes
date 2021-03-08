@@ -127,7 +127,7 @@ def load_records_to_redis():
 
 def get_task_records(root_id):
     task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.root_id == str(root_id)).all()
-    return task_records
+    return [t.freeze() for t in task_records]
 
 
 def get_records():
@@ -158,6 +158,7 @@ def build_graph_node(x):
     if x is None:
         block = GraphBlock(type='E', content="无记录", html_class="btn-default")
         block.parent_id = "-12"
+        block.sub_id = "-12"
         return block
     if not isinstance(x, StatusNode):
         raise Exception("only build_graph_node(StatusNode)")
@@ -188,8 +189,8 @@ def get_tasks_from_redis(root_id, parent_id=None, sub_id=None):
     tree = build_task_status_tree(root_id)
     if not tree:
         return None
-    res = tree.find_node_by_parent_id(parent_id)
-    return res,tree
+    res = tree.find_node_by_sub_id(sub_id)
+    return [res], tree
 
 
 class TaskRecordCache:
@@ -205,8 +206,8 @@ class TaskRecordCache:
         self.records = get_records()
 
     def insert(self, record):
-        _root_id = record.root_id
-        if root_id in self.records:
+        _root_id = str(record.root_id)
+        if _root_id in self.records:
             self.records[_root_id].append(record)
         else:
             self.records[_root_id] = [record]
