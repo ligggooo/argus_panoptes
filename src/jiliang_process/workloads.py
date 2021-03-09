@@ -6,7 +6,7 @@ import random
 from .process_monitor import task_monitor
 
 
-@task_monitor.normal_task_deco
+@task_monitor.normal_task_deco()
 def normal_task_throws_exception():
     """
     normal_task_throws_exception test
@@ -21,7 +21,7 @@ def normal_task_throws_exception():
     return "A"
 
 
-@task_monitor.normal_task_deco
+@task_monitor.normal_task_deco()
 def normal_task_with_a_loop(alpha):
     """
     normal_task_with_a_loop test
@@ -35,7 +35,7 @@ def normal_task_with_a_loop(alpha):
     return res
 
 
-@task_monitor.normal_task_deco
+@task_monitor.normal_task_deco()
 def normal_task_mult_threds(beta):
     """
     normal_task_starts_multiple_threads test
@@ -66,7 +66,7 @@ def thread_func(charlie):
     print(charlie)
 
 
-@task_monitor.normal_task_deco
+@task_monitor.normal_task_deco()
 # @task_monitor.loop_task_deco
 def normal_task_sleeps(xenon):
     """
@@ -74,7 +74,7 @@ def normal_task_sleeps(xenon):
     :param xenon:
     :return:
     """
-    time.sleep(2)
+    time.sleep(0.2)
     return "D%d" % xenon
 
 

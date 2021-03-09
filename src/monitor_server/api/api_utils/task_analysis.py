@@ -127,7 +127,7 @@ def load_records_to_redis():
 
 def get_task_records(root_id):
     task_records = TaskTrackingRecord.query.filter(TaskTrackingRecord.root_id == str(root_id)).all()
-    return [t.freeze() for t in task_records]
+    return [t.freeze(safe=False) for t in task_records]
 
 
 def get_records():

@@ -4,7 +4,7 @@ import sys
 import json
 from flask_apscheduler import APScheduler
 
-from status_track import StatusRecord
+from jiliang_process.status_track import StatusRecord
 
 sys.path.append("..")
 from api.api_utils.clear_package import clear_package_name, clear_package_path

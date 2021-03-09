@@ -1,10 +1,10 @@
 """测试用任务"""
+import time
 
-from .process_monitor import task_monitor,StatePoint
-from .workloads import normal_task_throws_exception,normal_task_with_a_loop,normal_task_mult_threds,xp_test
+from jiliang_process.process_monitor import task_monitor,StatePoint
+from jiliang_process.workloads import normal_task_throws_exception,normal_task_with_a_loop,normal_task_mult_threds,xp_test
 import traceback
-
-
+import multiprocessing as mp
 
 
 __version__ = "语义算法v 1.0.0"
@@ -20,7 +20,10 @@ def sa_celery_main(sub_task, parent_id="",root_id=None):  # 跨系统调用关�
     b = normal_task_with_a_loop(a)
     c = normal_task_mult_threds(b)
     try:
-        xp_test(parent_id=task_monitor.get_current_call_stack_node().this_id,root_id=root_id)
+        new_p = mp.Process(target=xp_test, kwargs={"parent_id": task_monitor.current_id,
+                                          "root_id": task_monitor.root_id})
+        new_p.start()
+        new_p.join()
     except Exception as e:
         print(e)
         raise e
@@ -41,9 +44,14 @@ def main2(sub_id, parent_id="",root_id=None):  # 跨系统调用关联
 
 @task_monitor.root_deco("根任务", "batch_id")
 def call(batch_id): # 模拟jiliang启动一个batch之后，发起了三个子任务
-    sa_celery_main(sub_task="1", parent_id=task_monitor.current_id, root_id=task_monitor.root_id)
-    sa_celery_main(sub_task="2", parent_id=task_monitor.current_id, root_id=task_monitor.root_id)
-    sa_celery_main(sub_task="3", parent_id=task_monitor.current_id, root_id=task_monitor.root_id)
+    new_p_1 = mp.Process(target=sa_celery_main, kwargs={"sub_task":1,"parent_id": task_monitor.current_id,"root_id": task_monitor.root_id})
+    new_p_2 = mp.Process(target=sa_celery_main,
+                         kwargs={"sub_task": 2, "parent_id": task_monitor.current_id, "root_id": task_monitor.root_id})
+    new_p_3 = mp.Process(target=sa_celery_main,
+                         kwargs={"sub_task": 3, "parent_id": task_monitor.current_id, "root_id": task_monitor.root_id})
+    pl = [new_p_1,new_p_2,new_p_3]
+    [p.start() for p in pl]
+    [p.join() for p in pl]
 
 
 def test_main():
@@ -52,9 +60,9 @@ def test_main():
     # 批量发了两个batch，后一个发了两次
     id1 = "batch 001"
     call(batch_id=id1)
-    id2 = "batch 002"
-    call(batch_id=id2)
-    call(batch_id=id2)
+    # id2 = "batch 002"
+    # call(batch_id=id2)
+    # call(batch_id=id2)
 
 
 
@@ -73,4 +81,5 @@ def test_main_single_machine_multiple_threads():
 
 
 # 假设这个就是一个批量往rabbit_mq发消息的脚本
-test_main()
+if __name__ == "__main__":
+    test_main()

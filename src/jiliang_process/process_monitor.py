@@ -1,5 +1,6 @@
 """任务跟踪器"""
 
+import os
 import json
 from functools import wraps
 import traceback
@@ -30,6 +31,7 @@ class ProcessMonitor:
         self.main_thread_id = threading.current_thread().ident
         self.root_id = None
         self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree.root}
+        self.MONITOR_DISABLED = os.environ.get("MONITOR_ENABLED") is None
 
     def re_init(self, sub_id, parent_id, root_id, root_tag_name):
         # self.sub_id = sub_id
@@ -84,6 +86,8 @@ class ProcessMonitor:
 
     def normal_task_deco(self, name=None):
         """普通调用的装饰器"""
+
+        @shorted_if(self.MONITOR_DISABLED)
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -125,6 +129,8 @@ class ProcessMonitor:
         :param name:
         :return:
         """
+
+        @shorted_if(self.MONITOR_DISABLED)
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -163,6 +169,8 @@ class ProcessMonitor:
         :param name:
         :return:
         """
+
+        @shorted_if(self.MONITOR_DISABLED)
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -170,7 +178,7 @@ class ProcessMonitor:
                 this_id = UniqueId.get()
                 self.re_init(this_id, parent_id, root_id, func.__name__)
                 # 任务拆分跨系统调用，需要用这种方式人工建立关联
-                self.id_tree_grow(func, this_id)
+                # self.id_tree_grow(func, this_id)
                 self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
                                  parent_id=parent_id, root_id=self.root_id,
                                  name=name,
@@ -201,6 +209,7 @@ class ProcessMonitor:
         :param root_tag_var_name:
         :return:
         """
+        @shorted_if(self.MONITOR_DISABLED)
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -210,7 +219,7 @@ class ProcessMonitor:
                     root_tag = this_id
                 self.re_init(sub_id=this_id, parent_id=None,
                              root_id=this_id, root_tag_name=func.__name__)
-                self.id_tree_grow(func, this_id)
+                # self.id_tree_grow(func, this_id)
                 self.logger.info(call_category=CallCategory.root.value, sub_id=this_id,
                                  parent_id=None, root_id=self.root_id,
                                  name=name, root_tag=root_tag,
@@ -283,5 +292,22 @@ class UniqueId:
     def reset():
         UniqueId._unique_id = 0
 
+
+def shorted_if(flag):
+    """
+    这个装饰器可以使装饰器失效
+    :param flag:
+    :return:
+    """
+    if flag:
+        def turn_into_null_deco(deco):
+            def null_deco(func):
+                return func
+            return null_deco
+        return turn_into_null_deco
+    else:
+        def do_nothing_to_deco(deco):
+            return deco
+        return do_nothing_to_deco
 
 task_monitor = ProcessMonitor(sub_id="default", web_logger=True)

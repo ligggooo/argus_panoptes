@@ -28,17 +28,19 @@ class TaskTrackingRecord(db.Model):
     def is_record_exist():
         pass
 
-    def freeze(self):
+    def freeze(self, safe=True):
         """
         :return:
         """
-        db.session.refresh(self)
+        if safe:
+            db.session.refresh(self)
         record = StatusRecord()
         record.sub_id = self.sub_id
         record.root_id = self.root_id
         record.parent_id = self.parent_id
         record.desc = self.desc
         record.state = self.state
+        record.name = self.name
         record.call_category = self.call_category
         record.timestamp = self.timestamp
         return record
