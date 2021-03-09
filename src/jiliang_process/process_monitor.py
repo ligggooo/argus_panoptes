@@ -91,13 +91,14 @@ class ProcessMonitor:
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
+                func_name = func.__name__ if name is None else name
                 this_id = UniqueId.get()
                 parent_node, this_node = self.id_tree_grow(func, this_id)  # 发起任务，id树生长，id树指针下移
                 parent_id = parent_node.this_id
 
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id,
                                  parent_id=parent_id,
-                                 name=func.__name__, root_id=self.root_id,
+                                 name=func_name, root_id=self.root_id,
                                  state=StatePoint.start.value, desc="")
                 try:
                     res = func(*args, **kwargs)
@@ -106,14 +107,14 @@ class ProcessMonitor:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id,
                                      parent_id=parent_id,
-                                     name=func.__name__, root_id=self.root_id,
+                                     name=func_name, root_id=self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 id树指针上移
                     self.set_current_call_stack_node(parent_node)
                     raise e
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id,
                                  parent_id=parent_id,
-                                 name=func.__name__, root_id=self.root_id,
+                                 name=func_name, root_id=self.root_id,
                                  state=StatePoint.end.value, desc="")
                 #   任务成功 id树指针上移
                 self.set_current_call_stack_node(parent_node)
@@ -134,13 +135,14 @@ class ProcessMonitor:
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
+                func_name = func.__name__ if name is None else name
                 this_id = UniqueId.get()
                 parent_node, this_node = self.id_tree_grow(func, this_id)
                 parent_id = parent_node.this_id
                 print(threading.current_thread().ident, threading.current_thread().name)
                 self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
                                  parent_id=parent_id, root_id=self.root_id,
-                                 name=name,
+                                 name=func_name,
                                  state=StatePoint.start.value)
                 try:
                     res = func(*args, **kwargs)
@@ -148,14 +150,14 @@ class ProcessMonitor:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
                                      parent_id=parent_id,
-                                     name=name, root_id=self.root_id,
+                                     name=func_name, root_id=self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 id树指针上移
                     self.set_current_call_stack_node(parent_node)
                     raise e
                 self.logger.info(call_category=CallCategory.cross_thread.value, sub_id=this_id,
                                  parent_id=parent_id, root_id=self.root_id,
-                                 name=name,
+                                 name=func_name,
                                  state=StatePoint.end.value)
                 # 任务完成 id树指针上移
                 self.set_current_call_stack_node(parent_node)
@@ -174,6 +176,7 @@ class ProcessMonitor:
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
+                func_name = func.__name__ if name is None else name
                 parent_id, root_id = ProcessMonitor.make_connection_between_processes(kwargs)
                 this_id = UniqueId.get()
                 self.re_init(this_id, parent_id, root_id, func.__name__)
@@ -181,7 +184,7 @@ class ProcessMonitor:
                 # self.id_tree_grow(func, this_id)
                 self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
                                  parent_id=parent_id, root_id=self.root_id,
-                                 name=name,
+                                 name=func_name,
                                  state=StatePoint.start.value)
                 try:
                     res = func(*args, **kwargs)
@@ -189,14 +192,14 @@ class ProcessMonitor:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
                                      parent_id=parent_id,
-                                     name=name, root_id=self.root_id,
+                                     name=func_name, root_id=self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 此子进程直接退出，id树不需要再维护了
                     self.current_call_stack_node = None
                     raise e
                 self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
                                  parent_id=parent_id, root_id=self.root_id,
-                                 name=name,
+                                 name=func_name,
                                  state=StatePoint.end.value)
                 return res
             return wrapper
@@ -213,6 +216,7 @@ class ProcessMonitor:
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
+                func_name = func.__name__ if name is None else name
                 this_id = UniqueId.get()
                 root_tag = ProcessMonitor.get_root_tag(kwargs, root_tag_var_name)
                 if not root_tag:
@@ -222,7 +226,7 @@ class ProcessMonitor:
                 # self.id_tree_grow(func, this_id)
                 self.logger.info(call_category=CallCategory.root.value, sub_id=this_id,
                                  parent_id=None, root_id=self.root_id,
-                                 name=name, root_tag=root_tag,
+                                 name=func_name, root_tag=root_tag,
                                  state=StatePoint.start.value)
                 try:
                     res = func(*args, **kwargs)
@@ -230,14 +234,14 @@ class ProcessMonitor:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.root.value, sub_id=this_id,
                                      parent_id=None,
-                                     name=name, root_id=self.root_id,
+                                     name=func_name, root_id=self.root_id,
                                      state=StatePoint.error.value, desc=err_msg[-1000:])
                     # 任务失败 此子进程直接退出，id树不需要再维护了
                     self.current_call_stack_node = None
                     raise e
                 self.logger.info(call_category=CallCategory.root.value, sub_id=this_id,
                                  parent_id=None, root_id=self.root_id,
-                                 name=name,
+                                 name=func_name,
                                  state=StatePoint.end.value)
                 return res
             return wrapper
