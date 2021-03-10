@@ -22,6 +22,7 @@ class ProcessMonitor:
         # self.sub_id = sub_id
         # self.parent_id = parent_id
         self.logger = get_web_logger() if web_logger else get_logger()
+        self.unique_id_holder = UniqueId
         # self.index_holder = {}
         # self.normal_task_deco = self._normal_task()
         # self.loop_task_deco = self.loop_task()
@@ -32,6 +33,10 @@ class ProcessMonitor:
         self.root_id = None
         self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree.root}
         self.MONITOR_DISABLED = os.environ.get("MONITOR_ENABLED") is None
+
+    def re_config(self, TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks", TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"):
+        self.logger = get_web_logger(TASK_RECORDER_URL)
+        self.unique_id_holder.reset_url(TASK_UNIQUE_ID_URL)
 
     def re_init(self, sub_id, parent_id, root_id, root_tag_name):
         # self.sub_id = sub_id
@@ -92,7 +97,7 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 func_name = func.__name__ if name is None else name
-                this_id = UniqueId.get()
+                this_id = self.unique_id_holder.get()
                 parent_node, this_node = self.id_tree_grow(func, this_id)  # 发起任务，id树生长，id树指针下移
                 parent_id = parent_node.this_id
 
@@ -136,7 +141,7 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 func_name = func.__name__ if name is None else name
-                this_id = UniqueId.get()
+                this_id = self.unique_id_holder.get()
                 parent_node, this_node = self.id_tree_grow(func, this_id)
                 parent_id = parent_node.this_id
                 print(threading.current_thread().ident, threading.current_thread().name)
@@ -178,7 +183,7 @@ class ProcessMonitor:
             def wrapper(*args, **kwargs):
                 func_name = func.__name__ if name is None else name
                 parent_id, root_id = ProcessMonitor.make_connection_between_processes(kwargs)
-                this_id = UniqueId.get()
+                this_id = self.unique_id_holder.get()
                 self.re_init(this_id, parent_id, root_id, func.__name__)
                 # 任务拆分跨系统调用，需要用这种方式人工建立关联
                 # self.id_tree_grow(func, this_id)
@@ -217,7 +222,7 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 func_name = func.__name__ if name is None else name
-                this_id = UniqueId.get()
+                this_id = self.unique_id_holder.get()
                 root_tag = ProcessMonitor.get_root_tag(kwargs, root_tag_var_name)
                 if not root_tag:
                     root_tag = this_id
@@ -280,6 +285,7 @@ class UniqueId:
 
     _unique_id = 0
     _lock = threading.Lock()
+    _id_url = TASK_UNIQUE_ID_URL
 
     @staticmethod
     def get():
@@ -287,7 +293,7 @@ class UniqueId:
         #     ret = Unique_id._unique_id
         #     Unique_id._unique_id += 1
         # return ret
-        res = requests.get(url=TASK_UNIQUE_ID_URL)
+        res = requests.get(url=UniqueId._id_url)
         data = json.loads(res.content)
         u_id = data["task_unique_id"]
         return u_id
@@ -295,6 +301,10 @@ class UniqueId:
     @staticmethod
     def reset():
         UniqueId._unique_id = 0
+
+    @staticmethod
+    def reset_url(url):
+        UniqueId._id_url = url
 
 
 def shorted_if(flag):
