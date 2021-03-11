@@ -34,9 +34,10 @@ class ProcessMonitor:
         self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree.root}
         self.MONITOR_DISABLED = os.environ.get("MONITOR_ENABLED") is None
 
-    def re_config(self, TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks", TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"):
-        self.logger = get_web_logger(TASK_RECORDER_URL)
+    def re_config(self, TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks", TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id", MONITOR_DISABLED=False):
+        self.logger.url = TASK_RECORDER_URL
         self.unique_id_holder.reset_url(TASK_UNIQUE_ID_URL)
+        self.MONITOR_DISABLED = MONITOR_DISABLED
 
     def re_init(self, sub_id, parent_id, root_id, root_tag_name):
         # self.sub_id = sub_id

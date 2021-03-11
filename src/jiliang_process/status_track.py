@@ -82,9 +82,9 @@ class TaskStatusTree:
             return [self.root]
         parent_node = self.find_node_by_sub_id(parent_id)
         if not parent_node:
-            return []
+            return None,[]
         else:
-            return parent_node.children
+            return parent_node,parent_node.children
 
     def add_node(self, new_node, parent_id):
         if self.root is None:

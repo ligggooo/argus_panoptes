@@ -4,6 +4,7 @@ import logging
 import requests
 import json
 import time
+import sys
 
 from .process_monitor_types import CallCategory,StatePoint
 from .settings import TASK_RECORDER_URL
@@ -14,11 +15,11 @@ class MyFileLogger:
     文件logger
     """
     def __init__(self, file_name):
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("jiliang_process_logger")
         self.logger.setLevel(logging.DEBUG)
 
         fh = logging.FileHandler(filename=file_name, encoding="utf-8")
-        sh = logging.StreamHandler()
+        sh = logging.StreamHandler(sys.stdout)
 
         fmt = logging.Formatter("%(asctime)s - %(levelname)s: %(message)s")
         fh.setFormatter(fmt)
@@ -43,9 +44,9 @@ class HttpLogger:
         文件logger
     """
     def __init__(self, url):
-        proc_mon_logger = logging.getLogger()
+        proc_mon_logger = logging.getLogger("jiliang_process_logger")
         proc_mon_logger.setLevel(logging.INFO)
-        sh = logging.StreamHandler()
+        sh = logging.StreamHandler(sys.stdout)
         fmt = logging.Formatter("%(asctime)s - %(levelname)s: %(message)s")
         sh.setFormatter(fmt)
         proc_mon_logger.addHandler(sh)
@@ -70,6 +71,7 @@ def get_web_logger(url=TASK_RECORDER_URL):
 def get_logger(fname="test.log"):
     logger = MyFileLogger(fname)
     return logger
+
 
 if __name__ == "__main__":
     # req = requests.get("http://127.0.0.1:60010/record_tasks",params={"msg":"123"})

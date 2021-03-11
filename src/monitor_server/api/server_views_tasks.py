@@ -39,7 +39,7 @@ def get_tasks():
 
         for t in tasks:
             t.note = str(t)
-            t.state_track, t.desc = get_status(root_id=t.root_id, parent_id=t.root_id)
+            t.status, t.state_track, t.desc = get_status(root_id=t.root_id, parent_id=t.root_id)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks, test_url=test_url)
@@ -48,7 +48,7 @@ def get_tasks():
         for t in tasks:
             t.note = str(t)
             t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
-            t.state_track, _ = get_status(root_id=root_id, parent_id=t.sub_id, tree=tree)
+            t.status, t.state_track, _ = get_status(root_id=root_id, parent_id=t.sub_id, tree=tree)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks, test_url=test_url)
