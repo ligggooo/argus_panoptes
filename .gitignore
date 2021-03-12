@@ -1,4 +1,8 @@
 *.pyc
 .idea
 .old
+*.log
+*.sqlite
 data_tmp/
+src/dist
+src/build

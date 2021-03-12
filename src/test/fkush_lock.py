@@ -28,6 +28,7 @@ sb_p = subprocess.Popen(
     shell=False,
     stdin=subprocess.PIPE,
     stderr=subprocess.PIPE,
+    universal_newlines=True
 )
 x = sb_p.wait()
 print(x)

@@ -166,6 +166,8 @@ def build_graph_node(x):
     html_class = "btn-success" if success == total else "btn-warning"
     if x.status == ProcessState.failed:
         html_class = "btn-danger"
+    if x.status == ProcessState.running:
+        html_class = "btn-warning"
     block = GraphBlock(type='E', content=str(x), html_class=html_class)
     block.parent_id = x.parent_id
     block.sub_id = x.sub_id

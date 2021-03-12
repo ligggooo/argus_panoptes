@@ -278,6 +278,33 @@ class ProcessMonitor:
     #                      name=name,desc= desc[-1000:],
     #                      state=state)
 
+    def pack_monitor_params_into_str(self, str_params):
+        print("packing monitor_params_into_str")
+        try:
+            params = json.loads(str_params)
+        except Exception as e:
+            raise e
+        if "root_id" in params or "parent_id" in params:
+            raise Exception("监控器客户端参数与原始参数冲突...")
+        else:
+            params.update({
+                "root_id": self.root_id,
+                "parent_id": self.current_id
+            })
+            return json.dumps(params)
+
+    @staticmethod
+    def extract_monitor_params_from_str(str_params):
+        print("extracting monitor_params_from_str")
+        try:
+            params = json.loads(str_params)
+        except Exception as e:
+            raise e
+        if "root_id" in params and "parent_id" in params:
+            return params.get("root_id"), params.get("parent_id")
+        else:
+            raise Exception("监控器参数抽取失败...")
+
 
 class UniqueId:
     """

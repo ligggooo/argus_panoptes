@@ -6,7 +6,8 @@ import json
 import time
 import sys
 
-from .process_monitor_types import CallCategory,StatePoint
+
+from .process_monitor_types import CallCategory, StatePoint
 from .settings import TASK_RECORDER_URL
 
 
