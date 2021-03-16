@@ -232,14 +232,14 @@ def container_exec(ip, port, container_id, command):
         return "success", str(e)
 
 
-def tar_and_cp_file_2_container(ip, port, container_id, file_path):
+def tar_and_cp_file_2_container(ip, port, container_id, file_path, tmp_dir=_tmp_data_dir):
     try:
         c = __get_container(ip, port, container_id)
         if c:
             tmp_tar_name = str(uuid.uuid4())+".tar"
-            tar = tarfile.open(os.path.join(_tmp_data_dir,tmp_tar_name), mode="w")
+            tar = tarfile.open(os.path.join(tmp_dir,tmp_tar_name), mode="w")
 
-            os.chdir(_tmp_data_dir)
+            os.chdir(tmp_dir)
             tar.add(file_path)
             tar.close()
             data = open(tmp_tar_name,"rb").read()

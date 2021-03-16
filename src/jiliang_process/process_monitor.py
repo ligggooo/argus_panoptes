@@ -353,3 +353,4 @@ def shorted_if(flag):
         return do_nothing_to_deco
 
 task_monitor = ProcessMonitor(sub_id="default", web_logger=True)
+task_monitor.re_config()
