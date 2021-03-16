@@ -179,12 +179,13 @@ def get_status(root_id, parent_id=None, tag="root", tree=None):
         tree = build_task_status_tree(root_id)
     if not tree:
         return [build_graph_node(None)]
-    parent, chilren = tree.find_node_by_parent_id(parent_id)
-    if not chilren:
+    parent, children = tree.find_node_by_parent_id(parent_id)
+    children.sort(key=lambda x: x.sub_id)
+    if not children:
         chilren = [tree.find_node_by_sub_id(parent_id)]
         parent = chilren[0]
 
-    chilren_status_block = [build_graph_node(x) for x in chilren]
+    chilren_status_block = [build_graph_node(x) for x in children]
     parent_status_block = build_graph_node(parent)
     return parent_status_block,chilren_status_block, tree.root.desc
 
