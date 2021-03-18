@@ -8,7 +8,7 @@ import multiprocessing as mp
 
 
 __version__ = "语义算法v 1.0.0"
-
+task_monitor.re_config()
 
 @task_monitor.cross_process_deco(__version__)
 def sa_celery_main(sub_task, parent_id="",root_id=None):  # 跨系统调用关联

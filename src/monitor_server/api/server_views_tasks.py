@@ -9,7 +9,6 @@ from jiliang_process.status_track import StatusRecord
 
 sys.path.append("..")
 from api.api_utils.clear_package import clear_package_name, clear_package_path
-from api.api_utils.task_analysis import get_status, get_tasks_from_redis, load_records_to_redis,task_record_cache
 
 from jiliang_process.process_monitor_types import StatePoint
 from models.model_006_tasks import Task, TaskTrackingRecord
@@ -30,6 +29,7 @@ api_group5 = Blueprint("api_g5", __name__)
 
 
 # ---------------------------------------------------------------------------------------------------------
+from api.api_utils.task_analysis import task_status_tree_cache
 
 @api_group5.route('/tasks', methods=['GET', 'POST'])
 def get_tasks():
@@ -40,29 +40,30 @@ def get_tasks():
     test_url = url_for("api_g5.test_tasks")
 
     if not root_id:
-        tasks = Task.query.order_by(Task.id.desc()).limit(10).all()
+        tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
 
         for t in tasks:
             t.note = str(t)
-            t.status, t.state_track, t.desc = get_status(root_id=t.root_id, parent_id=t.root_id)
+            t.status, t.state_track, t.desc = task_status_tree_cache.get_status(root_id=t.root_id, parent_id=t.root_id)
+            t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
-        return render_template("tasks.html", tasks=tasks, test_url=test_url)
+        return render_template("tasks.html", tasks=tasks, test_url=test_url, task_class="active")
     else:
-        tasks,tree = get_tasks_from_redis(root_id=root_id, parent_id=parent_id, sub_id=sub_id)
+        tasks,tree = task_status_tree_cache.get_tasks_from_cache(root_id=root_id, parent_id=parent_id, sub_id=sub_id)
         for t in tasks:
             t.note = str(t)
             t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
-            t.status, t.state_track, _ = get_status(root_id=root_id, parent_id=t.sub_id, tree=tree)
+            t.status, t.state_track, _ = task_status_tree_cache.get_status(root_id=root_id, parent_id=t.sub_id, tree=tree)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
-        return render_template("tasks.html", tasks=tasks, test_url=test_url)
+        return render_template("tasks.html", tasks=tasks, test_url=test_url, task_class="active")
 
 
 @api_group5.route('/record_tasks', methods=['POST', "GET"])
 def record_tasks():
     from jiliang_process.process_monitor import CallCategory
-    raw_data = request.values['msg']
+    raw_data = request.values.get('msg')
     print(raw_data)
     data = json.loads(raw_data)
     if data.get("sub_id"):
@@ -80,7 +81,7 @@ def record_tasks():
     print(new_task_track_obj)
     sess = db.session()
     sess.add(new_task_track_obj)
-    task_record_cache.insert(new_task_track_obj_shadow)
+    task_status_tree_cache.update(new_task_track_obj_shadow)
     if new_task_track_obj.call_category == CallCategory.root.value and new_task_track_obj.state == StatePoint.start.value:
         new_task_obj = Task(name=data.get("name"), root_id=data.get("sub_id"), root_tag=root_tag, desc=data.get("desc"))
         sess.add(new_task_obj)

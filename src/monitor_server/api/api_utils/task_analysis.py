@@ -85,29 +85,49 @@ def end_exists(records):
 #     return res
 
 
-def merge_status(records, multi_task=False, regroup_index="index"):
-    '''
-    Because original status records are generated when events of interests occur, so a task may have more than one
-    record binded to it. To find out whether a task finishes or fails, this function must be called to merge records.
-    :param records: related records
-    :return: ProcessState
-    '''
-    desc = ""
-    if len(records) == 0:
-        desc = "尚无记录"
-        return ProcessState.not_started_yet, desc
-    if len(records) >= 1 and (not start_exists(records)):
-        desc = "记录不完整"
-        return ProcessState.record_incomplete, desc
-    if len(records) == 1 and start_exists(records):
-        desc = "running"
-        return ProcessState.running, desc
-    error, desc = error_exists(records)
-    if error:
-        return ProcessState.failed, desc
-    if end_exists(records):
-        desc = "完成"
-        return ProcessState.finished, desc
+class StatusMerger:
+    def merge_info(self, status, err, info):
+        if "完成" in info:
+            info_msg = "完成"
+        else:
+            info_msg = "running"
+        err_msg = "\n".join(err)
+        base_desc = "%s\n------------------\n%s"%(info_msg, err_msg)
+        if status == ProcessState.running:
+            desc = "%s" % base_desc
+        elif status == ProcessState.finished:
+            desc = "%s" % base_desc
+        elif status == ProcessState.not_started_yet:
+            desc = "尚未开始\n%s" % base_desc
+        else:
+            desc = "错误\n%s" % base_desc
+        return desc
+
+    def merge_status(self, records, multi_task=False, regroup_index="index"):
+        '''
+        Because original status records are generated when events of interests occur, so a task may have more than one
+        record binded to it. To find out whether a task finishes or fails, this function must be called to merge records.
+        :param records: related records
+        :return: ProcessState
+        '''
+        err = None
+        info = None
+        if len(records) == 0:
+            err = "尚无记录"
+            return ProcessState.not_started_yet, err, info
+        if len(records) >= 1 and (not start_exists(records)):
+            err = "记录不完整"
+            return ProcessState.record_incomplete, err, info
+        if len(records) == 1 and start_exists(records):
+            info = "running"
+            return ProcessState.running, err, info
+        err_flag, err = error_exists(records)
+        if err_flag:
+            return ProcessState.failed, err, info
+        if end_exists(records):
+            info = "完成"
+            err = None
+            return ProcessState.finished, err, info
 
 
 def load_records_to_redis():
@@ -148,10 +168,7 @@ def get_records_for_test():
         return records
 
 
-def build_task_status_tree(root_id=None):
-    batch_records = task_record_cache.get_records(root_id)
-    status_tree = TaskStatusTree.build_from_records(batch_records, status_merger=merge_status)
-    return status_tree
+
 
 
 def build_graph_node(x):
@@ -174,28 +191,10 @@ def build_graph_node(x):
     return block
 
 
-def get_status(root_id, parent_id=None, tag="root", tree=None):
-    if not tree:
-        tree = build_task_status_tree(root_id)
-    if not tree:
-        return [build_graph_node(None)]
-    parent, children = tree.find_node_by_parent_id(parent_id)
-    children.sort(key=lambda x: x.sub_id)
-    if not children:
-        chilren = [tree.find_node_by_sub_id(parent_id)]
-        parent = chilren[0]
-
-    chilren_status_block = [build_graph_node(x) for x in children]
-    parent_status_block = build_graph_node(parent)
-    return parent_status_block,chilren_status_block, tree.root.desc
 
 
-def get_tasks_from_redis(root_id, parent_id=None, sub_id=None):
-    tree = build_task_status_tree(root_id)
-    if not tree:
-        return None
-    res = tree.find_node_by_sub_id(sub_id)
-    return [res], tree
+
+
 
 
 class TaskRecordCache:
@@ -233,17 +232,72 @@ class TaskRecordCache:
             return self.records[root_id]
 
 
+class TaskStatusTreeCache:
+    """
+    缓存内容会无限增，得设计一个限制大小的机制
+    """
+
+    def __init__(self, task_record_cache):
+        self._task_record_cache = task_record_cache
+        self._trees = {}
+        self._lock = threading.Lock()
+
+    def load(self):
+        if not self._trees:
+            self._task_record_cache.load()
+            for root_id in self._task_record_cache.records:
+                self._trees[root_id] = self.build_task_status_tree(root_id)
+
+    def build_task_status_tree(self, root_id=None):
+        batch_records = self._task_record_cache.get_records(root_id)
+        status_tree = TaskStatusTree.build_from_records(batch_records, status_merger=StatusMerger())
+        return status_tree
+
+    def get_status(self, root_id, parent_id=None, tag="root", tree=None):
+        if not tree:
+            tree = self._trees.get(root_id)
+        if not tree:
+            return [build_graph_node(None)]
+        parent, children = tree.find_node_by_parent_id(parent_id)
+        children.sort(key=lambda x: x.sub_id)
+        if not children:
+            chilren = [tree.find_node_by_sub_id(parent_id)]
+            parent = chilren[0]
+
+        chilren_status_block = [build_graph_node(x) for x in children]
+        parent_status_block = build_graph_node(parent)
+        return parent_status_block, chilren_status_block, tree.root.desc
+
+    def get_tasks_from_cache(self, root_id, parent_id=None, sub_id=None):
+        tree = self._trees.get(root_id)
+        if not tree:
+            return None
+        res = tree.find_node_by_sub_id(sub_id)
+        return [res.copy()], tree
+
+    def update(self, record):
+        self._task_record_cache.insert(record)
+        root_id = record.root_id
+        tree_to_update = self._trees.get(root_id)
+        if not tree_to_update:
+            self._trees[root_id] = self.build_task_status_tree(root_id)
+        else:
+            tree_to_update.update_with_record(record, StatusMerger())
+
+
+
+
+
 task_record_cache = TaskRecordCache()
-task_record_cache.load()
+task_status_tree_cache = TaskStatusTreeCache(task_record_cache)  # todo
+task_status_tree_cache.load()
+
 
 if __name__ == "__main__":
-    root_id = "832"
+    root_id_x = "832"
     # get_status(root_id=root_id)
     # get_status(root_id=root_id, parent_id="832")
     # s = get_status(sub_id="20200413004000_20201110232523_20201114112585", parent_id=None, tag="root")
     # print(s)
-    get_task_records(1120)
-    tc = TaskRecordCache()
-    tc.load()
-    xx = tc.get_records(1120)
+
     pass

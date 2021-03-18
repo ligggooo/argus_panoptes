@@ -8,7 +8,7 @@ class TaskTrackingRecord(db.Model):
     __tablename__ = "task_track"
     __table_args__ = {"extend_existing":True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    sub_id = db.Column(db.String(128), nullable=False, unique=False)
+    sub_id = db.Column(db.String(128), nullable=False, unique=True)
     parent_id = db.Column(db.String(128), nullable=True, unique=False)
     root_id = db.Column(db.String(128), nullable=False, unique=False)
     name = db.Column(db.String(128), nullable=False, unique=False)

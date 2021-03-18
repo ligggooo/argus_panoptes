@@ -48,6 +48,8 @@ class StatusNode:
         self.records = []
         self.status = ProcessState.unknown  # 节点日志中反映出的完成情况
         self.sub_success_rate = [0, 0]  # 子节点日志中反映出的完成情况( 完成数/总数 )
+        self.err=set()
+        self.info=set()
         self.desc = None
 
     def __repr__(self):
@@ -60,11 +62,18 @@ class StatusNode:
         new_node.records.append(record)
         return new_node
 
+    def copy(self):
+        cp = StatusNode(self.root_id, self.parent_id, self.sub_id, self.tag)
+        cp.status = self.status
+        cp.sub_success_rate = self.sub_success_rate.copy()
+        cp.desc = self.desc
+        return cp
 
 class TaskStatusTree:
     def __init__(self):
         self.root = None
         self.orphans = []
+        self.records = []
 
     def find_node_by_sub_id(self, sub_id):
         stack = [self.root]
@@ -89,11 +98,12 @@ class TaskStatusTree:
     def add_node(self, new_node, parent_id):
         if self.root is None:
             self.root = new_node
+            return True
         else:
             this_node = self.find_node_by_sub_id(new_node.sub_id)
             if this_node:  # 这个node是某个节点的另一个记录
                 this_node.records.extend(new_node.records)
-                return
+                return True
             node_to_attach_to = self.find_node_by_sub_id(parent_id)
             if not node_to_attach_to:
                 # 可能这个节点更高级
@@ -101,60 +111,75 @@ class TaskStatusTree:
                     new_node.children.append(self.root)
                     self.root.parent = new_node
                     self.root = new_node
+                    return True
                 elif self.root.sub_id == new_node.sub_id:
                     # 可能这个节点就是根节点的另一个记录
                     self.root.records.extend(new_node.records)
+                    return True
                 else:
                     # 两个节点无关联
                     self.orphans.append(new_node)
+                    return False
                 # raise Exception("cannot find parent node to attach <%s> to"%new_node)  # todo  如果中间记录丢失怎么办？
             else:
                 node_to_attach_to.children.append(new_node)
                 new_node.parent = node_to_attach_to
+                return True
 
     def add_record(self, record):
+        res = True
+        self.records.append(record)
         if not self.root:
             self.root = StatusNode.create_node_from_record(record)
         else:
             node = self.find_node_by_sub_id(record.sub_id)
             if not node:
                 new_node = StatusNode.create_node_from_record(record)
-                self.add_node(new_node, new_node.parent_id)
+                status = self.add_node(new_node, new_node.parent_id)
+                if not status: # 说明记录添加失败，记录作为orphan被添加到树的孤儿列表了
+                    res = False
             else:
                 node.records.append(record)
+        return res
 
-    @staticmethod
-    def build_from_records(records, status_merger):
-        t = TaskStatusTree()
-        if not records:
-            return None
-        for r in records:
-            t.add_record(r)
-        len_orphans = len(t.orphans)
+    def consume_orphans(self):
+        len_orphans = len(self.orphans)
         cnt = 0
-        while t.orphans:  # 说明没有添加完
-            tmp_node = t.orphans.pop(0)
-            t.add_node(tmp_node, tmp_node.parent_id)
-            if len_orphans > len(t.orphans):  # 说明有点被加入了
-                len_orphans = len(t.orphans)
+        while self.orphans:  # 说明没有添加完
+            tmp_node = self.orphans.pop(0)
+            self.add_node(tmp_node, tmp_node.parent_id)
+            if len_orphans > len(self.orphans):  # 说明有点被加入了
+                len_orphans = len(self.orphans)
                 cnt = 0
             else:
                 cnt += 1
             if cnt > 0 and cnt > len_orphans:
-                t.root.desc = "存在记录丢失，调用树被割裂"
+                self.root.err.add("存在记录丢失，调用树被割裂")
                 break
 
-        # 后续遍历树
-        stack = [t.root]
+    def status_update(self, status_merger):
+        # 后续遍历树,刷新每个节点的状态
+        # 目前每次都重来一遍，以后规模增加之后可以做进一步优化
+        stack = [self.root]
         stack_rev = []
         while stack:
             tmp = stack.pop()
-            tmp.status, desc = status_merger(tmp.records)
-            if desc and tmp.desc:
-                tmp.desc = tmp.desc + " | \n " + desc
-            else:
-                if desc:
-                    tmp.desc = desc
+            try:
+                tmp.status, err_msg, info_msg = status_merger.merge_status(tmp.records)
+            except Exception as e:
+                print(e)
+                err_msg = str(e)
+            if err_msg is not None:
+                tmp.err.add(err_msg)
+            if info_msg is not None:
+                tmp.info.add(info_msg)
+            tmp.desc = status_merger.merge_info(tmp.status, tmp.err, tmp.info)
+
+                # if desc and tmp.desc and desc != tmp.desc:
+            #     tmp.desc = tmp.desc + " | \n " + desc
+            # else:
+            #     if desc:
+            #         tmp.desc = desc
             stack_rev.append(tmp)
             if tmp.children:
                 stack.extend(tmp.children)
@@ -169,15 +194,33 @@ class TaskStatusTree:
             node.parent.sub_success_rate[1] += 1
             if node.sub_success_rate[0] == node.sub_success_rate[1]:
                 node.parent.sub_success_rate[0] += 1
+
+    @staticmethod
+    def build_from_records(records, status_merger):
+        t = TaskStatusTree()
+        if not records:
+            return None
+        for r in records:
+            t.add_record(r)
+
+        # 可能存在记录顺序不对导致有些节点没有找到父节点
+        t.consume_orphans()
+
+        t.status_update(status_merger)
         return t
+
+    def update_with_record(self, record, status_merger):
+        self.add_record(record)
+        self.status_update(status_merger)
+
 
 
 if __name__ == "__main__":
-    t = TaskStatusTree()
+    txx = TaskStatusTree()
     from monitor_server.api.api_utils.task_analysis import get_records_for_test
 
     records = get_records_for_test()
     for r in records:
-        t.add_record(r)
+        txx.add_record(r)
         pass
     pass
