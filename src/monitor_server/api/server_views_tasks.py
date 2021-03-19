@@ -8,11 +8,12 @@ from flask_apscheduler import APScheduler
 from jiliang_process.status_track import StatusRecord
 
 sys.path.append("..")
-from api.api_utils.clear_package import clear_package_name, clear_package_path
+from monitor_server.api.api_utils.clear_package import clear_package_name, clear_package_path
 
 from jiliang_process.process_monitor_types import StatePoint
-from models.model_006_tasks import Task, TaskTrackingRecord
+from monitor_server.models.model_006_tasks import Task, TaskTrackingRecord
 from monitor_server import db
+from monitor_server.api.api_utils.task_analysis import task_status_tree_cache
 
 api_group5 = Blueprint("api_g5", __name__)
 
@@ -29,7 +30,7 @@ api_group5 = Blueprint("api_g5", __name__)
 
 
 # ---------------------------------------------------------------------------------------------------------
-from api.api_utils.task_analysis import task_status_tree_cache
+
 
 @api_group5.route('/tasks', methods=['GET', 'POST'])
 def get_tasks():

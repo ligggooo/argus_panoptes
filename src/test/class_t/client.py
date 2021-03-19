@@ -9,6 +9,7 @@ import seal
 import seal
 from seal import ZZ
 from seal import ZZ
+from class_t.seal import *
 
 
 print(ZZ, id(ZZ))

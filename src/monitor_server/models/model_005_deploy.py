@@ -1,6 +1,6 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
 from monitor_server import db
-from models.model_002_package import SoftPackage
+from monitor_server.models.model_002_package import SoftPackage
 
 
 class Deployment(db.Model):

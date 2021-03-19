@@ -1,8 +1,8 @@
 from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
 
-from api.api_utils.portmapping_parser import port_mapping_str2list
+from monitor_server.api.api_utils.portmapping_parser import port_mapping_str2list
 from monitor_server import db
-from models.model_003_machines import PhysicalPort
+from monitor_server.models.model_003_machines import PhysicalPort
 
 db.metadata.clear()
 class Image(db.Model):

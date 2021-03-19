@@ -2,7 +2,7 @@ import sys
 import threading
 
 sys.path.append("../../")
-from models.model_006_tasks import TaskTrackingRecord, Task, db
+from monitor_server.models.model_006_tasks import TaskTrackingRecord, Task, db
 
 import pickle
 import os
