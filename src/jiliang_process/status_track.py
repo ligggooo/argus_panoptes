@@ -164,6 +164,8 @@ class TaskStatusTree:
         stack_rev = []
         while stack:
             tmp = stack.pop()
+            tmp.sub_success_rate = [0,0]
+            info_msg = None
             try:
                 tmp.status, err_msg, info_msg = status_merger.merge_status(tmp.records)
             except Exception as e:
