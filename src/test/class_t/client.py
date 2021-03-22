@@ -9,16 +9,24 @@ import seal
 import seal
 from seal import ZZ
 from seal import ZZ
-from class_t.seal import *
+# from class_t.seal import ZZ as ZZ2
+from seal import __x
+from class_t import  __x
+import sys
 
+print("===========================")
+for x in sys.modules:
+    print(x)
+print("===========================")
 
 print(ZZ, id(ZZ))
 print(seal.ZZ, id(seal.ZZ))
+# print(ZZ2, id(ZZ2))
 
 from seal import *
 from seal import __x, _y
 
 print(locals())
-print(__x,_y,z)
+print(__x, _y, z)
 if __name__ == "__main__":
     pass

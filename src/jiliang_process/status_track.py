@@ -48,8 +48,8 @@ class StatusNode:
         self.records = []
         self.status = ProcessState.unknown  # 节点日志中反映出的完成情况
         self.sub_success_rate = [0, 0]  # 子节点日志中反映出的完成情况( 完成数/总数 )
-        self.err=set()
-        self.info=set()
+        self.err = set()
+        self.info = set()
         self.desc = None
 
     def __repr__(self):
@@ -194,7 +194,7 @@ class TaskStatusTree:
             if not node.parent:
                 continue
             node.parent.sub_success_rate[1] += 1
-            if node.sub_success_rate[0] == node.sub_success_rate[1]:
+            if node.sub_success_rate[0] == node.sub_success_rate[1] and node.status == ProcessState.finished:
                 node.parent.sub_success_rate[0] += 1
 
     @staticmethod
