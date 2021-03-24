@@ -4,14 +4,15 @@
 # @Time      : 2021/3/24 10:01
 # @Author    : Lee
 
-import configparser
+import configparser,os
 
 
 class StarterConf:
     def __init__(self):
         self.config = configparser.ConfigParser()
-        path = "start_conf.ini"
-        self.config.read(path, encoding='UTF-8')
+        path = os.path.dirname(os.path.abspath(__file__))
+        file = os.path.join(path,"start_conf.ini")
+        self.config.read(file, encoding='UTF-8')
 
     def __get_section(self, section_name):
         res = self.config._sections.get(section_name)

@@ -117,7 +117,8 @@ class MyRunner:
 
 mainfile = "pdb_t.py"
 r= MyRunner()
-f = os.path.realpath(mainfile)
+path = os.path.dirname(os.path.abspath(__file__))
+f = os.path.join(path, mainfile)
 print(f)
 # m="imp"
 # import imp
