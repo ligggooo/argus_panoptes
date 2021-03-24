@@ -354,3 +354,7 @@ def shorted_if(flag):
 
 task_monitor = ProcessMonitor(sub_id="default", web_logger=True)
 task_monitor.re_config()
+task_monitor.deco_normal = task_monitor.normal_task_deco()
+task_monitor.deco_root = task_monitor.root_deco("测试根")
+task_monitor.deco_cross_p_merge = task_monitor.cross_process_deco("语义子任务根节点")
+task_monitor.deco_normal_se_main = task_monitor.normal_task_deco("融合模块主函数")

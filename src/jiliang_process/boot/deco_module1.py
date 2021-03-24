@@ -24,7 +24,11 @@ def deco2(func):
 
 def chain_get(mobj, chain):
     for c in chain:
-        mobj = getattr(mobj, c)
+        try:
+            mobj = getattr(mobj, c)
+        except AttributeError as e:
+            print(e)
+            return None
     return mobj
 
 def chain_import(import_chain):
@@ -40,15 +44,24 @@ def chain_import(import_chain):
 
 def deco_module(module, deco_rules):
     print(module, deco_rules)
+    status = True
     for deco_rule in deco_rules:
-        print("--替换", deco_rule)
+        print("--装饰", deco_rule)
         to_deco_name, deco_name = deco_rule
         deco = chain_import(deco_name)
         tokens = to_deco_name.strip().split(".")
-        target = chain_get(module, tokens)
         parent = chain_get(module, tokens[:-1])
-        end = tokens[-1]
-        setattr(parent,end,deco(target))
+        if not parent:
+            status = False
+            continue
+        target = chain_get(module, tokens)
+        if not getattr(target,"_lee_decorated",None):
+            end = tokens[-1]
+            setattr(parent,end,deco(target))
+            getattr(parent,end)._lee_decorated = True
+        else:
+            print("--装饰已经应用过", deco_rule)
+    return status
 
 
 if __name__ == "__main__":

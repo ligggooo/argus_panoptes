@@ -9,7 +9,8 @@ import sys, os
 from my_dispatch import mydispatch, trace_dispatch
 # sys.setprofile(trace_dispatch)
 # import mypack
-from mypack import hello,hehe
+from jiliang_process.boot.mypack import hello,hehe
+from mypack import hello as hello2
 
 def traverse(tree):
     traverse_i(tree, 0)
@@ -45,14 +46,12 @@ def main():
 
 
 
-def main2():
-    # profile.run("hello()")
-
-    hello(2131231)
-    hehe(123123213)
+from mypack import main2
+import matplotlib.colorbar
 
 if __name__ == '__main__':
     # sys.modules[__name__].hello.hello = sys.modules[__name__].hello.hehe
+    print(sys.argv, "in script")
     main2()
 
 

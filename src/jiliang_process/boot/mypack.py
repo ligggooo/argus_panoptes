@@ -27,6 +27,12 @@ def hehe(n=None):
 class X:
     a=2
 
+def main2():
+    # profile.run("hello()")
+
+    hello(2131231)
+    hehe(123123213)
+
 if __name__ == "__main__":
     hello()
     cmd = """
