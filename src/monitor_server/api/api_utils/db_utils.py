@@ -6,11 +6,13 @@
 
 from monitor_server import db
 
+
 def wake_up_data_base():
     sess = db.session()
     xx = sess.execute("select * from wake_up")
     print(xx.fetchall())
     pass
+
 
 if __name__ == "__main__":
     wake_up_data_base()
