@@ -2,12 +2,20 @@ import enum
 
 
 class StatePoint(enum.Enum):
+    """
+    记录状态点的状态，是数据库原始记录中的状态
+    """
     start = 0
     end = 1
     error = 2
+    process_shutdown = 3
 
 
 class ProcessState(enum.Enum):
+    """
+    记录函数过程的状态，是经过merger处理过的状态
+    tmd为什么不用python 3.8 ？？， 这tmd没有类型声明搞死人
+    """
     unknown = -3
     record_incomplete = -2
     not_started_yet = -1
@@ -17,6 +25,7 @@ class ProcessState(enum.Enum):
     # finished_with_error = 2
     failed = 2
     partially_finished = 3
+    process_shutdown = 4
 
 
 class CallCategory(enum.Enum):

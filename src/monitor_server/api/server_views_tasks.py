@@ -6,6 +6,7 @@ import queue
 from flask_apscheduler import APScheduler
 
 from jiliang_process.status_track import StatusRecord
+from monitor_server.api.api_utils.db_utils import wake_up_data_base
 
 sys.path.append("..")
 from monitor_server.api.api_utils.clear_package import clear_package_name, clear_package_path
@@ -25,7 +26,12 @@ api_group5 = Blueprint("api_g5", __name__)
 # scheduler.start()
 # # get_task 从redis中读取分析结果，呈现到前端
 # ---------------------------------------------------------------------------------------------------------
-
+scheduler = APScheduler()
+# 定时任务周期性地读取数据库,保持数据库连接是活的
+scheduler.add_job(func=wake_up_data_base, id="wake_up_data_base", args=(), trigger='interval',
+                   seconds=50, replace_existing=True)
+scheduler.start()
+# # get_task 从redis中读取分析结果，呈现到前端
 # ---------------------------------------------------------------------------------------------------------
 
 

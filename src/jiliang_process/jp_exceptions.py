@@ -5,9 +5,19 @@
 # @Author    : Lee
 
 
-class ProcessAccidentallyShutDownException(Exception):
-    def __init__(self,*args, **kwargs):
-        super().__init__(*args, **kwargs)
+class ProcessShutDownException(Exception):
+    def __init__(self, data, msg):
+        super().__init__(str(msg))
+        self.data = data
+        self.msg = msg
+
+
+class ProcessAccidentallyShutDownException(ProcessShutDownException):
+    pass
+
+
+class ProcessIntentionallyShutDownException(ProcessShutDownException):
+    pass
 
 
 if __name__ == "__main__":
@@ -15,7 +25,7 @@ if __name__ == "__main__":
     try:
         import json
         msg = ["1231",{"a":123,"b":3434}]
-        raise  ProcessAccidentallyShutDownException(json.dumps(msg,indent=" "))
-    except ProcessAccidentallyShutDownException as e:
+        raise  ProcessIntentionallyShutDownException(data=msg,msg=1)
+    except ProcessShutDownException as e:
         print(e)
-        print(json.loads(str(e)))
+        print(e.data)

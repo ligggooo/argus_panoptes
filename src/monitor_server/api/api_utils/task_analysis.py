@@ -63,6 +63,13 @@ def error_exists(records):
     return False, ""
 
 
+def process_shutdown(records):
+    for r in records:
+        if r.state == StatePoint.process_shutdown.value:
+            return True, r.desc
+    return False, ""
+
+
 def end_exists(records):
     for r in records:
         if r.state == StatePoint.end.value:
@@ -89,6 +96,10 @@ class StatusMerger:
     def merge_info(self, status, err, info):
         if "完成" in info:
             info_msg = "完成"
+        elif "失败" in info:
+            info_msg = "失败"
+        elif "进程终止" in info:
+            info_msg = "进程终止"
         else:
             info_msg = "running"
         err_msg = "\n".join(err)
@@ -99,6 +110,8 @@ class StatusMerger:
             desc = "%s" % base_desc
         elif status == ProcessState.not_started_yet:
             desc = "尚未开始\n%s" % base_desc
+        elif status == ProcessState.process_shutdown:
+            desc = "进程退出\n%s" % err_msg
         else:
             desc = "错误\n%s" % base_desc
         return desc
@@ -123,7 +136,11 @@ class StatusMerger:
             return ProcessState.running, err, info
         err_flag, err = error_exists(records)
         if err_flag:
+            info= "失败"
             return ProcessState.failed, err, info
+        process_shutdown_flag, err = process_shutdown(records)
+        if process_shutdown_flag:
+            return ProcessState.process_shutdown, err, info
         if end_exists(records):
             info = "完成"
             err = None

@@ -116,7 +116,7 @@ if __name__ == "__main__":
     print("start -------------------", sys.argv)
     if len(sys.argv) == 1:
         mainfile = "test_task.py"
-        mainfile = "e:\workspace\distributed_semantics\main.py"
+        # mainfile = "e:\workspace\distributed_semantics\main.py"
         path = os.path.dirname(os.path.abspath(__file__))
         f = os.path.join(path, mainfile)
     else:

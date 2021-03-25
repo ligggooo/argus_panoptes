@@ -8,6 +8,8 @@ import threading
 
 import requests
 
+from jiliang_process.jp_exceptions import ProcessIntentionallyShutDownException, ProcessShutDownException, \
+    ProcessAccidentallyShutDownException
 from .process_logger import get_logger, get_web_logger
 from .call_track import IdTree
 from .process_monitor_types import CallCategory, StatePoint
@@ -194,6 +196,24 @@ class ProcessMonitor:
                                  state=StatePoint.start.value)
                 try:
                     res = func(*args, **kwargs)
+                except ProcessAccidentallyShutDownException as e:
+                    err_msg = str(e.msg)
+                    self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
+                                     parent_id=parent_id,
+                                     name=func_name, root_id=self.root_id,
+                                     state=StatePoint.process_shutdown.value, desc=err_msg[-1000:])
+                    # 任务意外自行退出 此子节点的所有子节点都需要在服务端关闭
+                    self.current_call_stack_node = None
+                    return e.data
+                except ProcessIntentionallyShutDownException as e:
+                    err_msg = str(e.msg)
+                    self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
+                                     parent_id=parent_id,
+                                     name=func_name, root_id=self.root_id,
+                                     state=StatePoint.end.value, desc=err_msg[-1000:])
+                    # 任务有意自行退出 此子节点的所有子节点都需要在服务端关闭
+                    self.current_call_stack_node = None
+                    return e.data
                 except Exception as e:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,

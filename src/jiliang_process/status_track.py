@@ -1,4 +1,6 @@
-from jiliang_process.process_monitor_types import ProcessState
+import copy
+
+from jiliang_process.process_monitor_types import ProcessState,StatePoint
 
 '''
 class TaskTrackingRecord(db.Model):
@@ -36,6 +38,11 @@ class StatusRecord:
         self.timestamp = timestamp
         self.desc = desc
 
+    def generate_fake_end_record(self):
+        "生成一条假的结束记录"
+        fake_record = copy.deepcopy(self)
+        fake_record.state = StatePoint.process_shutdown.value
+        return fake_record
 
 class StatusNode:
     def __init__(self, root_id, parent_id, sub_id, tag):
@@ -51,10 +58,11 @@ class StatusNode:
         self.err = set()
         self.info = set()
         self.desc = None
+        self.ended_signature = None  # 为了手动关闭节点而增加的标记
 
     def __repr__(self):
         return "%s<%s>%s<%d/%d>" % (
-        self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1])
+            self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1])
 
     @staticmethod
     def create_node_from_record(record):
@@ -68,6 +76,17 @@ class StatusNode:
         cp.sub_success_rate = self.sub_success_rate.copy()
         cp.desc = self.desc
         return cp
+
+    def close_sub_nodes(self):
+        """
+        特殊需求，关闭子节点
+        :return:
+        """
+        for c in self.children:
+            if len(c.records) >0 and not c.ended_signature:
+                fake_record = c.records[0].generate_fake_end_record()
+                c.records.append(fake_record)
+                c.ended_signature = True # 标记过一次就不会再标记了
 
 class TaskStatusTree:
     def __init__(self):
@@ -91,9 +110,9 @@ class TaskStatusTree:
             return [self.root]
         parent_node = self.find_node_by_sub_id(parent_id)
         if not parent_node:
-            return None,[]
+            return None, []
         else:
-            return parent_node,parent_node.children
+            return parent_node, parent_node.children
 
     def add_node(self, new_node, parent_id):
         if self.root is None:
@@ -136,7 +155,7 @@ class TaskStatusTree:
             if not node:
                 new_node = StatusNode.create_node_from_record(record)
                 status = self.add_node(new_node, new_node.parent_id)
-                if not status: # 说明记录添加失败，记录作为orphan被添加到树的孤儿列表了
+                if not status:  # 说明记录添加失败，记录作为orphan被添加到树的孤儿列表了
                     res = False
             else:
                 node.records.append(record)
@@ -164,10 +183,13 @@ class TaskStatusTree:
         stack_rev = []
         while stack:
             tmp = stack.pop()
-            tmp.sub_success_rate = [0,0]
+            tmp.sub_success_rate = [0, 0]
             info_msg = None
             try:
                 tmp.status, err_msg, info_msg = status_merger.merge_status(tmp.records)
+                if tmp.status == ProcessState.process_shutdown:  # 一个特殊情况，启动进程的进程发现子进程结束
+                    # 目前的策略是： 在这个地方关掉所有的子节点
+                    tmp.close_sub_nodes()
             except Exception as e:
                 print(e)
                 err_msg = str(e)
@@ -177,7 +199,7 @@ class TaskStatusTree:
                 tmp.info.add(info_msg)
             tmp.desc = status_merger.merge_info(tmp.status, tmp.err, tmp.info)
 
-                # if desc and tmp.desc and desc != tmp.desc:
+            # if desc and tmp.desc and desc != tmp.desc:
             #     tmp.desc = tmp.desc + " | \n " + desc
             # else:
             #     if desc:
@@ -214,7 +236,6 @@ class TaskStatusTree:
     def update_with_record(self, record, status_merger):
         self.add_record(record)
         self.status_update(status_merger)
-
 
 
 if __name__ == "__main__":
