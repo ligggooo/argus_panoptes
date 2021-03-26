@@ -140,6 +140,7 @@ class StatusMerger:
             return ProcessState.failed, err, info
         process_shutdown_flag, err = process_shutdown(records)
         if process_shutdown_flag:
+            info = "进程终止"
             return ProcessState.process_shutdown, err, info
         if end_exists(records):
             info = "完成"
