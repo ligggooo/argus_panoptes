@@ -42,8 +42,18 @@ def chain_import(import_chain):
     return ret
 
 
-def deco_module(module, deco_rules):
-    print(module, deco_rules)
+def deco_module(module,module_name,deco_rules):
+    print(module, module_name, deco_rules)
+    if module_name != module.__name__:
+        """
+        import dist_road_topo.dist_road_network as dist_road
+        module_name 是  dist_road_topo.dist_road_network，
+        结果__import__传进来的是dist_road_topo，所以还得先get到dist_road_network
+        """
+        module_name_tokens = module_name.split(".")
+        module = chain_get(module, module_name_tokens[1:])
+        if not module:
+            raise Exception("导包错误，规则不明")
     status = True
     for deco_rule in deco_rules:
         print("--装饰", deco_rule)

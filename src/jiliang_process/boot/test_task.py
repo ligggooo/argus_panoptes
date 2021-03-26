@@ -4,6 +4,8 @@
 # @Time      : 2021/3/22 21:08
 # @Author    : Lee
 
+import jiliang_process.process_monitor as pm
+from celery import  Celery
 import pdb
 import sys, os
 from my_dispatch import mydispatch, trace_dispatch

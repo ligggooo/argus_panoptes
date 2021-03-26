@@ -1,5 +1,6 @@
 import sys
 import os
+import traceback
 sys.path.append("E:\workspace\jiliang_monitor_pr\src")
 
 from jiliang_process.boot.starter_conf import get_starter_conf
@@ -67,20 +68,33 @@ class MyRunner:
         sys.path.append(os.path.split(filename)[0])
         def my_import(*args, **kwargs):
             # print(args, kwargs)
-            module_cache = dict()
+            # module_cache = dict()
             module_name = args[0]
-            print("lee import -------%s--------"%module_name)
-            if module_name in module_cache:
-                print("lee done import cached ---%s---" % module_name)
-                return module_cache.get(module_name)
-            ret_module = __original_import(*args, **kwargs)
+            # print("lee import -------%s--------"%module_name)
+            # if module_name in module_cache:
+            #     print("lee done import cached ---%s---" % module_name)
+            #     return module_cache.get(module_name)
+            try:
+                ret_module = __original_import(*args, **kwargs)
+            except ImportError as e:
+                print("lee import ImportError -------%s--------"%module_name,e)
+                print(args,kwargs)
+                raise e
+            except Exception as e:
+                print("lee import Exception -------%s--------" % module_name,e)
+                traceback.print_exc()
+                return e
+            finally:
+                pass
             if len(args) <2 and len(module_name)>0:
                 print(args)
                 print("lee done import cached ---%s---" % module_name)
-                module_cache[module_name] = ret_module
+                # module_cache[module_name] = ret_module
                 return ret_module
             else:
                 info = args[1]
+                if not info:  # 居然还有info传None的情况
+                    info = {}
             if (not module_name) or info.get("__name__","") in ["unittest"]:
                 print("lee done import ---%s-------" % module_name)
                 return ret_module
@@ -88,9 +102,10 @@ class MyRunner:
             status = True
             if module_deco_rules:
                 print("装饰模块", module_deco_rules)
-                status = deco_module(ret_module, module_deco_rules)
+                status = deco_module(ret_module,module_name, module_deco_rules)
             if status:
-                module_cache[module_name] = ret_module
+                # module_cache[module_name] = ret_module
+                pass
             print("lee done import ---%s-------" % module_name)
             return ret_module
 
