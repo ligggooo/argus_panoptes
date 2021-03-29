@@ -4,6 +4,11 @@
 # @Time      : 2021/3/22 21:08
 # @Author    : Lee
 
+
+from dcs_task import road_public_func
+print(dcs_task.road_public_func)
+
+dcs_task.road_public_func
 import jiliang_process.process_monitor as pm
 from celery import  Celery
 import pdb

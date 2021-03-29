@@ -2,7 +2,7 @@ import sys
 import os
 import traceback
 sys.path.append("E:\workspace\jiliang_monitor_pr\src")
-
+sys.path.append(r"E:\workspace\automapbuilding_z")
 from jiliang_process.boot.starter_conf import get_starter_conf
 from jiliang_process.boot.deco_module1 import deco_module
 from jiliang_process.process_monitor import task_monitor
@@ -70,6 +70,8 @@ class MyRunner:
             # print(args, kwargs)
             # module_cache = dict()
             module_name = args[0]
+            if module_name.startswith("dcs"):
+                pass
             # print("lee import -------%s--------"%module_name)
             # if module_name in module_cache:
             #     print("lee done import cached ---%s---" % module_name)
