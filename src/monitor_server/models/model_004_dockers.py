@@ -10,7 +10,7 @@ class Image(db.Model):
     __table_args__ = (
     )
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    image_name = db.Column(db.String(32), nullable=False, unique=True)
+    image_name = db.Column(db.String(256), nullable=False, unique=True)
     desc = db.Column(db.String(512), nullable=False, unique=False)
     size_in_MB = db.Column(db.Integer, nullable=False, unique=False)
 

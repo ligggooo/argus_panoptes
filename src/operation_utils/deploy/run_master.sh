@@ -18,7 +18,7 @@ echo "========================================="
 echo $?
 echo "========================================="
 
-
+source ~/.bashrc
 export RUNTIME_MODE=development_lgw
 export MONITOR_ENABLED=1
 
@@ -30,4 +30,4 @@ echo "========================================="
 
 
 cd $PATH_MAP/jiliang_system
-python ./launch_dist_master_modify_v3_1.py 
+/root/anaconda3/bin/python ./launch_dist_master_modify_v3_1.py  > master_$(date +"%s").log

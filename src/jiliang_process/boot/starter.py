@@ -1,8 +1,7 @@
 import sys
 import os
 import traceback
-sys.path.append("E:\workspace\jiliang_monitor_pr\src")
-sys.path.append(r"E:\workspace\automapbuilding_z")
+sys.path.append("/workspace/jiliang_monitor_pr/src")
 from jiliang_process.boot.starter_conf import get_starter_conf
 from jiliang_process.boot.deco_module1 import deco_module
 from jiliang_process.process_monitor import task_monitor
@@ -65,7 +64,10 @@ class MyRunner:
         import sys,os
         __original_import = sys.modules["builtins"].__import__
         _starter_conf = get_starter_conf()
-        sys.path.append(os.path.split(filename)[0])
+        os.chdir(os.path.split(filename)[0])
+        filename = os.path.split(filename)[1]
+        sys.path.append(".")
+        print("lee_debug current", os.getcwd())
         def my_import(*args, **kwargs):
             # print(args, kwargs)
             # module_cache = dict()

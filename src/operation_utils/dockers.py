@@ -7,8 +7,11 @@ import os
 from operation_utils.file import get_tmp_data_dir
 import uuid
 
-repo_addr = "http://10.130.160.114:2375"
+# repo_addr = "http://10.130.160.114:2375"
 # repo_addr = "http://192.168.31.110:2375"
+repo_addr = "http://172.16.100.51:2375"
+repo_addr_host = "172.16.100.51:5000"
+repo_addr2 = "http://172.16.101.220:2375"
 
 _tmp_data_dir = get_tmp_data_dir()
 CHUNK_SIZE = 2048*1024
@@ -38,12 +41,12 @@ def get_docker_images():
         client = docker.DockerClient(base_url=repo_addr,timeout=2)
         for img in client.images.list():
             full_name = img.tags[0]
-            if "/" in full_name:
-                name = full_name.split("/")[1]
-            else:
-                name = full_name
+            # if "/" in full_name:
+            #     name = full_name.split("/")[1]
+            # else:
+            #     name = full_name
             size_in_MB = int(img.attrs["Size"]/1024/1024)
-            images[name]=Image(full_name,size_in_MB)
+            images[full_name]=Image(full_name,size_in_MB)
         return images
     except Exception as e:
         traceback.print_exc()
@@ -71,7 +74,18 @@ def docker_clients():
     # client.images.pull("172.16.100.51:5000/hello-world","v1")
 
 
-
+def pull_image(ip, port,image_name):
+    try:
+        client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
+        # images = client.images.list()
+        # print(images)
+        c= client.images.pull(image_name,all_tags=True)
+        # print(c, dir(c))
+        # c.run()
+    except Exception as e:
+        traceback.print_exc()
+        return None, str(e)
+    return c, None
 
 
 def create_container(ip, port, image_name_tag, container_name, command, port_mapping):
@@ -308,9 +322,9 @@ if __name__ == '__main__':
     #
     # rm_container("10.130.160.114",2375,"xxxxxx")
     # start_container("10.130.160.114",2375,"xx")
-
     host = "10.130.160.114"
-    image = "image_20201024:latest"
+    host = "172.16.101.119"
+    image = "image_20201228:latest"
     #init_docker_container(host, "test005", image, command='/bin/bash')
     # c = create_container(host, 2375, image, "test007", "/bin/bash")
 
@@ -321,4 +335,5 @@ if __name__ == '__main__':
     # print(a,b)
     # write_content_2_container(host, 2375, "test_copy", "sleep 100\n", "/run.sh")
 
-    container_exec(host, 2375, "jlmonitor", "lx")
+    # container_exec(host, 2375, "jlmonitor", "lx")
+    pull_image(host, 2375, "172.16.100.51:5000/image_20201218")
