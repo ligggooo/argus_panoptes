@@ -1,4 +1,5 @@
 import copy
+import json
 
 from jiliang_process.process_monitor_types import ProcessState,StatePoint
 
@@ -87,6 +88,20 @@ class StatusNode:
                 fake_record = c.records[0].generate_fake_end_record()
                 c.records.append(fake_record)
                 c.ended_signature = True # 标记过一次就不会再标记了
+
+    def dump(self, res):
+        res.update({
+            "id": self.sub_id,
+            "success_rate": self.sub_success_rate,
+            "tag": self.tag,
+            "err": list(self.err),
+            "info": list(self.info),
+            "status":self.status.name,
+            "children":[{} for c in self.children]
+        })
+        for i,c in enumerate(self.children):
+            c.dump(res["children"][i])
+        return res
 
 class TaskStatusTree:
     def __init__(self):
@@ -237,6 +252,10 @@ class TaskStatusTree:
         self.add_record(record)
         self.status_update(status_merger)
 
+    def dumps(self):
+        res = {}
+        self.root.dump(res)
+        return res
 
 if __name__ == "__main__":
     txx = TaskStatusTree()

@@ -1,3 +1,4 @@
+import json
 import sys
 import threading
 
@@ -274,6 +275,13 @@ class TaskStatusTreeCache:
     def get_status(self, root_id, parent_id=None, tag="root", tree=None):
         if not tree:
             tree = self._trees.get(root_id)
+            # dump 树
+            res_str = json.dumps({
+                "code":200,
+                "message":"请求成功",
+                "data":tree.dumps()
+            })
+            print(res_str)
         if not tree:
             return [build_graph_node(None)]
         parent, children = tree.find_node_by_parent_id(parent_id)
