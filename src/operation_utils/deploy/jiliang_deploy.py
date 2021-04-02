@@ -9,6 +9,8 @@ src_dir_sys = r"E:\workspace\jiliang_system"
 src_dir_proc = r"E:\workspace\jiliang_monitor_pr\src\jiliang_process"
 src_dir_semantics = r"E:\workspace\distributed_semantics"
 src_dir_trajectory = r"E:\workspace\automapbuilding_z"
+master_script = "run_master.sh"
+slave_script = "run_slave.sh"
 import tarfile
 
 

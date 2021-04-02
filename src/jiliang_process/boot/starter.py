@@ -81,18 +81,18 @@ class MyRunner:
             try:
                 ret_module = __original_import(*args, **kwargs)
             except ImportError as e:
-                print("lee import ImportError -------%s--------"%module_name,e)
+                # print("lee import ImportError -------%s--------"%module_name,e)
                 print(args,kwargs)
                 raise e
             except Exception as e:
-                print("lee import Exception -------%s--------" % module_name,e)
+                # print("lee import Exception -------%s--------" % module_name,e)
                 traceback.print_exc()
                 return e
             finally:
                 pass
             if len(args) <2 and len(module_name)>0:
                 print(args)
-                print("lee done import cached ---%s---" % module_name)
+                # print("lee done import cached ---%s---" % module_name)
                 # module_cache[module_name] = ret_module
                 return ret_module
             else:
@@ -100,7 +100,7 @@ class MyRunner:
                 if not info:  # 居然还有info传None的情况
                     info = {}
             if (not module_name) or info.get("__name__","") in ["unittest"]:
-                print("lee done import ---%s-------" % module_name)
+                # print("lee done import ---%s-------" % module_name)
                 return ret_module
             module_deco_rules = _starter_conf.match(module_name)
             status = True
@@ -110,7 +110,7 @@ class MyRunner:
             if status:
                 # module_cache[module_name] = ret_module
                 pass
-            print("lee done import ---%s-------" % module_name)
+            # print("lee done import ---%s-------" % module_name)
             return ret_module
 
         sys.modules["builtins"].__import__ = my_import

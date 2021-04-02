@@ -280,10 +280,10 @@ class TaskStatusTreeCache:
                 "code":200,
                 "message":"请求成功",
                 "data":tree.dumps()
-            })
+            },indent=" ")
             print(res_str)
         if not tree:
-            return [build_graph_node(None)]
+            return build_graph_node(None), [build_graph_node(None)], ""
         parent, children = tree.find_node_by_parent_id(parent_id)
         children.sort(key=lambda x: x.sub_id)
         if not children:

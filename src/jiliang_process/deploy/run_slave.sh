@@ -9,16 +9,16 @@ sh /workspace/jiliang_system/deploy/install.sh
 echo "========================================="
 echo $?
 echo "========================================="
-sh /workspace/automapbuilding_z/deploy/install.sh 
+sh /workspace/jiliang_system/deploy/automapbuilding_z/install.sh
 echo "========================================="
 echo $?
 echo "========================================="
-sh /workspace/distributed_semantics/deploy/install.sh 
+sh /workspace/jiliang_system/deploy/distributed_semantics/install.sh
 echo "========================================="
 echo $?
 echo "========================================="
 
-
+source ~/.bashrc
 export RUNTIME_MODE=development_lgw
 export MONITOR_ENABLED=1
 
@@ -26,4 +26,3 @@ sh /workspace/jiliang_system/deploy/run.sh
 echo "========================================="
 echo $?
 echo "========================================="
-
