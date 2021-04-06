@@ -1,6 +1,6 @@
-# jiliang_monitor
+# argus panoptes
 
-*集成组后台运维管理系统*
+*An unified monitor system for distributed systems*
 
 ## v1.2.1 ---------------------------------
 ### 变更
