@@ -2,7 +2,7 @@ import copy
 import json
 
 from jiliang_process.process_monitor_types import ProcessState,StatePoint
-
+from typing import List,Tuple
 '''
 class TaskTrackingRecord(db.Model):
     __tablename__ = "task_track"
@@ -53,7 +53,9 @@ class StatusNode:
         self.sub_id = sub_id
         self.root_id = root_id
         self.tag = tag
-        self.records = []
+        self.records: List[StatusRecord] = []
+        self.start_time = -1
+        self.end_time = -1
         self.status = ProcessState.unknown  # 节点日志中反映出的完成情况
         self.sub_success_rate = [0, 0]  # 子节点日志中反映出的完成情况( 完成数/总数 )
         self.err = set()
@@ -103,9 +105,22 @@ class StatusNode:
             c.dump(res["children"][i])
         return res
 
+    def dump_without_children(self):
+        return {
+            "id": self.sub_id,
+            "success_rate": self.sub_success_rate,
+            "tag": self.tag,
+            "err": list(self.err),
+            "info": list(self.info),
+            "status": self.status.name,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "has_children": len(self.children) > 0
+        }
+
 class TaskStatusTree:
     def __init__(self):
-        self.root = None
+        self.root:StatusNode = None
         self.orphans = []
         self.records = []
 
@@ -120,9 +135,9 @@ class TaskStatusTree:
         else:
             return None
 
-    def find_node_by_parent_id(self, parent_id):
+    def find_node_by_parent_id(self, parent_id)->Tuple[StatusNode, List[StatusNode]]:
         if parent_id is None:
-            return [self.root]
+            return None, [self.root]
         parent_node = self.find_node_by_sub_id(parent_id)
         if not parent_node:
             return None, []

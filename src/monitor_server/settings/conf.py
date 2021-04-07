@@ -20,10 +20,12 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
 
-# class TestingConfig(Config):
-#     TESTING = True
-#     SQLALCHEMY_DATABASE_URI="sqlite:///my_db.sqlite"
-#     SQLALCHEMY_TRACK_MODIFICATIONS = False
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI="sqlite:///my_db.sqlite"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
+    TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
 class TestingConfig2(Config):
     TESTING = True
@@ -39,4 +41,5 @@ class TestingConfig2(Config):
     TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
-config = TestingConfig2
+
+config = TestingConfig

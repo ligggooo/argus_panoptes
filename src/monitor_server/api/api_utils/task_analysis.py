@@ -1,6 +1,7 @@
 import json
 import sys
 import threading
+from typing import Dict
 
 sys.path.append("../../")
 from monitor_server.models.model_006_tasks import TaskTrackingRecord, Task, db
@@ -258,7 +259,7 @@ class TaskStatusTreeCache:
 
     def __init__(self, task_record_cache):
         self._task_record_cache = task_record_cache
-        self._trees = {}
+        self._trees:Dict[str,TaskStatusTree] = {}
         self._lock = threading.Lock()
 
     def load(self):
@@ -272,12 +273,9 @@ class TaskStatusTreeCache:
         status_tree = TaskStatusTree.build_from_records(batch_records, status_merger=StatusMerger())
         return status_tree
 
-    def get_status(self, root_id, parent_id=None, tag="root", tree=None, json_flag=False):
+    def get_status(self, root_id, parent_id=None, tag="root", tree:TaskStatusTree=None):
         if not tree:
             tree = self._trees.get(root_id)
-            # dump 树
-            if json_flag:
-                return tree.dumps()
         if not tree:
             return build_graph_node(None), [build_graph_node(None)], ""
         parent, children = tree.find_node_by_parent_id(parent_id)
@@ -289,6 +287,18 @@ class TaskStatusTreeCache:
         chilren_status_block = [build_graph_node(x) for x in children]
         parent_status_block = build_graph_node(parent)
         return parent_status_block, chilren_status_block, tree.root.desc
+
+    def get_tree_root_json_obj(self, root_id):
+        tree = self._trees.get(root_id)
+        res = tree.root.dump_without_children()
+        return res
+
+    def get_children_json_obj(self, root_id, parent_id):
+        tree = self._trees.get(root_id)
+        parent, children = tree.find_node_by_parent_id(parent_id)
+        children.sort(key=lambda x: x.sub_id)
+        res = [c.dump_without_children() for c in children]
+        return res
 
     def get_tasks_from_cache(self, root_id, parent_id=None, sub_id=None):
         tree = self._trees.get(root_id)

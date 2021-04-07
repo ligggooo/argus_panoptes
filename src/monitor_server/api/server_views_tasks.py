@@ -1,9 +1,10 @@
 import threading
-from flask import Blueprint, request, url_for, render_template
+from flask import Blueprint, request, url_for, render_template,json
 import sys
-import json
+# import json
 import queue
 from flask_apscheduler import APScheduler
+from flask_cors import cross_origin
 
 from jiliang_process.status_track import StatusRecord
 from monitor_server.api.api_utils.db_utils import wake_up_data_base
@@ -68,20 +69,29 @@ def get_tasks():
 
 
 @api_group5.route('/frontend_test_status_tree', methods=['GET', 'POST'])
+@cross_origin()
 def front_end_test():
-    tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
+    root_id = request.args.get("root_id")
+    parent_id = request.args.get("parent_id")
 
-    data = []
-    for t in tasks:
-        t.note = str(t)
-        tree_dump = task_status_tree_cache.get_status(root_id=t.root_id, parent_id=t.root_id,json_flag=True)
-        data.append(tree_dump)
-
+    if not root_id:
+        data = []
+        tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
+        for t in tasks:
+            t.note = str(t)
+            tree_dump = task_status_tree_cache.get_tree_root_json_obj(root_id=t.root_id)
+            size = sys.getsizeof(tree_dump)
+            print(size)
+            data.append(tree_dump)
+    else:
+        data = task_status_tree_cache.get_children_json_obj(root_id=root_id,parent_id=parent_id)
     res_json = json.dumps({
         "code": 200,
         "message": "请求成功",
         "data": data
     }, indent=" ")
+    size = sys.getsizeof(res_json)
+    print(size)
     return res_json
 
 
