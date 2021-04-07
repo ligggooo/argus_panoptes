@@ -92,7 +92,7 @@ class ProcessMonitor:
         return parent_node, this_node_in_id_tree
         # id树生长 -------
 
-    def normal_task_deco(self, name=None):
+    def normal_task_deco(self, name=None, show_kw_arg=None, show_position_arg=-1):
         """普通调用的装饰器"""
 
         @shorted_if(self.MONITOR_DISABLED)
@@ -103,11 +103,16 @@ class ProcessMonitor:
                 this_id = self.unique_id_holder.get()
                 parent_node, this_node = self.id_tree_grow(func, this_id)  # 发起任务，id树生长，id树指针下移
                 parent_id = parent_node.this_id
+                desc = ""
+                if show_kw_arg:
+                    desc = "%s: %s" % (show_kw_arg, str(kwargs.get(show_kw_arg)))
+                if show_position_arg >= 0 and show_position_arg < len(args):
+                    desc = "arg_%d: %s" % (show_position_arg, str(args[show_position_arg]))
 
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id,
                                  parent_id=parent_id,
                                  name=func_name, root_id=self.root_id,
-                                 state=StatePoint.start.value, desc="")
+                                 state=StatePoint.start.value, desc=desc)
                 try:
                     res = func(*args, **kwargs)
 
@@ -123,7 +128,7 @@ class ProcessMonitor:
                 self.logger.info(call_category=CallCategory.normal.value, sub_id=this_id,
                                  parent_id=parent_id,
                                  name=func_name, root_id=self.root_id,
-                                 state=StatePoint.end.value, desc="")
+                                 state=StatePoint.end.value, desc=desc)
                 #   任务成功 id树指针上移
                 self.set_current_call_stack_node(parent_node)
                 return res
