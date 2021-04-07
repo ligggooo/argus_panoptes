@@ -190,7 +190,7 @@ def get_records_for_test():
 
 
 
-def build_graph_node(x):
+def build_graph_node(x: StatusNode):
     if x is None:
         block = GraphBlock(type='E', content="无记录", html_class="btn-default")
         block.parent_id = "-12"
@@ -272,16 +272,12 @@ class TaskStatusTreeCache:
         status_tree = TaskStatusTree.build_from_records(batch_records, status_merger=StatusMerger())
         return status_tree
 
-    def get_status(self, root_id, parent_id=None, tag="root", tree=None):
+    def get_status(self, root_id, parent_id=None, tag="root", tree=None, json_flag=False):
         if not tree:
             tree = self._trees.get(root_id)
             # dump 树
-            res_str = json.dumps({
-                "code":200,
-                "message":"请求成功",
-                "data":tree.dumps()
-            },indent=" ")
-            print(res_str)
+            if json_flag:
+                return tree.dumps()
         if not tree:
             return build_graph_node(None), [build_graph_node(None)], ""
         parent, children = tree.find_node_by_parent_id(parent_id)

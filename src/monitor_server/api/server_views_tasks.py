@@ -67,6 +67,24 @@ def get_tasks():
         return render_template("tasks.html", tasks=tasks, test_url=test_url, task_class="active")
 
 
+@api_group5.route('/frontend_test_status_tree', methods=['GET', 'POST'])
+def front_end_test():
+    tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
+
+    data = []
+    for t in tasks:
+        t.note = str(t)
+        tree_dump = task_status_tree_cache.get_status(root_id=t.root_id, parent_id=t.root_id,json_flag=True)
+        data.append(tree_dump)
+
+    res_json = json.dumps({
+        "code": 200,
+        "message": "请求成功",
+        "data": data
+    }, indent=" ")
+    return res_json
+
+
 @api_group5.route('/record_tasks', methods=['POST', "GET"])
 def record_tasks():
     from jiliang_process.process_monitor import CallCategory

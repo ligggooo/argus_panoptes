@@ -9,7 +9,11 @@ from jiliang_process.process_monitor import task_monitor
 
 class MyRunner:
     def __init__(self) -> None:
-        pass
+        if getattr(sys.modules["builtins"].__import__, "runner_tag", None) is None:
+            self.__original_import = sys.modules["builtins"].__import__
+        else:
+            raise Exception("两次初始化runner")
+            pass
 
     def canonic(self, filename):
         import os
@@ -62,11 +66,10 @@ class MyRunner:
     def run_script(self, filename, root_id=None, parent_id=None):
         import __main__
         import sys,os
-        __original_import = sys.modules["builtins"].__import__
         _starter_conf = get_starter_conf()
         os.chdir(os.path.split(filename)[0])
         filename = os.path.split(filename)[1]
-        sys.path.append(".")
+        sys.path.insert(0, os.getcwd())
         print("lee_debug current", os.getcwd())
         def my_import(*args, **kwargs):
             # print(args, kwargs)
@@ -79,7 +82,7 @@ class MyRunner:
             #     print("lee done import cached ---%s---" % module_name)
             #     return module_cache.get(module_name)
             try:
-                ret_module = __original_import(*args, **kwargs)
+                ret_module = self.__original_import(*args, **kwargs)
             except ImportError as e:
                 # print("lee import ImportError -------%s--------"%module_name,e)
                 print(args,kwargs)
@@ -113,7 +116,10 @@ class MyRunner:
             # print("lee done import ---%s-------" % module_name)
             return ret_module
 
-        sys.modules["builtins"].__import__ = my_import
+        if getattr(sys.modules["builtins"].__import__, "runner_tag", None) is None:
+            sys.modules["builtins"].__import__ = my_import
+            sys.modules["builtins"].__import__.runner_tag = "replaced"
+
 
         # __main__.__dict__.clear()
         __main__.__dict__.update({"__name__"    : "__main__",
