@@ -246,6 +246,23 @@ def container_exec(ip, port, container_id, command):
         return "success", str(e)
 
 
+def exec_cmd(ip, port, container_id, cmd):
+    try:
+        c = __get_container(ip, port, container_id)
+        if c:
+            res = c.exec_run(cmd)
+            if res.exit_code != 0:
+                ret = "failed", res[1]
+            else:
+                ret = "success", res[1]
+        else:
+            ret = "failed", "cannot find this container"
+        return ret
+    except Exception as e:
+        traceback.print_exc()
+        return "success", str(e)
+
+
 def tar_and_cp_file_2_container(ip, port, container_id, file_path, tmp_dir=_tmp_data_dir):
     try:
         c = __get_container(ip, port, container_id)
@@ -336,4 +353,6 @@ if __name__ == '__main__':
     # write_content_2_container(host, 2375, "test_copy", "sleep 100\n", "/run.sh")
 
     # container_exec(host, 2375, "jlmonitor", "lx")
-    pull_image(host, 2375, "172.16.100.51:5000/image_20201218")
+    # pull_image(host, 2375, "172.16.100.51:5000/image_20201218")
+    xx = exec_cmd("172.16.100.51", 2375,"jiliang_core","ls /xx")
+    print(xx)

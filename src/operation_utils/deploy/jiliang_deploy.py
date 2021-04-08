@@ -3,7 +3,7 @@
 # @FileName  : jiliang_deploy.py
 # @Time      : 2021/3/16 20:19
 # @Author    : Lee
-from operation_utils.dockers import tar_and_cp_file_2_container
+from operation_utils.dockers import tar_and_cp_file_2_container, exec_cmd
 
 src_dir_sys = r"E:\workspace\jiliang_system"
 src_dir_proc = r"E:\workspace\jiliang_monitor_pr\src\jiliang_process"
@@ -16,6 +16,9 @@ import tarfile
 
 def deploy_to_machine(host,dockers):
     for d in dockers:
+        res = exec_cmd(host, 2375, d,"rm -rf /workspace/*")
+        if res[0]!="success":
+            print(res)
         print(host,d,src_dir_sys)
         tar_and_cp_file_2_container(host, 2375, d, src_dir_sys)
         print(host, d, src_dir_proc)
