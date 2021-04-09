@@ -123,17 +123,29 @@ class TaskStatusTree:
         self.root:StatusNode = None
         self.orphans = []
         self.records = []
+        self.node_cache = {}
 
-    def find_node_by_sub_id(self, sub_id):
+    def cache_node(self, new_node):
+        if new_node.sub_id in self.node_cache:
+            raise Exception("缓存逻辑错误")
+        self.node_cache[new_node.sub_id] = new_node
+
+    # 这个方法也简单粗暴，可以加速 todo
+    # 方案一： 缓存
+    def find_node_by_sub_id_old(self, sub_id):
         stack = [self.root]
         while stack:
             tmp = stack.pop(0)
             if tmp.sub_id == sub_id:
                 return tmp
             else:
-                stack.extend(tmp.children)
+                if tmp.sub_id < sub_id:  # 若当前节点的id大于待查id，则没必要继续查找了
+                    stack.extend(tmp.children)
         else:
             return None
+
+    def find_node_by_sub_id(self, sub_id):
+        return self.node_cache.get(sub_id)
 
     def find_node_by_parent_id(self, parent_id)->Tuple[StatusNode, List[StatusNode]]:
         if parent_id is None:
@@ -144,20 +156,23 @@ class TaskStatusTree:
         else:
             return parent_node, parent_node.children
 
-    def add_node(self, new_node, parent_id):
+    def add_node(self, new_node, parent_id, new_node_gurantee_flag=False):
         if self.root is None:
             self.root = new_node
+            self.cache_node(new_node)
             return True
         else:
-            this_node = self.find_node_by_sub_id(new_node.sub_id)
-            if this_node:  # 这个node是某个节点的另一个记录
-                this_node.records.extend(new_node.records)
-                return True
+            if not new_node_gurantee_flag: # 若无法保证这个是新节点，就查一次
+                this_node = self.find_node_by_sub_id(new_node.sub_id)
+                if this_node:  # 这个node是某个节点的另一个记录
+                    this_node.records.extend(new_node.records)
+                    return True
             node_to_attach_to = self.find_node_by_sub_id(parent_id)
             if not node_to_attach_to:
                 # 可能这个节点更高级
                 if self.root.parent_id == new_node.sub_id:
                     new_node.children.append(self.root)
+                    self.cache_node(new_node)
                     self.root.parent = new_node
                     self.root = new_node
                     return True
@@ -173,18 +188,19 @@ class TaskStatusTree:
             else:
                 node_to_attach_to.children.append(new_node)
                 new_node.parent = node_to_attach_to
+                self.cache_node(new_node)
                 return True
 
     def add_record(self, record):
         res = True
         self.records.append(record)
         if not self.root:
-            self.root = StatusNode.create_node_from_record(record)
+            self.add_node(StatusNode.create_node_from_record(record),parent_id=None)
         else:
             node = self.find_node_by_sub_id(record.sub_id)
             if not node:
                 new_node = StatusNode.create_node_from_record(record)
-                status = self.add_node(new_node, new_node.parent_id)
+                status = self.add_node(new_node, new_node.parent_id, new_node_gurantee_flag=True)
                 if not status:  # 说明记录添加失败，记录作为orphan被添加到树的孤儿列表了
                     res = False
             else:
@@ -254,10 +270,13 @@ class TaskStatusTree:
         t = TaskStatusTree()
         if not records:
             return None
+        records = sorted(records, key=lambda x: x.sub_id)
         for r in records:
             t.add_record(r)
+            print(len(t.records),len(t.orphans))
 
         # 可能存在记录顺序不对导致有些节点没有找到父节点
+        # todo 此方法太简单粗暴，应该优化  建树过程应该允许分段进行
         t.consume_orphans()
 
         t.status_update(status_merger)

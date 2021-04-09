@@ -2,6 +2,7 @@
 
 import os
 import json
+import time
 from functools import wraps
 import traceback
 import threading
@@ -248,7 +249,10 @@ class ProcessMonitor:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 func_name = func.__name__ if name is None else name
+                t = time.time()
                 this_id = self.unique_id_holder.get()
+                t1 = time.time()
+                print("t1",t1-t)
                 root_tag = ProcessMonitor.get_root_tag(kwargs, root_tag_var_name)
                 if not root_tag:
                     root_tag = this_id
@@ -259,6 +263,8 @@ class ProcessMonitor:
                                  parent_id=None, root_id=self.root_id,
                                  name=func_name, root_tag=root_tag,
                                  state=StatePoint.start.value)
+                t2 = time.time()
+                print("t2", t2 - t1)
                 try:
                     res = func(*args, **kwargs)
                 except Exception as e:

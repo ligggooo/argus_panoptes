@@ -29,6 +29,16 @@ def deploy_to_machine(host,dockers):
         tar_and_cp_file_2_container(host, 2375, d, src_dir_trajectory)
 
 if __name__ == "__main__":
+    host = "172.16.100.52"
+    dockers = ["jl_slave_52_2"]
+    deploy_to_machine(host, dockers)
+    exit()
+
+    host = "172.16.100.52"
+    dockers = ["jl_slave_52_1", "jl_slave_52_2"]
+    deploy_to_machine(host, dockers)
+    exit()
+
     host = "172.16.100.51"
     dockers = ["jiliang_core", "jiliang_slave"]
     deploy_to_machine(host, dockers)
