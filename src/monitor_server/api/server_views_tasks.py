@@ -27,11 +27,11 @@ api_group5 = Blueprint("api_g5", __name__)
 # scheduler.start()
 # # get_task 从redis中读取分析结果，呈现到前端
 # ---------------------------------------------------------------------------------------------------------
-scheduler = APScheduler()
-# 定时任务周期性地读取数据库,保持数据库连接是活的
-scheduler.add_job(func=wake_up_data_base, id="wake_up_data_base", args=(), trigger='interval',
-                   seconds=50, replace_existing=True)
-scheduler.start()
+# scheduler = APScheduler()
+# # 定时任务周期性地读取数据库,保持数据库连接是活的
+# scheduler.add_job(func=wake_up_data_base, id="wake_up_data_base", args=(), trigger='interval',
+#                    seconds=50, replace_existing=True)
+# scheduler.start()
 # # get_task 从redis中读取分析结果，呈现到前端
 # ---------------------------------------------------------------------------------------------------------
 
@@ -145,3 +145,22 @@ def task_unique_id():
     id = g_task_unique_id.get_id()
     msg = {"task_unique_id": id}
     return json.dumps(msg)
+
+
+@api_group5.route('/slow_job', methods=['POST'])
+def slow_job_post_endpoint():
+    print(request.data)
+    return "ok"
+
+
+@api_group5.route('/post_test_write_db', methods=['POST'])
+def post_test_write_db():
+    content = request.data.decode("utf-8")
+    print(content)
+    sess = db.session()
+    from monitor_server.models.model_001_test import Info
+    info = Info(content=content[:4096])
+    sess.add(info)
+    sess.commit()
+    sess.close()
+    return "ok"

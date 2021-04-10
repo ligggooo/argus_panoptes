@@ -6,7 +6,7 @@ from jiliang_process.status_track import StatusRecord
 
 class TaskTrackingRecord(db.Model):
     __tablename__ = "task_track"
-    __table_args__ = {"extend_existing":True}
+    __table_args__ = {"extend_existing": True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     sub_id = db.Column(db.String(128), nullable=False, unique=True)
     parent_id = db.Column(db.String(128), nullable=True, unique=False)

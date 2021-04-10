@@ -16,13 +16,16 @@ import tarfile
 
 def deploy_to_machine(host,dockers):
     for d in dockers:
-        res = exec_cmd(host, 2375, d,"rm -rf /workspace/*")
+        res = exec_cmd(host, 2375, d, "rm -rfv /workspace")
+        if res[0]!="success":
+            print(res)
+        res = exec_cmd(host, 2375, d, "rm -rfv /app/inte_dir")
         if res[0]!="success":
             print(res)
         print(host,d,src_dir_sys)
         tar_and_cp_file_2_container(host, 2375, d, src_dir_sys)
-        print(host, d, src_dir_proc)
-        tar_and_cp_file_2_container(host, 2375, d, src_dir_proc)
+        # print(host, d, src_dir_proc)
+        # tar_and_cp_file_2_container(host, 2375, d, src_dir_proc)
         print(host, d, src_dir_semantics)
         tar_and_cp_file_2_container(host, 2375, d, src_dir_semantics)
         print(host, d, src_dir_trajectory)
@@ -32,12 +35,11 @@ if __name__ == "__main__":
     host = "172.16.100.52"
     dockers = ["jl_slave_52_2"]
     deploy_to_machine(host, dockers)
-    exit()
+
 
     host = "172.16.100.52"
     dockers = ["jl_slave_52_1", "jl_slave_52_2"]
     deploy_to_machine(host, dockers)
-    exit()
 
     host = "172.16.100.51"
     dockers = ["jiliang_core", "jiliang_slave"]

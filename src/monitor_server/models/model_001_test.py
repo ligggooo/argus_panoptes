@@ -11,6 +11,16 @@ class Users1(db.Model):
     def __repr__(self):
         return "<Users %r>" %self.username
 
+
+class Info(db.Model):
+    __tablename__ = "infos"
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(4096), nullable=False, unique=False)
+
+    def __repr__(self):
+        return "<%s> %s\n" % (self.id, self.content[:49])
+
+
 class ProcessState(db.Model):
     __tablename__ = "process_state"
     __table_args__ = (
