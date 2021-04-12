@@ -27,6 +27,33 @@ state_graph = {
         }
 }
 
+
+status_graph = {
+    "root": {
+        "parent": None,
+        "nodes": [(0, 0, 'root_s0'), (1, 1, 'root_s1')],
+        'edges': [(0, 1, "main", CallCategory.cross_process)],
+    },
+    "main": {
+        "name": "语义算法v 1.0.0",
+        "parent": ("root", "main", CallCategory.cross_process),
+        "nodes": [(0, 0, 'main_s0'), (1, 1, 'main_s1'), (2, 2, 'main_s2'), (3, 3, 'main_s3')],
+        'edges': [(0, 1, "A", CallCategory.normal), (1, 2, "B", CallCategory.normal),
+                  (2, 3, "C", CallCategory.normal)],  # (from,to,edge_tag, how edge is called)
+    },
+    "B": {
+        "parent": ("main", "B", CallCategory.normal),
+        # (parent_graph, node_name_in_parent_graph, how_sub_graph_is_called)
+        "nodes": [(0, 0, 'B_s0'), (1, 1, 'B_s1')],
+        "edges": [(0, 1, "D", CallCategory.normal)],
+    },
+    "C": {
+        "parent": ("main", "C", CallCategory.normal),
+        "nodes": [(0, 0, 'C_s0'), (1, 1, 'C_s1')],
+        "edges": [(0, 1, "E", CallCategory.cross_process)],
+    }
+}
+
 dependence_graph_2 = {
     "main": {
         "parent": None,
