@@ -22,6 +22,6 @@ app.register_blueprint(api_group6)
 
 
 if __name__ == '__main__':
-    app.run(host="192.168.31.124", port=60010, threaded=False)
+    app.run(host="127.0.0.1", port=60010, threaded=False)
     #app.run()
 

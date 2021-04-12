@@ -41,9 +41,8 @@ class ProcessState(db.Model):
     def __repr__(self):
         return self.batch_id
 
-
-
-
+def create_all():
+    db.create_all()
 
 
 if __name__ == "__main__":

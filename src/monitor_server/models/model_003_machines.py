@@ -68,7 +68,7 @@ def update_ports():
     available_port_objs[1].available=0
     db.session().commit()
 
-if __name__ == "__main__":
+def create_all():
     db.create_all()
     init_machines()
     init_ports()

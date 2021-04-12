@@ -36,7 +36,7 @@ class Deployment(db.Model):
                 return False, None
 
 
-if __name__ == "__main__":
+def create_all():
     db.create_all()
     xx = Deployment.query.filter_by(container_id=1).join(SoftPackage, SoftPackage.spid==Deployment.soft_package_id).\
         filter(SoftPackage.package_name=="jiliang_monitor").all()

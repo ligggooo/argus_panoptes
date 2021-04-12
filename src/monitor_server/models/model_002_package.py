@@ -36,8 +36,7 @@ class SoftPackage(db.Model):
     def full_name_no_suffix_no_version(self):
         return "%s" % (self.package_name)
 
-
-if __name__ == "__main__":
+def create_all():
     db.create_all()
     for i in range(10):
         new_soft_pack = SoftPackage(package_name="dev_helloworld",

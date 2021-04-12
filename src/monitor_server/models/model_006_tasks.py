@@ -57,5 +57,9 @@ class Task(db.Model):
     def __repr__(self):
         return "%s <%s:%s>"%(self.name, self.root_tag,self.root_id)
 
+
+def create_all():
+    db.create_all()
+
 if __name__ == "__main__":
     db.create_all()

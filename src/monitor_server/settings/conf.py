@@ -57,10 +57,16 @@ class TestingConfig3(Config):
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
 
-config = TestingConfig3
+config = TestingConfig
 
 
 class RedisConn:
     host = '192.168.31.110'
+    port = 6379
+    db = 0
+
+
+class RedisConn:
+    host = '127.0.0.1'
     port = 6379
     db = 0

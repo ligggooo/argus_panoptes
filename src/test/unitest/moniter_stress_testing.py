@@ -14,7 +14,7 @@ holder = []
 
 
 def fast_job():
-    z = requests.get("http://172.16.5.148:60012/task_unique_id")
+    z = requests.get("http://127.0.0.1:60010/task_unique_id")
     print(z.content)
     return z.content
 

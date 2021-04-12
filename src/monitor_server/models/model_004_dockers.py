@@ -2,6 +2,7 @@ from sqlalchemy import UniqueConstraint, PrimaryKeyConstraint
 
 from monitor_server.api.api_utils.portmapping_parser import port_mapping_str2list
 from monitor_server import db
+db.metadata.clear()
 from monitor_server.models.model_003_machines import PhysicalPort
 
 db.metadata.clear()
@@ -60,8 +61,7 @@ class Container(db.Model):
         db.session.commit()
 
 
-if __name__ == "__main__":
-
+def create_all():
     db.create_all()
     sess = db.session()
     new_obj1 = Image(desc="demo ：支持ta sa", image_name="pytorch_gis_sa_ta_v202101.1", size_in_MB=321)

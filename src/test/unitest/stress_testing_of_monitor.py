@@ -10,8 +10,8 @@ import numpy as np
 from jiliang_process.process_monitor import task_monitor
 from test.unitest.utils import holder, speed_deco, timer_deco, holder2, concurrent_tester
 
-TASK_RECORDER_URL="http://192.168.31.124:60010/record_tasks"
-TASK_UNIQUE_ID_URL="http://192.168.31.124:60010/task_unique_id"
+TASK_RECORDER_URL="http://127.0.0.1:60010/record_tasks"
+TASK_UNIQUE_ID_URL="http://127.0.0.1:60010/task_unique_id"
 task_monitor.re_config(TASK_RECORDER_URL=TASK_RECORDER_URL,
                        TASK_UNIQUE_ID_URL=TASK_UNIQUE_ID_URL)
 
@@ -80,7 +80,7 @@ class MyTestCase(unittest.TestCase):
         part2(concurreny=30, job_size=50000)
 
     def test_unique_id(self):
-        concurrent_tester(get_id,1,200)
+        concurrent_tester(get_id,100,2000)
         print("=====average resp time %f ==========", np.mean(holder[-40:-1]), len(holder2), len(set(holder2)))
 
     @task_monitor.root_deco("压测3根节点 无并发 无限任务 计时")
