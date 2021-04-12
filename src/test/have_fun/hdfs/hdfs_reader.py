@@ -1,0 +1,2 @@
+from pyhdfs import HdfsClient
+

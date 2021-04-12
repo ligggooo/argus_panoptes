@@ -11,18 +11,20 @@ import traceback
 def wake_up_data_base():
     try:
         sess = db.session()
-        xx = sess.execute("select * from wake_up")
+        xx = sess.execute("select * from pg_ts_config")
         print(xx.fetchall())
+        sess.close()
     except Exception as e:
         traceback.print_exc()
         db.session.rollback()
         try:
             sess = db.session()
-            xx = sess.execute("select * from wake_up")
+            xx = sess.execute("select * from pg_ts_config")
             print(xx.fetchall())
+            sess.close()
         except Exception as e:
             traceback.print_exc()
-            exit(0)
+            raise e
 
 
 if __name__ == "__main__":

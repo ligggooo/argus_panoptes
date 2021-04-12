@@ -41,5 +41,26 @@ class TestingConfig2(Config):
     TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
+class TestingConfig3(Config):
+    TESTING = False
+    SQLALCHEMY_ECHO = False
+    SQLALCHEMY_DATABASE_URI="postgresql://lee:1122@192.168.31.110:5432/test"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    DB_POOL_SIZE = 10
+    DB_POOL_RECYCLE = 10
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size' : DB_POOL_SIZE,
+        'pool_recycle' : DB_POOL_RECYCLE
+    }
+    TASK_TRACK_CACHE = False
+    TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
+    TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
-config = TestingConfig2
+
+config = TestingConfig3
+
+
+class RedisConn:
+    host = '192.168.31.110'
+    port = 6379
+    db = 0

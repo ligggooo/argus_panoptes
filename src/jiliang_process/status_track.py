@@ -20,7 +20,7 @@ class TaskTrackingRecord(db.Model):
 
 
 class StatusRecord:
-    # 模仿适配falsk ORM对象
+    # 模仿适配flask ORM对象
     def __init__(self, sub_id=None,
                  parent_id=None,
                  root_id=None,
@@ -44,6 +44,7 @@ class StatusRecord:
         fake_record = copy.deepcopy(self)
         fake_record.state = StatePoint.process_shutdown.value
         return fake_record
+
 
 class StatusNode:
     def __init__(self, root_id, parent_id, sub_id, tag):

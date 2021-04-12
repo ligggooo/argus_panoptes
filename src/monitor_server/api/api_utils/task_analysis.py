@@ -24,33 +24,6 @@ class GraphBlock:
         self.html_class = html_class
 
 
-status_graph = {
-    "root": {
-        "parent": None,
-        "nodes": [(0, 0, 'root_s0'), (1, 1, 'root_s1')],
-        'edges': [(0, 1, "main", CallCategory.cross_process)],
-    },
-    "main": {
-        "name": "语义算法v 1.0.0",
-        "parent": ("root", "main", CallCategory.cross_process),
-        "nodes": [(0, 0, 'main_s0'), (1, 1, 'main_s1'), (2, 2, 'main_s2'), (3, 3, 'main_s3')],
-        'edges': [(0, 1, "A", CallCategory.normal), (1, 2, "B", CallCategory.normal),
-                  (2, 3, "C", CallCategory.normal)],  # (from,to,edge_tag, how edge is called)
-    },
-    "B": {
-        "parent": ("main", "B", CallCategory.normal),
-        # (parent_graph, node_name_in_parent_graph, how_sub_graph_is_called)
-        "nodes": [(0, 0, 'B_s0'), (1, 1, 'B_s1')],
-        "edges": [(0, 1, "D", CallCategory.normal)],
-    },
-    "C": {
-        "parent": ("main", "C", CallCategory.normal),
-        "nodes": [(0, 0, 'C_s0'), (1, 1, 'C_s1')],
-        "edges": [(0, 1, "E", CallCategory.cross_process)],
-    }
-}
-
-
 def start_exists(records):
     for r in records:
         if r.state == StatePoint.start.value:
@@ -188,9 +161,6 @@ def get_records_for_test():
         return records
 
 
-
-
-
 def build_graph_node(x: StatusNode):
     if x is None:
         block = GraphBlock(type='E', content="无记录", html_class="btn-default")
@@ -211,17 +181,17 @@ def build_graph_node(x: StatusNode):
     return block
 
 
-
-
-
-
+"""
+    ---------------------------------- 数据缓存 -----------------------------------
+"""
 
 
 class TaskRecordCache:
     """
-    缓存内容会无限增，得设计一个限制大小的机制
+    缓存内容会无限增加，得设计一个限制大小的机制
+    LRU 就够了
     """
-
+    # todo 进程共享需要尽快实现
     def __init__(self):
         self.records = {}
         self._lock = threading.Lock()
@@ -231,12 +201,14 @@ class TaskRecordCache:
 
     def insert(self, record):
         _root_id = str(record.root_id)
-        if _root_id in self.records:
-            self.records[_root_id].append(record)
-        else:
-            self.records[_root_id] = [record]
+        with self._lock:
+            if _root_id in self.records:
+                self.records[_root_id].append(record)
+            else:
+                self.records[_root_id] = [record]
 
     def get_records(self, root_id):
+        # todo 这样同步只能保证 root_id 存在，不能保证一个root_id对应的记录是一致完整的
         if root_id not in self.records:  # 缓存未命中
             with self._lock:
                 if root_id not in self.records:  # dbl check
@@ -254,46 +226,52 @@ class TaskRecordCache:
 
 class TaskStatusTreeCache:
     """
-    缓存内容会无限增，得设计一个限制大小的机制
+    缓存内容会无限增加，得设计一个限制大小的机制
     """
 
-    def __init__(self, task_record_cache):
+    def __init__(self, task_record_cache: TaskRecordCache):
         self._task_record_cache = task_record_cache
-        self._trees:Dict[str,TaskStatusTree] = {}
+        self._trees: Dict[str, TaskStatusTree] = {}
         self._lock = threading.Lock()
 
     def load(self):
+        # todo 线程安全
+        # 仅在服务器启动时调用，不必实现线程安全
         if not self._trees:
             self._task_record_cache.load()
             for root_id in self._task_record_cache.records:
                 self._trees[root_id] = self.build_task_status_tree(root_id)
 
-    def build_task_status_tree(self, root_id=None):
+    def build_task_status_tree(self, root_id=None) -> TaskStatusTree:
+        # todo 线程安全
         batch_records = self._task_record_cache.get_records(root_id)
         status_tree = TaskStatusTree.build_from_records(batch_records, status_merger=StatusMerger())
         return status_tree
 
     def get_status(self, root_id, parent_id=None, tag="root", tree:TaskStatusTree=None):
+        # todo 线程安全
         if not tree:
             tree = self._trees.get(root_id)
         if not tree:
             return build_graph_node(None), [build_graph_node(None)], ""
         parent, children = tree.find_node_by_parent_id(parent_id)
         children.sort(key=lambda x: x.sub_id)
-        if not children:
-            chilren = [tree.find_node_by_sub_id(parent_id)]
-            parent = chilren[0]
+        # if not children:
+        #     children = [tree.find_node_by_sub_id(parent_id)]
+        #     parent = children[0]
 
-        chilren_status_block = [build_graph_node(x) for x in children]
+        children_status_block = [build_graph_node(x) for x in children]
         parent_status_block = build_graph_node(parent)
-        return parent_status_block, chilren_status_block, tree.root.desc
+        return parent_status_block, children_status_block, tree.root.desc
 
     def get_tree_root_json_obj(self, root_id):
+        # todo 线程安全
         tree = self._trees.get(root_id)
         res = tree.root.dump_without_children()
         return res
 
     def get_children_json_obj(self, root_id, parent_id):
+        # todo 线程安全
         tree = self._trees.get(root_id)
         parent, children = tree.find_node_by_parent_id(parent_id)
         children.sort(key=lambda x: x.sub_id)
@@ -301,6 +279,7 @@ class TaskStatusTreeCache:
         return res
 
     def get_tasks_from_cache(self, root_id, parent_id=None, sub_id=None):
+        # todo 线程安全
         tree = self._trees.get(root_id)
         if not tree:
             return None
@@ -308,6 +287,7 @@ class TaskStatusTreeCache:
         return [res.copy()], tree
 
     def update(self, record):
+        # todo 线程安全
         self._task_record_cache.insert(record)
         root_id = record.root_id
         tree_to_update = self._trees.get(root_id)
@@ -317,12 +297,9 @@ class TaskStatusTreeCache:
             tree_to_update.update_with_record(record, StatusMerger())
 
 
-
-
-
-task_record_cache = TaskRecordCache()
-task_status_tree_cache = TaskStatusTreeCache(task_record_cache)  # todo
-task_status_tree_cache.load()
+g_task_record_cache = TaskRecordCache()
+task_status_tree_cache = TaskStatusTreeCache(g_task_record_cache)
+task_status_tree_cache.load() # 服务器启动的时候不存在线程竞争
 
 
 if __name__ == "__main__":
