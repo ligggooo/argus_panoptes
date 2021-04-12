@@ -1,13 +1,17 @@
+import numpy
 import time
 import unittest
 from concurrent.futures.thread import ThreadPoolExecutor
-from concurrent.futures import  as_completed
+from concurrent.futures import as_completed
 import requests
-
 from jiliang_process.process_monitor import task_monitor
+
 
 task_monitor.re_config(TASK_RECORDER_URL="http://172.16.5.148:60012/record_tasks",
                   TASK_UNIQUE_ID_URL="http://172.16.5.148:60012/task_unique_id", MONITOR_DISABLED=False)
+
+holder = []
+
 
 def fast_job():
     z = requests.get("http://172.16.5.148:60012/task_unique_id")
@@ -17,16 +21,15 @@ def fast_job():
 
 @task_monitor.normal_task_deco()
 def fast_job_do_nothing():
-    time.sleep(0.01)
     return None
 
 
 @task_monitor.normal_task_deco()
-def supposed_to_be_real():
-    executor = ThreadPoolExecutor(max_workers=130)
-    t_v = [executor.submit(fast_job_do_nothing) for i in range(10000)]
+def supposed_to_be_real(c, m):
+    executor = ThreadPoolExecutor(max_workers=c)
+    t_v = [executor.submit(fast_job_do_nothing) for i in range(m)]
     for t in as_completed(t_v):
-        print("post_test_write_db", t.result())
+        print("----------------", t.result())
     print("done")
 
 
@@ -37,8 +40,11 @@ def slow_job():
 
 
 def super_slow_job():
+    t = time.time()
     z = requests.post("http://172.16.5.148:60012/post_test_write_db", data="this should take some time".encode("utf-8")*10)
     print(z.content)
+    delta = time.time()-t
+    holder.append(delta)
     return z.content
 
 
@@ -53,20 +59,28 @@ class MyTestCase(unittest.TestCase):
     def test_something_else(self):
         executor = ThreadPoolExecutor(max_workers=30)
         t_v = [executor.submit(slow_job) for i in range(10000)]
+        cnt = 0
         for t in as_completed(t_v):
             print("post_get", t.result())
+            cnt += 1
+            print(numpy.mean(holder), cnt)
         print("done")
+        print(numpy.mean(holder))
 
     def test_something_different(self):
-        executor = ThreadPoolExecutor(max_workers=30)
-        t_v = [executor.submit(super_slow_job) for i in range(1000)]
+        executor = ThreadPoolExecutor(max_workers=50)
+        t_v = [executor.submit(super_slow_job) for i in range(10000)]
+        cnt = 0
         for t in as_completed(t_v):
             print("post_test_write_db", t.result())
+            cnt += 1
+            print(numpy.mean(holder), cnt)
         print("done")
+        print(numpy.mean(holder))
 
     @task_monitor.root_deco("性能压测")
     def test_something_real(self):
-        supposed_to_be_real()
+        supposed_to_be_real(c=1,m=1000)
 
 
     def test_speed_anl(self,parent_id):
