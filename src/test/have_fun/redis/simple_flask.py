@@ -24,10 +24,11 @@ x = 0
 def hello():
     global x
     y = x
-    x +=1
+    x += 1
     # time.sleep(1)
     return str(y)
 
 
-server = WSGIServer(('127.0.0.1',int(5001)),app)
+server = WSGIServer(('127.0.0.1', int(5001)), app)
 server.serve_forever()
+# app.run(host="127.0.0.1", port=5001)

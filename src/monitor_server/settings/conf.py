@@ -39,8 +39,10 @@ class TestingConfig2(Config):
         'pool_recycle' : DB_POOL_RECYCLE
     }
     TASK_TRACK_CACHE = False
-    TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
-    TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
+    host = "172.16.5.148"
+    port = 60012
+    TASK_RECORDER_URL = "http://%s:%s/record_tasks" % (host, port)
+    TASK_UNIQUE_ID_URL = "http://%s:%s/task_unique_id" % (host, port)
 
 
 class TestingConfig3(Config):
@@ -59,7 +61,8 @@ class TestingConfig3(Config):
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
 
-config = TestingConfig3
+
+config = TestingConfig2
 
 
 class RedisConnWork:

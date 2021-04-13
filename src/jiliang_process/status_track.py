@@ -1,5 +1,6 @@
 import copy
 import json
+import threading
 
 from jiliang_process.process_monitor_types import ProcessState,StatePoint
 from typing import List,Tuple
@@ -69,6 +70,12 @@ class StatusNode:
             self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1])
 
     @staticmethod
+    def create_empty_node(root_id, parent_id, sub_id, tag):
+        n = StatusNode(root_id, parent_id, sub_id, tag)
+        n.desc = "找不到记录"
+        return n
+
+    @staticmethod
     def create_node_from_record(record):
         new_node = StatusNode(record.root_id, record.parent_id, record.sub_id, record.name)
         new_node.records.append(record)
@@ -95,6 +102,7 @@ class StatusNode:
     def dump(self, res):
         res.update({
             "id": self.sub_id,
+            "root_id": self.root_id,
             "success_rate": self.sub_success_rate,
             "tag": self.tag,
             "err": list(self.err),
@@ -109,6 +117,7 @@ class StatusNode:
     def dump_without_children(self):
         return {
             "id": self.sub_id,
+            "root_id": self.root_id,
             "success_rate": self.sub_success_rate,
             "tag": self.tag,
             "err": list(self.err),
@@ -116,15 +125,17 @@ class StatusNode:
             "status": self.status.name,
             "start_time": self.start_time,
             "end_time": self.end_time,
-            "has_children": len(self.children) > 0
+            "hasChildren": len(self.children) > 0,
         }
+
 
 class TaskStatusTree:
     def __init__(self):
-        self.root:StatusNode = None
+        self.root: StatusNode = None
         self.orphans = []
         self.records = []
         self.node_cache = {}
+        self._tree_lock = threading.Lock()
 
     def cache_node(self, new_node):
         if new_node.sub_id in self.node_cache:
@@ -196,14 +207,19 @@ class TaskStatusTree:
         res = True
         self.records.append(record)
         if not self.root:
-            self.add_node(StatusNode.create_node_from_record(record),parent_id=None)
+            with self._tree_lock:
+                if not self.root:
+                    self.add_node(StatusNode.create_node_from_record(record),parent_id=None)
         else:
             node = self.find_node_by_sub_id(record.sub_id)
             if not node:
-                new_node = StatusNode.create_node_from_record(record)
-                status = self.add_node(new_node, new_node.parent_id, new_node_gurantee_flag=True)
-                if not status:  # 说明记录添加失败，记录作为orphan被添加到树的孤儿列表了
-                    res = False
+                with self._tree_lock:
+                    node = self.find_node_by_sub_id(record.sub_id)
+                    if not node:
+                        new_node = StatusNode.create_node_from_record(record)
+                        status = self.add_node(new_node, new_node.parent_id, new_node_gurantee_flag=True)
+                        if not status:  # 说明记录添加失败，记录作为orphan被添加到树的孤儿列表了
+                            res = False
             else:
                 node.records.append(record)
         return res
@@ -233,7 +249,8 @@ class TaskStatusTree:
             tmp.sub_success_rate = [0, 0]
             info_msg = None
             try:
-                tmp.status, err_msg, info_msg = status_merger.merge_status(tmp.records)
+                tmp.status, err_msg, info_msg, time_stamps = status_merger.merge_status(tmp.records)
+                tmp.start_time,tmp.end_time = time_stamps
                 if tmp.status == ProcessState.process_shutdown:  # 一个特殊情况，启动进程的进程发现子进程结束
                     # 目前的策略是： 在这个地方关掉所有的子节点
                     tmp.close_sub_nodes()
@@ -285,7 +302,7 @@ class TaskStatusTree:
 
     def update_with_record(self, record, status_merger):
         self.add_record(record)
-        self.status_update(status_merger)
+        # self.status_update(status_merger) # 不再每插一条记录都更新
 
     def dumps(self):
         res = {}

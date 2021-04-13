@@ -17,11 +17,16 @@ import requests,numpy,time,sys
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
 
-N=200
-holder = numpy.zeros([1,N])
-holder2 = numpy.zeros([1,N])
+
 
 port = sys.argv[1]
+w = int(sys.argv[2])
+N=int(sys.argv[3])
+
+
+
+holder = numpy.zeros([1,N])
+holder2 = numpy.zeros([1,N])
 
 def req(id):
     t = time.time()
@@ -33,7 +38,7 @@ def req(id):
     holder[0,id] = delta
     return res
 
-pool = ThreadPoolExecutor(max_workers=5)
+pool = ThreadPoolExecutor(max_workers=w)
 t_v = []
 
 for i in range(N):
@@ -49,4 +54,4 @@ for h in as_completed(t_v):
 
 print(holder)
 print(holder2)
-print(numpy.mean(holder), 1/numpy.mean(holder))
+print(numpy.mean(holder), w*1/numpy.mean(holder))

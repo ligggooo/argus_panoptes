@@ -45,13 +45,16 @@ class TaskTrackingRecord(db.Model):
         record.timestamp = self.timestamp
         return record
 
+
 class Task(db.Model):
     __tablename__ = "task"
     # __table_args__ = {"extend_existing":True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     root_id = db.Column(db.String(128), nullable=False, unique=False)
     root_tag = db.Column(db.String(128), nullable=False, unique=False)
-    name = db.Column(db.String(128), nullable=False, unique=False,default="测试")
+    name = db.Column(db.String(128), nullable=False, unique=False, default="测试")
+    start_time = db.Column(db.Float, nullable=False, unique=False, default=-1)
+    end_time = db.Column(db.Float, nullable=False, unique=False, default=-1)
     desc = db.Column(db.String(1024), nullable=True, unique=False)
 
     def __repr__(self):

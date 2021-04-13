@@ -1,7 +1,8 @@
 import json
 import sys
 import threading
-from typing import Dict
+import time
+from typing import Dict, Tuple, List
 
 sys.path.append("../../")
 from monitor_server.models.model_006_tasks import TaskTrackingRecord, Task, db
@@ -10,7 +11,7 @@ import pickle
 import os
 
 from jiliang_process.process_monitor_types import CallCategory, StatePoint, ProcessState
-from jiliang_process.status_track import TaskStatusTree, StatusNode
+from jiliang_process.status_track import TaskStatusTree, StatusNode, StatusRecord
 from operation_utils.file import get_tmp_data_dir, get_data_dir
 from monitor_server.settings.conf import config
 
@@ -24,30 +25,38 @@ class GraphBlock:
         self.html_class = html_class
 
 
-def start_exists(records):
+def start_exists(records:List[StatusRecord],time=None):
     for r in records:
         if r.state == StatePoint.start.value:
+            if time is not None:
+                time[0] = r.timestamp
             return True
     return False
 
 
-def error_exists(records):
+def error_exists(records, time=None):
     for r in records:
         if r.state == StatePoint.error.value:
+            if time is not None:
+                time[1] = r.timestamp
             return True, r.desc
     return False, ""
 
 
-def process_shutdown(records):
+def process_shutdown(records, time=None):
     for r in records:
         if r.state == StatePoint.process_shutdown.value:
+            if time is not None:
+                time[1] = r.timestamp
             return True, r.desc
     return False, ""
 
 
-def end_exists(records):
+def end_exists(records, time=None):
     for r in records:
         if r.state == StatePoint.end.value:
+            if time is not None:
+                time[1] = r.timestamp
             return True
     return False
 
@@ -100,27 +109,28 @@ class StatusMerger:
         '''
         err = None
         info = None
+        timestamps = [-1,-1]
         if len(records) == 0:
             err = "尚无记录"
-            return ProcessState.not_started_yet, err, info
+            return ProcessState.not_started_yet, err, info, timestamps
         if len(records) >= 1 and (not start_exists(records)):
             err = "记录不完整"
-            return ProcessState.record_incomplete, err, info
-        if len(records) == 1 and start_exists(records):
+            return ProcessState.record_incomplete, err, info, timestamps
+        if len(records) == 1 and start_exists(records, timestamps):
             info = "running"
-            return ProcessState.running, err, info
-        err_flag, err = error_exists(records)
+            return ProcessState.running, err, info, timestamps
+        err_flag, err = error_exists(records, timestamps)
         if err_flag:
             info= "失败"
-            return ProcessState.failed, err, info
-        process_shutdown_flag, err = process_shutdown(records)
+            return ProcessState.failed, err, info, timestamps
+        process_shutdown_flag, err = process_shutdown(records, timestamps)
         if process_shutdown_flag:
             info = "进程终止"
-            return ProcessState.process_shutdown, err, info
-        if end_exists(records):
+            return ProcessState.process_shutdown, err, info, timestamps
+        if end_exists(records, timestamps):
             info = "完成"
             err = None
-            return ProcessState.finished, err, info
+            return ProcessState.finished, err, info, timestamps
 
 
 def load_records_to_redis():
@@ -144,7 +154,8 @@ def get_task_records(root_id):
 
 
 def get_records():
-    tasks = Task.query.order_by(Task.id.desc()).limit(10).all()
+    t_start = time.time() - 7 * 24 * 3600
+    tasks = Task.query.filter(Task.start_time >= t_start).order_by(Task.id.desc()).all()
     records = {}
     for t in tasks:
         records[t.root_id] = get_task_records(t.root_id)
@@ -199,6 +210,9 @@ class TaskRecordCache:
     def load(self):
         self.records = get_records()
 
+    def clear(self):
+        self.records = {}
+
     def insert(self, record):
         _root_id = str(record.root_id)
         with self._lock:
@@ -232,7 +246,7 @@ class TaskStatusTreeCache:
     def __init__(self, task_record_cache: TaskRecordCache):
         self._task_record_cache = task_record_cache
         self._trees: Dict[str, TaskStatusTree] = {}
-        self._lock = threading.Lock()
+        self._build_tree_lock = threading.Lock()
 
     def load(self):
         # todo 线程安全
@@ -241,6 +255,17 @@ class TaskStatusTreeCache:
             self._task_record_cache.load()
             for root_id in self._task_record_cache.records:
                 self._trees[root_id] = self.build_task_status_tree(root_id)
+
+    def clear(self):
+        self._task_record_cache.clear()
+        self._trees = {}
+
+    def find_tree_and_update(self, root_id):
+        tree = self._trees.get(root_id)
+        if not tree:
+            return TaskStatusTree()
+        tree.status_update(status_merger=StatusMerger())
+        return tree
 
     def build_task_status_tree(self, root_id=None) -> TaskStatusTree:
         # todo 线程安全
@@ -251,7 +276,7 @@ class TaskStatusTreeCache:
     def get_status(self, root_id, parent_id=None, tag="root", tree:TaskStatusTree=None):
         # todo 线程安全
         if not tree:
-            tree = self._trees.get(root_id)
+            tree = self.find_tree_and_update(root_id)
         if not tree:
             return build_graph_node(None), [build_graph_node(None)], ""
         parent, children = tree.find_node_by_parent_id(parent_id)
@@ -266,21 +291,26 @@ class TaskStatusTreeCache:
 
     def get_tree_root_json_obj(self, root_id):
         # todo 线程安全
-        tree = self._trees.get(root_id)
+        tree = self.find_tree_and_update(root_id)
+        if not tree or not tree.root:
+            return StatusNode.create_empty_node(root_id, root_id, root_id, str(root_id)).dump_without_children()
         res = tree.root.dump_without_children()
         return res
 
-    def get_children_json_obj(self, root_id, parent_id):
+    def get_children_json_obj(self, root_id, parent_id, slice: Tuple[int, int]=None):
         # todo 线程安全
-        tree = self._trees.get(root_id)
+        tree = self.find_tree_and_update(root_id)
         parent, children = tree.find_node_by_parent_id(parent_id)
         children.sort(key=lambda x: x.sub_id)
+        count = len(children)
+        if slice:
+            children = children[slice[0]:slice[1]]
         res = [c.dump_without_children() for c in children]
-        return res
+        return res,count
 
     def get_tasks_from_cache(self, root_id, parent_id=None, sub_id=None):
         # todo 线程安全
-        tree = self._trees.get(root_id)
+        tree = self.find_tree_and_update(root_id)
         if not tree:
             return None
         res = tree.find_node_by_sub_id(sub_id)
@@ -292,7 +322,10 @@ class TaskStatusTreeCache:
         root_id = record.root_id
         tree_to_update = self._trees.get(root_id)
         if not tree_to_update:
-            self._trees[root_id] = self.build_task_status_tree(root_id)
+            with self._build_tree_lock:
+                tree_to_update = self._trees.get(root_id)
+                if not tree_to_update:
+                    self._trees[root_id] = self.build_task_status_tree(root_id)
         else:
             tree_to_update.update_with_record(record, StatusMerger())
 

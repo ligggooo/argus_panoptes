@@ -11,6 +11,7 @@ import logging,time
 from concurrent.futures.thread import ThreadPoolExecutor
 from concurrent.futures import as_completed
 import numpy as np
+import numpy
 
 holder = []
 holder2 = []
@@ -47,3 +48,5 @@ def concurrent_tester(func, n, m,args=[]):
     for future in as_completed(res):
         print("=============== %s %.5f %d"%(future.result(), float(np.mean(holder[-40:-1])), cnt))
         cnt += 1
+    print("=====average resp time %.5f  qps=%f %d %d==========" % (
+        float(numpy.mean(holder)), n*1 / float(numpy.mean(holder)), len(holder2), len(set(holder2))))

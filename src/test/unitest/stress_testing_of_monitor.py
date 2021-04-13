@@ -9,9 +9,10 @@ from concurrent.futures import as_completed
 import numpy as np
 from jiliang_process.process_monitor import task_monitor
 from test.unitest.utils import holder, speed_deco, timer_deco, holder2, concurrent_tester
+from monitor_server.settings.conf import config
 
-TASK_RECORDER_URL="http://127.0.0.1:60010/record_tasks"
-TASK_UNIQUE_ID_URL="http://127.0.0.1:60010/task_unique_id"
+TASK_RECORDER_URL= config.TASK_RECORDER_URL
+TASK_UNIQUE_ID_URL= config.TASK_UNIQUE_ID_URL
 task_monitor.re_config(TASK_RECORDER_URL=TASK_RECORDER_URL,
                        TASK_UNIQUE_ID_URL=TASK_UNIQUE_ID_URL)
 
@@ -19,12 +20,16 @@ task_monitor.re_config(TASK_RECORDER_URL=TASK_RECORDER_URL,
 
 @task_monitor.normal_task_deco()
 def in_fast_job():
-    time.sleep(10)
+    time.sleep(0.1)
+    raise Exception("故意失败的")
 
 
 def fast_job():
     start = time.time()
-    in_fast_job()
+    try:
+        in_fast_job()
+    except Exception as e:
+        print(e)
     delta = time.time()-start
     holder.append(delta)
 
@@ -44,12 +49,7 @@ def part1():
 @task_monitor.normal_task_deco()
 @speed_deco
 def part2(concurreny=130, job_size=50000):
-    pool = ThreadPoolExecutor(max_workers=concurreny)
-    res = [pool.submit(fast_job) for i in range(job_size)]
-    cnt = 0
-    for future in as_completed(res):
-        print(future.result(),np.mean(holder),cnt)
-        cnt += 1
+    concurrent_tester(fast_job,concurreny, job_size)
 
 
 @timer_deco
@@ -77,7 +77,7 @@ class MyTestCase(unittest.TestCase):
     @task_monitor.root_deco("压测2根节点 大并发数 大任务 计时")
     @speed_deco
     def test_something_else(self):
-        part2(concurreny=30, job_size=50000)
+        part2(concurreny=30, job_size=5)
 
     def test_unique_id(self):
         concurrent_tester(get_id,100,2000)
@@ -85,7 +85,7 @@ class MyTestCase(unittest.TestCase):
 
     @task_monitor.root_deco("压测3根节点 无并发 无限任务 计时")
     def test_resp(self):
-        concurrent_tester(empty_task, 1, 20000, args=[0,])
+        concurrent_tester(empty_task, 1, 200, args=[0,])
         print("=====average resp time %.5f %d %d==========" % (np.mean(holder), len(holder2), len(set(holder2))))
         with open("./reports/concurrent_test_002", 'w') as f:
             for delta_t in holder:
