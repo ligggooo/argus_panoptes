@@ -27,6 +27,7 @@ class TestingConfig(Config):
     TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
+
 class TestingConfig2(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI="postgresql://postgres:123456@10.130.160.114:60030/my_test"
@@ -40,6 +41,7 @@ class TestingConfig2(Config):
     TASK_TRACK_CACHE = False
     TASK_RECORDER_URL = "http://127.0.0.1:60010/record_tasks"
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
+
 
 class TestingConfig3(Config):
     TESTING = False
@@ -57,16 +59,22 @@ class TestingConfig3(Config):
     TASK_UNIQUE_ID_URL = "http://127.0.0.1:60010/task_unique_id"
 
 
-config = TestingConfig
+config = TestingConfig3
 
 
-class RedisConn:
-    host = '192.168.31.110'
+class RedisConnWork:
+    # host = '192.168.31.110'
+    host = '172.16.100.53'
+    pswd = '123456'
     port = 6379
     db = 0
 
 
-class RedisConn:
+class RedisConnTest:
     host = '127.0.0.1'
     port = 6379
     db = 0
+    pswd = None
+
+
+RedisConn = RedisConnWork

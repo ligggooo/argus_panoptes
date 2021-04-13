@@ -329,7 +329,9 @@ class ProcessMonitor:
         except Exception as e:
             raise e
         if "root_id" in params and "parent_id" in params:
-            return params.get("root_id"), params.get("parent_id")
+            root_id = params.get("root_id")
+            parent_id = params.get("parent_id")
+            return root_id, parent_id, str_params
         else:
             raise Exception("监控器参数抽取失败...")
 

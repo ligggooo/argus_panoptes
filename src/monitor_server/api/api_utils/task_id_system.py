@@ -24,7 +24,7 @@ class GlobalID:
 
 class GlobalIDRedis:
     def __init__(self):
-        self.redis = redis.StrictRedis(host=RedisConn.host, port=RedisConn.port, db=RedisConn.db)
+        self.redis = redis.StrictRedis(host=RedisConn.host, port=RedisConn.port, db=RedisConn.db, password=RedisConn.pswd)
 
     def get_id(self):
         return self.redis.incr('uni_id')
