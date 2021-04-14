@@ -7,7 +7,9 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from concurrent.futures import as_completed
 
 import numpy as np
+from jiliang_process.jlp_release_package.process_monitor import EmptyProcessMonitor
 from jiliang_process.process_monitor import task_monitor
+# task_monitor = EmptyProcessMonitor()
 from test.unitest.utils import holder, speed_deco, timer_deco, holder2, concurrent_tester
 from monitor_server.settings.conf import config
 
@@ -77,7 +79,7 @@ class MyTestCase(unittest.TestCase):
     @task_monitor.root_deco("压测2根节点 大并发数 大任务 计时")
     @speed_deco
     def test_something_else(self):
-        part2(concurreny=30, job_size=5)
+        part2(concurreny=30, job_size=50000)
 
     def test_unique_id(self):
         concurrent_tester(get_id,100,2000)
@@ -85,7 +87,7 @@ class MyTestCase(unittest.TestCase):
 
     @task_monitor.root_deco("压测3根节点 无并发 无限任务 计时")
     def test_resp(self):
-        concurrent_tester(empty_task, 1, 200, args=[0,])
+        concurrent_tester(empty_task, 30, 20000, args=[0,])
         print("=====average resp time %.5f %d %d==========" % (np.mean(holder), len(holder2), len(set(holder2))))
         with open("./reports/concurrent_test_002", 'w') as f:
             for delta_t in holder:

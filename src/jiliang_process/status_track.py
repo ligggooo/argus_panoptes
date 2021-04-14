@@ -2,8 +2,9 @@ import copy
 import json
 import threading
 
-from jiliang_process.process_monitor_types import ProcessState,StatePoint
-from typing import List,Tuple
+from jiliang_process.process_monitor_types import ProcessState, StatePoint
+from typing import List, Tuple
+
 '''
 class TaskTrackingRecord(db.Model):
     __tablename__ = "task_track"
@@ -35,7 +36,7 @@ class StatusRecord:
         self.parent_id = parent_id
         self.root_id = root_id
         self.name = name
-        self.call_category = call_category
+        self.call_category: int = call_category
         self.state = state
         self.timestamp = timestamp
         self.desc = desc
@@ -45,6 +46,21 @@ class StatusRecord:
         fake_record = copy.deepcopy(self)
         fake_record.state = StatePoint.process_shutdown.value
         return fake_record
+
+    def keys(self):
+        return ('sub_id', 'parent_id', 'root_id',
+                'name',
+                'call_category',
+                'state',
+                'timestamp',
+                'desc')
+
+    def to_tuple(self):
+        return (self.sub_id, self.parent_id, self.root_id, self.name, self.call_category, self.state, self.timestamp,
+                self.desc)
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 class StatusNode:
@@ -94,10 +110,10 @@ class StatusNode:
         :return:
         """
         for c in self.children:
-            if len(c.records) >0 and not c.ended_signature:
+            if len(c.records) > 0 and not c.ended_signature:
                 fake_record = c.records[0].generate_fake_end_record()
                 c.records.append(fake_record)
-                c.ended_signature = True # 标记过一次就不会再标记了
+                c.ended_signature = True  # 标记过一次就不会再标记了
 
     def dump(self, res):
         res.update({
@@ -107,10 +123,10 @@ class StatusNode:
             "tag": self.tag,
             "err": list(self.err),
             "info": list(self.info),
-            "status":self.status.name,
-            "children":[{} for c in self.children]
+            "status": self.status.name,
+            "children": [{} for c in self.children]
         })
-        for i,c in enumerate(self.children):
+        for i, c in enumerate(self.children):
             c.dump(res["children"][i])
         return res
 
@@ -159,7 +175,7 @@ class TaskStatusTree:
     def find_node_by_sub_id(self, sub_id):
         return self.node_cache.get(sub_id)
 
-    def find_node_by_parent_id(self, parent_id)->Tuple[StatusNode, List[StatusNode]]:
+    def find_node_by_parent_id(self, parent_id) -> Tuple[StatusNode, List[StatusNode]]:
         if parent_id is None:
             return None, [self.root]
         parent_node = self.find_node_by_sub_id(parent_id)
@@ -174,7 +190,7 @@ class TaskStatusTree:
             self.cache_node(new_node)
             return True
         else:
-            if not new_node_gurantee_flag: # 若无法保证这个是新节点，就查一次
+            if not new_node_gurantee_flag:  # 若无法保证这个是新节点，就查一次
                 this_node = self.find_node_by_sub_id(new_node.sub_id)
                 if this_node:  # 这个node是某个节点的另一个记录
                     this_node.records.extend(new_node.records)
@@ -209,7 +225,7 @@ class TaskStatusTree:
         if not self.root:
             with self._tree_lock:
                 if not self.root:
-                    self.add_node(StatusNode.create_node_from_record(record),parent_id=None)
+                    self.add_node(StatusNode.create_node_from_record(record), parent_id=None)
         else:
             node = self.find_node_by_sub_id(record.sub_id)
             if not node:
@@ -250,7 +266,7 @@ class TaskStatusTree:
             info_msg = None
             try:
                 tmp.status, err_msg, info_msg, time_stamps = status_merger.merge_status(tmp.records)
-                tmp.start_time,tmp.end_time = time_stamps
+                tmp.start_time, tmp.end_time = time_stamps
                 if tmp.status == ProcessState.process_shutdown:  # 一个特殊情况，启动进程的进程发现子进程结束
                     # 目前的策略是： 在这个地方关掉所有的子节点
                     tmp.close_sub_nodes()
@@ -291,7 +307,7 @@ class TaskStatusTree:
         records = sorted(records, key=lambda x: x.sub_id)
         for r in records:
             t.add_record(r)
-            print(len(t.records),len(t.orphans))
+            print(len(t.records), len(t.orphans))
 
         # 可能存在记录顺序不对导致有些节点没有找到父节点
         # todo 此方法太简单粗暴，应该优化  建树过程应该允许分段进行
@@ -308,6 +324,14 @@ class TaskStatusTree:
         res = {}
         self.root.dump(res)
         return res
+
+    @classmethod
+    def create_empty_tree(cls, root_id, tag=None):
+        empty_tree = TaskStatusTree()
+        if tag is None:
+            tag = root_id
+        empty_tree.root = StatusNode.create_empty_node(root_id, root_id, root_id, tag)
+
 
 if __name__ == "__main__":
     txx = TaskStatusTree()

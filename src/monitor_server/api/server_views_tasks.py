@@ -46,13 +46,14 @@ def get_tasks():
     sub_id = request.args.get("sub_id")
 
     test_url = url_for("api_g5.test_tasks")
-
+    task_status_tree_cache.flush_cache()
     if not root_id:
         tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
 
         for t in tasks:
             t.note = str(t)
-            t.status, t.state_track, t.desc = task_status_tree_cache.get_status(root_id=t.root_id, parent_id=t.root_id)
+            t.status, t.state_track, t.desc = task_status_tree_cache.get_status(root_id=t.root_id, parent_id=t.root_id,
+                                                                                tag=t.name)
             t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
@@ -74,9 +75,10 @@ def get_tasks():
 def front_end_test():
     root_id = request.args.get("root_id")
     parent_id = request.args.get("id")
-    page = int(request.args.get("page",1))
-    limit = int(request.args.get("limit",10))
-    data, count = task_status_tree_cache.get_children_json_obj(root_id=root_id, parent_id=parent_id, slice=((page-1)*limit, page*limit))
+    page = int(request.args.get("page", 1))
+    limit = int(request.args.get("limit", 10))
+    data, count = task_status_tree_cache.get_children_json_obj(root_id=root_id, parent_id=parent_id,
+                                                               slice=((page - 1) * limit, page * limit))
     res_json = json.dumps({
         "code": 200,
         "message": "请求成功",
@@ -105,10 +107,10 @@ def frontend_test_root_record():
     if end_Time:
         tasks = tasks.filter(Task.start_time <= time.mktime(time.strptime(end_Time, "%Y-%m-%d+%H:%M:%S")))
     if not start_Time and not end_Time:
-        t_start = time.time() - 7*24*3600
+        t_start = time.time() - 7 * 24 * 3600
         tasks = tasks.filter(Task.start_time >= t_start)
     count = tasks.count()
-    tasks = tasks.slice((page-1)*limit, page*limit).all()
+    tasks = tasks.slice((page - 1) * limit, page * limit).all()
 
     for t in tasks:
         t.note = str(t)
@@ -121,8 +123,8 @@ def frontend_test_root_record():
         "code": 200,
         "message": "请求成功",
         "data": {
-            "count":count,
-            "data":data
+            "count": count,
+            "data": data
         }
     }, indent=" ")
     size = sys.getsizeof(res_json)
@@ -150,11 +152,11 @@ def recorder_tasks_doer(data):
     root_tag = "unknown "
     if "root_tag" in data:
         root_tag = data.pop("root_tag")
-    new_task_track_obj = TaskTrackingRecord(**data)
+    # new_task_track_obj = TaskTrackingRecord(**data)
     new_task_track_obj_shadow = StatusRecord(**data)  # 不然会报错 orm对象非常讨厌
-    print(new_task_track_obj)
+    # print(new_task_track_obj)
     sess = db.session()
-    sess.add(new_task_track_obj)
+    # sess.add(new_task_track_obj)
     task_status_tree_cache.update(new_task_track_obj_shadow)
     # todo 线程不安全
     # todo 不能能跨进程共享
@@ -164,7 +166,7 @@ def recorder_tasks_doer(data):
                             desc=data.get("desc"), start_time=data.get("timestamp"), end_time=-1)
         sess.add(new_task_obj)
     if new_task_track_obj_shadow.call_category == CallCategory.root.value and new_task_track_obj_shadow.state != StatePoint.start.value:
-        tasks = Task.query.filter(Task.root_id==data.get("sub_id")).limit(1).all()
+        tasks = Task.query.filter(Task.root_id == data.get("sub_id")).limit(1).all()
         if len(tasks) > 0:
             task = tasks[0]
             task.end_time = data.get("timestamp")

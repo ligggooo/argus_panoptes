@@ -28,7 +28,7 @@ class TaskTrackingRecord(db.Model):
     def is_record_exist():
         pass
 
-    def freeze(self, safe=True):
+    def freeze(self, safe=True)-> StatusRecord:
         """
         :return:
         """
