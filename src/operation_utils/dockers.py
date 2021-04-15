@@ -6,6 +6,7 @@ import tarfile
 import os
 from operation_utils.file import get_tmp_data_dir
 import uuid
+from threading import Lock
 
 # repo_addr = "http://10.130.160.114:2375"
 # repo_addr = "http://192.168.31.110:2375"
@@ -129,6 +130,7 @@ def __get_container(ip,port,container_id):
     client = docker.DockerClient(base_url="http://%s:%d" % (ip, port))
     c = client.containers.get(container_id=container_id)
     return c
+
 
 def get_container(ip,port,container_id):
     try:
@@ -263,41 +265,47 @@ def exec_cmd(ip, port, container_id, cmd):
         return "success", str(e)
 
 
+cp_lock = Lock()
 def tar_and_cp_file_2_container(ip, port, container_id, file_path, tmp_dir=_tmp_data_dir):
     try:
-        c = __get_container(ip, port, container_id)
-        if c:
-            tmp_tar_name = str(uuid.uuid4())+".tar"
-            tar = tarfile.open(os.path.join(tmp_dir,tmp_tar_name), mode="w")
+        with cp_lock:
+            c = __get_container(ip, port, container_id)
+            if c:
+                tmp_tar_name = str(uuid.uuid4())+".tar"
+                tar = tarfile.open(os.path.join(tmp_dir,tmp_tar_name), mode="w")
 
-            os.chdir(tmp_dir)
-            tar.add(file_path)
-            tar.close()
-            data = open(tmp_tar_name,"rb").read()
-            c.put_archive("/",data)
-        return "success", None
+                os.chdir(tmp_dir)
+                tar.add(file_path)
+                tar.close()
+                data = open(tmp_tar_name,"rb").read()
+                c.put_archive("/",data)
+            return "success", None
     except Exception as e:
         traceback.print_exc()
         return "success", str(e)
 
+
+
+write_lock = Lock()
 def write_content_2_container(ip, port, container_id, content, file_path="/run.sh"):
     try:
-        c = __get_container(ip, port, container_id)
-        if c:
-            tmp_dir = os.path.join(_tmp_data_dir, str(uuid.uuid4()))
-            os.makedirs(tmp_dir)
-            tmp_tar_name = "data.tar"
-            target_file_name = os.path.split(file_path)[1]
-            os.chdir(tmp_dir)
+        with write_lock:
+            c = __get_container(ip, port, container_id)
+            if c:
+                tmp_dir = os.path.join(_tmp_data_dir, str(uuid.uuid4()))
+                os.makedirs(tmp_dir)
+                tmp_tar_name = "data.tar"
+                target_file_name = os.path.split(file_path)[1]
+                os.chdir(tmp_dir)
 
-            with open(target_file_name, "w", newline="\n") as f:
-                f.write(content)
-            tar = tarfile.open(os.path.join(tmp_tar_name), mode="w:tar")
-            tar.add(target_file_name)
-            tar.close()
-            data = open(tmp_tar_name,"rb").read()
-            c.put_archive("/",data)
-        return "success", None
+                with open(target_file_name, "w", newline="\n") as f:
+                    f.write(content)
+                tar = tarfile.open(os.path.join(tmp_tar_name), mode="w:tar")
+                tar.add(target_file_name)
+                tar.close()
+                data = open(tmp_tar_name,"rb").read()
+                c.put_archive("/",data)
+            return "success", None
     except Exception as e:
         traceback.print_exc()
         return "failed", str(e)
