@@ -209,7 +209,8 @@ class ProcessMonitor:
                                      parent_id=parent_id,
                                      name=func_name, root_id=self.root_id,
                                      state=StatePoint.process_shutdown.value, desc=err_msg[-1000:])
-                    # 任务意外自行退出 此子节点的所有子节点都需要在服务端关闭
+                    # 任务意外退出 此子节点的所有子节点都需要在服务端关闭
+                    print("捕获任务意外退出 此子节点的所有子节点都需要在服务端关闭")
                     self.current_call_stack_node = None
                     return e.data
                 except ProcessIntentionallyShutDownException as e:
@@ -219,6 +220,7 @@ class ProcessMonitor:
                                      name=func_name, root_id=self.root_id,
                                      state=StatePoint.end.value, desc=err_msg[-1000:])
                     # 任务有意自行退出 此子节点的所有子节点都需要在服务端关闭
+                    print("捕获任务有意退出 此子节点的所有子节点都需要在服务端关闭")
                     self.current_call_stack_node = None
                     return e.data
                 except Exception as e:
@@ -307,19 +309,19 @@ class ProcessMonitor:
     #                      state=state)
 
     def pack_monitor_params_into_str(self, str_params):
-        print("packing monitor_params_into_str")
+        print("packing monitor_params_into_str %s" % str_params)
         try:
             params = json.loads(str_params)
         except Exception as e:
             raise e
-        if "root_id" in params or "parent_id" in params:
-            raise Exception("监控器客户端参数与原始参数冲突...")
-        else:
-            params.update({
-                "root_id": self.root_id,
-                "parent_id": self.current_id
-            })
-            return json.dumps(params)
+        # if "root_id" in params or "parent_id" in params:
+        #     raise Exception("监控器客户端参数与原始参数冲突...")
+        # else:
+        params.update({
+            "root_id": self.root_id,
+            "parent_id": self.current_id
+        })
+        return json.dumps(params)
 
     @staticmethod
     def extract_monitor_params_from_str(str_params):

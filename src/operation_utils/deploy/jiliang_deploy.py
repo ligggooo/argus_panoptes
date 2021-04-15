@@ -3,7 +3,7 @@
 # @FileName  : jiliang_deploy.py
 # @Time      : 2021/3/16 20:19
 # @Author    : Lee
-from operation_utils.dockers import tar_and_cp_file_2_container, exec_cmd, write_content_2_container
+from operation_utils.dockers import tar_and_cp_file_2_container, exec_cmd, write_content_2_container, restart_container
 from concurrent.futures import as_completed, ThreadPoolExecutor
 
 src_dir_sys = r"E:\workspace\jiliang_system"
@@ -34,6 +34,7 @@ def deploy_to_machine(host, dockers):
         content = open(r"E:\workspace\jiliang_monitor_pr\src\operation_utils\deploy\jiliang_docker_run.sh", "r",
                        newline="\n").read().replace("\r\n", "\n")
         print(write_content_2_container(host, 2375, d, content, file_path="/run.sh"))
+        print(restart_container(host, 2375, d))
 
 
 container_list = [
@@ -111,9 +112,9 @@ if __name__ == "__main__":
     t_v = []
     for item in container_list:
         if check_in_group(item, "test"):
-            # t = pool.submit(deploy_to_machine, item["host"], item["dockers"])
-            # t_v.append(t)
-            pass
+            t = pool.submit(deploy_to_machine, item["host"], item["dockers"])
+            t_v.append(t)
+            # pass
         else:
             print(item, "不满足过滤条件")
     for t in as_completed(t_v):

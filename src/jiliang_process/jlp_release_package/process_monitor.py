@@ -97,14 +97,14 @@ class EmptyProcessMonitor:
         except Exception as e:
             err_msg = traceback.format_exc()
             raise Exception("json 解析失败，被打包的参数必须是json字符串\n%s" % err_msg)
-        if "root_id" in params or "parent_id" in params:
-            raise Exception("监控器客户端参数与原始参数冲突...")
-        else:
-            params.update({
-                "root_id": "empty root_id",
-                "parent_id": "empty parent_id"
-            })
-            return json.dumps(params)
+        # if "root_id" in params or "parent_id" in params:
+        #     raise Exception("监控器客户端参数与原始参数冲突...")
+        # else:
+        params.update({
+            "root_id": "empty root_id",
+            "parent_id": "empty parent_id"
+        })
+        return json.dumps(params)
 
     @staticmethod
     def extract_monitor_params_from_str(str_params):

@@ -5,6 +5,7 @@ from monitor_server.api.server_views_tasks import recorder_tasks_doer,task_statu
 from monitor_server.settings.conf import config
 from test.unitest.utils import concurrent_tester, holder, holder2, timer_deco
 import numpy
+# import ahttp
 
 TASK_RECORDER_URL= config.TASK_RECORDER_URL
 TASK_UNIQUE_ID_URL= config.TASK_UNIQUE_ID_URL
@@ -79,7 +80,7 @@ class TestUniqueId(unittest.TestCase):
                 f.write("%.5f\n" % delta_t)
 
     def test_task_unique_id_through_backend(self):
-        concurrent_tester(get_id_through_web_backend, 1, 20000, args=[])
+        concurrent_tester(get_id_through_web_backend, 1, 2000, args=[])
         with open("./reports/concurrent_test_003", 'w') as f:
             for delta_t in holder:
                 f.write("%.5f\n" % delta_t)
