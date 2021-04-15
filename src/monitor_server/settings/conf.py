@@ -40,7 +40,7 @@ class TestingConfig2(Config):
     }
     TASK_TRACK_CACHE = False
     host = "172.16.5.148"
-    port = 60012
+    port = 60010
     TASK_RECORDER_URL = "http://%s:%s/record_tasks" % (host, port)
     TASK_UNIQUE_ID_URL = "http://%s:%s/task_unique_id" % (host, port)
 

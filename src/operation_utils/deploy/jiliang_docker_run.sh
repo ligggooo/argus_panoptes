@@ -1,11 +1,11 @@
 echo "========================================="
 echo $?
 echo "========================================="
-sh /workspace/jiliang_monitor_pr/src/jiliang_process/deploy/install.sh
+sh /workspace/jiliang_system/deploy/install.sh
 echo "========================================="
 echo $?
 echo "========================================="
-sh /workspace/jiliang_system/deploy/install.sh
+sh /workspace/jiliang_monitor_pr/src/jiliang_process/deploy/install.sh
 echo "========================================="
 echo $?
 echo "========================================="
