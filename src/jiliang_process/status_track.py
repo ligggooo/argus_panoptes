@@ -1,9 +1,9 @@
 import copy
-import json
 import threading
 
+from jiliang_process.interfaces import StatusRecordInterface, StatusNodeInterface, StatusMergerInterface
 from jiliang_process.process_monitor_types import ProcessState, StatePoint
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 '''
 class TaskTrackingRecord(db.Model):
@@ -21,7 +21,7 @@ class TaskTrackingRecord(db.Model):
 '''
 
 
-class StatusRecord:
+class StatusRecord(StatusRecordInterface):
     # 模仿适配flask ORM对象
     def __init__(self, sub_id=None,
                  parent_id=None,
@@ -39,7 +39,7 @@ class StatusRecord:
         self.call_category: int = call_category
         self.state = state
         self.timestamp = timestamp
-        self.desc = desc
+        self.desc: Union[None,str] = desc
 
     def generate_fake_end_record(self):
         "生成一条假的结束记录"
@@ -63,7 +63,7 @@ class StatusRecord:
         return getattr(self, item)
 
 
-class StatusNode:
+class StatusNode(StatusNodeInterface):
     def __init__(self, root_id, parent_id, sub_id, tag):
         self.parent = None
         self.children = []
@@ -75,19 +75,20 @@ class StatusNode:
         self.start_time = -1
         self.end_time = -1
         self.status = ProcessState.unknown  # 节点日志中反映出的完成情况
-        self.sub_success_rate = [0, 0]  # 子节点日志中反映出的完成情况( 完成数/总数 )
+        self.sub_success_rate = [0, 0, 0]  # 子节点日志中反映出的完成情况( 完成数/总数 )
         self.err = set()
         self.info = set()
-        self.desc = None
+        self.desc = ""
         self.ended_signature = None  # 为了手动关闭节点而增加的标记
 
     def __repr__(self):
-        return "%s<%s>%s<%d/%d>" % (
-            self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1])
+        return "%s<%s>%s<%d/%d/%d>" % (
+            self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1],self.sub_success_rate[2])
 
     @staticmethod
     def create_empty_node(root_id, parent_id, sub_id, tag):
         n = StatusNode(root_id, parent_id, sub_id, tag)
+        n.status = ProcessState.record_incomplete
         n.desc = "找不到记录"
         return n
 
@@ -138,7 +139,7 @@ class StatusNode:
             "tag": self.tag,
             "err": list(self.err),
             "info": list(self.info),
-            "status": self.status.name,
+            "status": self.status.value,
             "start_time": self.start_time,
             "end_time": self.end_time,
             "hasChildren": len(self.children) > 0,
@@ -255,14 +256,14 @@ class TaskStatusTree:
                 self.root.err.add("存在记录丢失，调用树被割裂")
                 break
 
-    def status_update(self, status_merger):
+    def status_update(self, status_merger: StatusMergerInterface):
         # 后续遍历树,刷新每个节点的状态
         # 目前每次都重来一遍，以后规模增加之后可以做进一步优化
         stack = [self.root]
         stack_rev = []
         while stack:
-            tmp = stack.pop()
-            tmp.sub_success_rate = [0, 0]
+            tmp: StatusNode = stack.pop()
+            tmp.sub_success_rate = [0, 0, 0]
             info_msg = None
             try:
                 tmp.status, err_msg, info_msg, time_stamps = status_merger.merge_status(tmp.records)
@@ -272,13 +273,12 @@ class TaskStatusTree:
                     tmp.close_sub_nodes()
             except Exception as e:
                 print(e)
-                err_msg = str(e)
+                err_msg = [str(e)]
             if err_msg is not None:
-                tmp.err.add(err_msg)
+                tmp.err.update(err_msg)
             if info_msg is not None:
-                tmp.info.add(info_msg)
-            tmp.desc = status_merger.merge_info(tmp.status, tmp.err, tmp.info)
-
+                tmp.info.update(info_msg)
+            tmp.desc = "\n".join(tmp.info)+"\n"+"\n".join(tmp.err)
             # if desc and tmp.desc and desc != tmp.desc:
             #     tmp.desc = tmp.desc + " | \n " + desc
             # else:
@@ -288,16 +288,28 @@ class TaskStatusTree:
             if tmp.children:
                 stack.extend(tmp.children)
         for node in reversed(stack_rev):  # 从后往前，先序遍历，刷新
+            # 更新自己
             if not node.children:
                 if node.status == ProcessState.finished:
-                    node.sub_success_rate = [1, 1]
+                    node.sub_success_rate = [1, 0, 1]
+                elif node.status == ProcessState.failed:
+                    node.sub_success_rate = [0, 1, 1]
                 else:
-                    node.sub_success_rate = [0, 1]
+                    node.sub_success_rate = [0, 0, 1]
+            else:
+                if node.status == ProcessState.finished and node.sub_success_rate[1] > 0 : # 完成但是子任务存在错误
+                    node.status = ProcessState.partially_finished
+
+            # 更新父节点
             if not node.parent:
                 continue
-            node.parent.sub_success_rate[1] += 1
-            if node.sub_success_rate[0] == node.sub_success_rate[1] and node.status == ProcessState.finished:
-                node.parent.sub_success_rate[0] += 1
+            else:
+                node.parent.sub_success_rate[2] += 1
+
+                if node.sub_success_rate[0] == node.sub_success_rate[2] and node.status == ProcessState.finished:
+                    node.parent.sub_success_rate[0] += 1
+                if node.status == ProcessState.failed or node.status == ProcessState.partially_finished:
+                    node.parent.sub_success_rate[1] += 1
 
     @staticmethod
     def build_from_records(records, status_merger):
@@ -334,11 +346,12 @@ class TaskStatusTree:
 
 
 if __name__ == "__main__":
-    txx = TaskStatusTree()
-    from monitor_server.api.api_utils.task_analysis import get_records_for_test
-
-    records = get_records_for_test()
-    for r in records:
-        txx.add_record(r)
-        pass
+    # txx = TaskStatusTree()
+    # from monitor_server.api.api_utils.task_analysis import get_records_for_test
+    #
+    # records = get_records_for_test()
+    # for r in records:
+    #     txx.add_record(r)
+    #     pass
+    # pass
     pass

@@ -9,7 +9,7 @@ from operation_utils.deploy.jiliang_deploy import container_list, check_in_group
 from operation_utils.dockers import tar_and_cp_file_2_container, exec_cmd, cp_file_from_container
 
 dir_temp = "/app/inte_dir/%s/jiliang_system"
-def check_dir(host, dockers, dir_mod=dir_temp, search="599624"):
+def check_dir(host, dockers, dir_mod=dir_temp, search="605170"):
     collect_local = []
     for d in dockers:
         dir = dir_mod%(d)

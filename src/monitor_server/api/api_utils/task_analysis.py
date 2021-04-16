@@ -49,23 +49,23 @@ def load_records_to_redis():
 
 
 
-def get_records():
-    t_start = time.time() - 7 * 24 * 3600
-    tasks = Task.query.filter(Task.start_time >= t_start).order_by(Task.id.desc()).all()
-    records = {}
-    for t in tasks:
-        records[t.root_id] = get_task_records(t.root_id)
-    return records
-
-
-def get_records_for_test():
-    if config.TASK_TRACK_CACHE:
-        records = pickle.load(open(os.path.join(_tmp_dir, "task_record.dat"), 'rb'))
-    else:
-        records = get_records()
-    for root_id in records:
-        records = records[root_id]
-        return records
+# def get_records():
+#     t_start = time.time() - 7 * 24 * 3600
+#     tasks = Task.query.filter(Task.start_time >= t_start).order_by(Task.id.desc()).all()
+#     records = {}
+#     for t in tasks:
+#         records[t.root_id] = get_task_records(t.root_id)
+#     return records
+#
+#
+# def get_records_for_test():
+#     if config.TASK_TRACK_CACHE:
+#         records = pickle.load(open(os.path.join(_tmp_dir, "task_record.dat"), 'rb'))
+#     else:
+#         records = get_records()
+#     for root_id in records:
+#         records = records[root_id]
+#         return records
 
 
 g_task_record_cache = TaskRecordCache(20)

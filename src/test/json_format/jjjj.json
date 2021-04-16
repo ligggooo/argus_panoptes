@@ -1,0 +1,447 @@
+{
+  "code": 200,
+  "data": {
+    "count": 26,
+    "data": [
+      {
+        "end_time": 1618486554.68565,
+        "err": [],
+        "hasChildren": true,
+        "id": "610904",
+        "info": [
+          "完成"
+        ],
+        "root_id": "610904",
+        "start_time": 1618485934.2101,
+        "status": 1,
+        "success_rate": [
+          3,
+          3
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "610823",
+        "info": [
+          "running"
+        ],
+        "root_id": "610823",
+        "start_time": 1618485041.50805,
+        "status": 0,
+        "success_rate": [
+          2,
+          3
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "610742",
+        "info": [
+          "running"
+        ],
+        "root_id": "610742",
+        "start_time": 1618484806.77637,
+        "status": 0,
+        "success_rate": [
+          2,
+          3
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "610661",
+        "info": [
+          "running"
+        ],
+        "root_id": "610661",
+        "start_time": 1618483869.09699,
+        "status": 0,
+        "success_rate": [
+          2,
+          3
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": 1618483781.09869,
+        "err": [
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 268, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\launch_alg_schedule\\launch_dist_mapbuilding.py\", line 730, in run_status_1\n task_json_dict_orig, task_json_list = split_task_with_size(message_obj)\n File \"E:\\workspace\\jiliang_system\\launch_alg_schedule\\launch_dist_mapbuilding.py\", line 543, in split_task_with_size\n datetime.datetime.strptime(message_obj[\"startTime\"], '%Y-%m-%d %H:%M:%S')), \\\nTypeError: '>' not supported between instances of 'datetime.datetime' and 'float'\n"
+        ],
+        "hasChildren": false,
+        "id": "610660",
+        "info": [
+          "失败"
+        ],
+        "root_id": "610660",
+        "start_time": 1618483780.70841,
+        "status": 2,
+        "success_rate": [
+          0,
+          1
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": 1618483760.89493,
+        "err": [
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 268, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\launch_alg_schedule\\launch_dist_mapbuilding.py\", line 730, in run_status_1\n task_json_dict_orig, task_json_list = split_task_with_size(message_obj)\n File \"E:\\workspace\\jiliang_system\\launch_alg_schedule\\launch_dist_mapbuilding.py\", line 543, in split_task_with_size\n datetime.datetime.strptime(message_obj[\"startTime\"], '%Y-%m-%d %H:%M:%S')), \\\nTypeError: '>' not supported between instances of 'datetime.datetime' and 'float'\n"
+        ],
+        "hasChildren": false,
+        "id": "610659",
+        "info": [
+          "失败"
+        ],
+        "root_id": "610659",
+        "start_time": 1618483760.50256,
+        "status": 2,
+        "success_rate": [
+          0,
+          1
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": 1618483411.37981,
+        "err": [
+          "iliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 119, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\launch_alg_schedule\\launch_dist_mapbuilding.py\", line 284, in func_handle_dict_tile_status\n bool_succ_finished_stage1, argv_str_return, _ = task_handler.get()\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\celery\\result.py\", line 219, in get\n self.maybe_throw(callback=callback)\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\celery\\result.py\", line 335, in maybe_throw\n self.throw(value, self._to_remote_traceback(tb))\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\celery\\result.py\", line 328, in throw\n self.on_ready.throw(*args, **kwargs)\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\vine\\promises.py\", line 244, in throw\n reraise(type(exc), exc, tb)\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\vine\\five.py\", line 195, in reraise\n raise value\nTypeError: '>=' not supported between instances of 'FileNotFoundError' and 'int'\n"
+        ],
+        "hasChildren": true,
+        "id": "600459",
+        "info": [
+          "失败"
+        ],
+        "root_id": "600459",
+        "start_time": 1618475589.61484,
+        "status": 2,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "600000",
+        "info": [
+          "running"
+        ],
+        "root_id": "600000",
+        "start_time": 1618475438.45649,
+        "status": 0,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599836",
+        "info": [
+          "running"
+        ],
+        "root_id": "599836",
+        "start_time": 1618475390.94606,
+        "status": 0,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599679",
+        "info": [
+          "running"
+        ],
+        "root_id": "599679",
+        "start_time": 1618475348.06363,
+        "status": 0,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599666",
+        "info": [
+          "running"
+        ],
+        "root_id": "599666",
+        "start_time": 1618473928.77281,
+        "status": 0,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599655",
+        "info": [
+          "running"
+        ],
+        "root_id": "599655",
+        "start_time": 1618472876.8715,
+        "status": 0,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": 1618472458.90154,
+        "err": [
+          "iliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 119, in wrapper\n res = func(*args, **kwargs)\n File \"E:/workspace/jiliang_system/launch_alg_schedule/launch_dist_mapbuilding.py\", line 284, in func_handle_dict_tile_status\n bool_succ_finished_stage1, argv_str_return, _ = task_handler.get()\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\celery\\result.py\", line 219, in get\n self.maybe_throw(callback=callback)\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\celery\\result.py\", line 335, in maybe_throw\n self.throw(value, self._to_remote_traceback(tb))\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\celery\\result.py\", line 328, in throw\n self.on_ready.throw(*args, **kwargs)\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\vine\\promises.py\", line 244, in throw\n reraise(type(exc), exc, tb)\n File \"D:\\dev_apps\\Anaconda\\lib\\site-packages\\vine\\five.py\", line 195, in reraise\n raise value\nTypeError: '>=' not supported between instances of 'FileNotFoundError' and 'int'\n"
+        ],
+        "hasChildren": true,
+        "id": "599638",
+        "info": [
+          "失败"
+        ],
+        "root_id": "599638",
+        "start_time": 1618472451.04641,
+        "status": 2,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599614",
+        "info": [
+          "running"
+        ],
+        "root_id": "599614",
+        "start_time": 1618471681.60906,
+        "status": 0,
+        "success_rate": [
+          1,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599591",
+        "info": [
+          "running"
+        ],
+        "root_id": "599591",
+        "start_time": 1618471449.83364,
+        "status": 0,
+        "success_rate": [
+          0,
+          2
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "599564",
+        "info": [
+          "running"
+        ],
+        "root_id": "599564",
+        "start_time": 1618471156.00968,
+        "status": 0,
+        "success_rate": [
+          1,
+          3
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": 1618471151.99493,
+        "err": [
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 266, in wrapper\n res = func(*args, **kwargs)\n File \"E:/workspace/jiliang_system/launch_alg_schedule/launch_dist_mapbuilding.py\", line 729, in run_status_1\n task_json_dict_orig, task_json_list = split_task_with_size(message_obj)\n File \"E:/workspace/jiliang_system/launch_alg_schedule/launch_dist_mapbuilding.py\", line 542, in split_task_with_size\n datetime.datetime.strptime(message_obj[\"startTime\"], '%Y-%m-%d %H:%M:%S')), \\\nTypeError: '>' not supported between instances of 'datetime.datetime' and 'float'\n"
+        ],
+        "hasChildren": false,
+        "id": "599563",
+        "info": [
+          "失败"
+        ],
+        "root_id": "599563",
+        "start_time": 1618471125.40751,
+        "status": 2,
+        "success_rate": [
+          0,
+          1
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": 1618471115.78524,
+        "err": [
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 266, in wrapper\n res = func(*args, **kwargs)\n File \"E:/workspace/jiliang_system/launch_alg_schedule/launch_dist_mapbuilding.py\", line 729, in run_status_1\n task_json_dict_orig, task_json_list = split_task_with_size(message_obj)\n File \"E:/workspace/jiliang_system/launch_alg_schedule/launch_dist_mapbuilding.py\", line 542, in split_task_with_size\n datetime.datetime.strptime(message_obj[\"startTime\"], '%Y-%m-%d %H:%M:%S')), \\\nTypeError: '>' not supported between instances of 'datetime.datetime' and 'float'\n"
+        ],
+        "hasChildren": false,
+        "id": "599562",
+        "info": [
+          "失败"
+        ],
+        "root_id": "599562",
+        "start_time": 1618471114.74285,
+        "status": 2,
+        "success_rate": [
+          0,
+          1
+        ],
+        "tag": "jiliang系统根任务status=1"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "599561",
+        "info": [],
+        "root_id": "599561",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "599561"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "599560",
+        "info": [],
+        "root_id": "599560",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "599560"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "599559",
+        "info": [],
+        "root_id": "599559",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "599559"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "599558",
+        "info": [],
+        "root_id": "599558",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "599558"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "599557",
+        "info": [],
+        "root_id": "599557",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "599557"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "587344",
+        "info": [],
+        "root_id": "587344",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "587344"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "587341",
+        "info": [],
+        "root_id": "587341",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "587341"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": false,
+        "id": "587338",
+        "info": [],
+        "root_id": "587338",
+        "start_time": -1,
+        "status": -2,
+        "success_rate": [
+          0,
+          0
+        ],
+        "tag": "587338"
+      }
+    ]
+  },
+  "message": "请求成功"
+}

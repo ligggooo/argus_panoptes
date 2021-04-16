@@ -212,7 +212,7 @@ class ProcessMonitor:
                     # 任务意外退出 此子节点的所有子节点都需要在服务端关闭
                     print("捕获任务意外退出 此子节点的所有子节点都需要在服务端关闭")
                     self.current_call_stack_node = None
-                    return e.data
+                    raise e
                 except ProcessIntentionallyShutDownException as e:
                     err_msg = str(e.msg)
                     self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
@@ -222,7 +222,7 @@ class ProcessMonitor:
                     # 任务有意自行退出 此子节点的所有子节点都需要在服务端关闭
                     print("捕获任务有意退出 此子节点的所有子节点都需要在服务端关闭")
                     self.current_call_stack_node = None
-                    return e.data
+                    raise e
                 except Exception as e:
                     err_msg = traceback.format_exc()
                     self.logger.info(call_category=CallCategory.cross_process.value, sub_id=this_id,
@@ -340,7 +340,7 @@ class ProcessMonitor:
 
 class UniqueId:
     """
-        通过monitor后端的一个全局变量来模拟一个全局唯一id生成服务，最终可能通过更鲁棒的方式实现
+        通过monitor后端的一个全局变量来模拟一个全局唯一id生成服务 后端使用redis实现
     """
 
     _unique_id = 0

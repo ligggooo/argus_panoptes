@@ -15,6 +15,7 @@ class ProcessState(enum.Enum):
     """
     记录函数过程的状态，是经过merger处理过的状态
     """
+    not_found_in_cache = -4
     unknown = -3
     record_incomplete = -2
     not_started_yet = -1

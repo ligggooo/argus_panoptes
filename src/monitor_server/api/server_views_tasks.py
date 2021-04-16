@@ -46,7 +46,9 @@ def get_tasks():
     sub_id = request.args.get("sub_id")
 
     test_url = url_for("api_g5.test_tasks")
+    #  缓存同步，目前刷新逻辑是满了才同步，所以要找个地方手动触发没满的那一部分
     task_status_tree_cache.flush_cache()
+
     if not root_id:
         tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
 
@@ -103,12 +105,13 @@ def frontend_test_root_record():
 
     tasks = Task.query
     if start_Time:
-        tasks = tasks.filter(Task.start_time >= time.mktime(time.strptime(start_Time, "%Y-%m-%d+%H:%M:%S")))
+        tasks = tasks.filter(Task.start_time >= time.mktime(time.strptime(start_Time, "%Y-%m-%d %H:%M:%S")))
     if end_Time:
-        tasks = tasks.filter(Task.start_time <= time.mktime(time.strptime(end_Time, "%Y-%m-%d+%H:%M:%S")))
+        tasks = tasks.filter(Task.start_time <= time.mktime(time.strptime(end_Time, "%Y-%m-%d %H:%M:%S")))
     if not start_Time and not end_Time:
         t_start = time.time() - 7 * 24 * 3600
         tasks = tasks.filter(Task.start_time >= t_start)
+    tasks = tasks.order_by(Task.start_time.desc())
     count = tasks.count()
     tasks = tasks.slice((page - 1) * limit, page * limit).all()
 

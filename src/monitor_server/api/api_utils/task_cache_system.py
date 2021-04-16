@@ -50,6 +50,10 @@ class NonDuplicatedDBLLinkListForLRU:
     def clear(self):
         self._data = []
 
+    @property
+    def keys(self):
+        return self._data
+
 
 class KeyedItem:
     def __init__(self, k):
@@ -113,10 +117,11 @@ class TaskTrackDbKeyedDataSrc(KeyedDataSrc):
                     'INSERT INTO task_track (sub_id,parent_id,root_id,name,call_category,state,timestamp,"desc") VALUES %s',
                     items)
                 cur.connection.commit()
+            print(self.__class__, "done write, %d items" % len(items))
         except Exception as e:
             traceback.print_exc()
             raise e
-        print(self.__class__, "done write")
+
 
 
 class LRUCache(ABC):
@@ -176,6 +181,10 @@ class LRUCache(ABC):
     def __repr__(self):
         return "\n".join([str(s) for s in self._hash_holder.items()])
 
+    @property
+    def keys(self):
+        return self._linked_list_key_holder.keys
+
 
 class TaskRecordCache(LRUCache):
     """
@@ -201,7 +210,7 @@ class TaskRecordCache(LRUCache):
             self._slow_data_src.async_write(self.async_pool, tmp)
 
     def load_all(self):
-        root_id_list = self.get_root_id_list()
+        root_id_list = self.get_root_id_list_last_week()
         for root_id in root_id_list[-self._capacity:]:
             print("loading ... %s" % root_id)
             item = self.load(root_id)
@@ -218,9 +227,9 @@ class TaskRecordCache(LRUCache):
                     self.flush()
 
     @staticmethod
-    def get_root_id_list():
+    def get_root_id_list_last_week():
         t_start = time.time() - 7 * 24 * 3600
-        tasks = Task.query.filter(Task.start_time >= t_start).order_by(Task.id.desc()).all()
+        tasks = Task.query.filter(Task.start_time >= t_start).order_by(Task.start_time).all()
         root_id_list = [t.root_id for t in tasks]
         return root_id_list
 

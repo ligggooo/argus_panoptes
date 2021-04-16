@@ -3,6 +3,8 @@
 # @FileName  : jiliang_deploy.py
 # @Time      : 2021/3/16 20:19
 # @Author    : Lee
+from typing import Dict
+
 from operation_utils.dockers import tar_and_cp_file_2_container, exec_cmd, write_content_2_container, restart_container
 from concurrent.futures import as_completed, ThreadPoolExecutor
 
@@ -13,28 +15,6 @@ src_dir_trajectory = r"E:\workspace\automapbuilding_z"
 master_script = "run_master.sh"
 slave_script = "run_slave.sh"
 import tarfile
-
-
-def deploy_to_machine(host, dockers):
-    for d in dockers:
-        res = exec_cmd(host, 2375, d, "rm -rfv /workspace")
-        if res[0] != "success":
-            print(res)
-        res = exec_cmd(host, 2375, d, "rm -rfv /app/inte_dir")
-        if res[0] != "success":
-            print(res)
-        print(host, d, src_dir_sys)
-        tar_and_cp_file_2_container(host, 2375, d, src_dir_sys)
-        print(host, d, src_dir_proc)
-        tar_and_cp_file_2_container(host, 2375, d, src_dir_proc)
-        print(host, d, src_dir_semantics)
-        tar_and_cp_file_2_container(host, 2375, d, src_dir_semantics)
-        print(host, d, src_dir_trajectory)
-        tar_and_cp_file_2_container(host, 2375, d, src_dir_trajectory)
-        content = open(r"E:\workspace\jiliang_monitor_pr\src\operation_utils\deploy\jiliang_docker_run.sh", "r",
-                       newline="\n").read().replace("\r\n", "\n")
-        print(write_content_2_container(host, 2375, d, content, file_path="/run.sh"))
-        print(restart_container(host, 2375, d))
 
 
 container_list = [
@@ -92,6 +72,47 @@ container_list = [
 ]
 
 
+def render(template_name: str, params:Dict):
+    content = open(template_name, "r", newline = "\n").read().replace("\r\n", "\n")
+    for k in params:
+        content = content.replace("{%% %s %%}"%k, params[k])
+    return content
+    
+    
+
+def deploy_to_machine(host, dockers,enable_monitor, runtime_mode):
+    for d in dockers:
+        res = exec_cmd(host, 2375, d, "rm -rfv /workspace")
+        if res[0] != "success":
+            print(res)
+        res = exec_cmd(host, 2375, d, "rm -rfv /app/inte_dir")
+        if res[0] != "success":
+            print(res)
+        print(host, d, src_dir_sys)
+        tar_and_cp_file_2_container(host, 2375, d, src_dir_sys)
+        print(host, d, src_dir_proc)
+        tar_and_cp_file_2_container(host, 2375, d, src_dir_proc)
+        print(host, d, src_dir_semantics)
+        tar_and_cp_file_2_container(host, 2375, d, src_dir_semantics)
+        print(host, d, src_dir_trajectory)
+        tar_and_cp_file_2_container(host, 2375, d, src_dir_trajectory)
+        env_set= ""
+        if runtime_mode == "test":
+            env_set += "export RUNTIME_MODE=test\n"
+        if enable_monitor:
+            env_set += "export MONITOR_ENABLED=1\n"
+        run_content = render(r"E:\workspace\jiliang_monitor_pr\src\operation_utils\deploy\jiliang_docker_run_template.sh", {
+            "env_set":env_set
+        })
+
+        print(write_content_2_container(host, 2375, d, run_content, file_path="/run.sh"))
+        print(restart_container(host, 2375, d))
+
+
+
+
+
+
 def check(item):
     filter_list = [
         "172.16.100.141",
@@ -107,15 +128,18 @@ def check_in_group(item, group):
     return group in item["group"]
 
 
-if __name__ == "__main__":
+def deploy_system(group="test", enable_monitor=True, runtime_mode="test"):
     pool = ThreadPoolExecutor(1)
     t_v = []
     for item in container_list:
-        if check_in_group(item, "test"):
-            t = pool.submit(deploy_to_machine, item["host"], item["dockers"])
+        if check_in_group(item, group):
+            t = pool.submit(deploy_to_machine, item["host"], item["dockers"], enable_monitor, runtime_mode)
             t_v.append(t)
             # pass
         else:
             print(item, "不满足过滤条件")
     for t in as_completed(t_v):
         print(t.result())
+
+if __name__ == "__main__":
+    deploy_system()

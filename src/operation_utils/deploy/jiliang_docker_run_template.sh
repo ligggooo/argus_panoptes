@@ -19,8 +19,7 @@ echo $?
 echo "========================================="
 
 source ~/.bashrc
-export RUNTIME_MODE=test
-export MONITOR_ENABLED=1
+{% env_set %}
 
 sh /workspace/jiliang_system/deploy/run.sh
 echo "========================================="
