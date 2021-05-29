@@ -1,4 +1,0 @@
-2021-03-24 18:21:43,381 - semantic_log - INFO - []
-2021-03-24 18:21:43,382 - semantic_log - INFO - main done 0.0009732246398925781 s, 0.0 min, 2.703401777479384e-07 h
-2021-03-24 18:23:02,158 - semantic_log - INFO - []
-2021-03-24 18:23:02,159 - semantic_log - INFO - main done 0.0 s, 0.0 min, 0.0 h

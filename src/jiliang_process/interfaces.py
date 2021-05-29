@@ -33,14 +33,14 @@ class StatusMergerInterface(ABC):
 
     @abstractmethod
     def merge_status(self, records: List[StatusRecordInterface]) -> Tuple[ProcessState, List[str], List[str],
-                                                                          List[float]]:
+                                                                          List[float], str]:
         '''
         Because original status records are generated when events of interests occur, so a task may have more than one
         record binded to it. To find out whether a task finishes or fails, this function must be called to merge records.
         :param records: related records
         :return: ProcessState
         '''
-        return ProcessState.finished, [], [], []
+        return ProcessState.finished, [], [], [],""
 
     @staticmethod
     @abstractmethod

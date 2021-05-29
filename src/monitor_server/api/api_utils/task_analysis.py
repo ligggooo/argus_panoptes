@@ -1,8 +1,8 @@
 import sys
-import time
 
 from monitor_server.api.api_utils.task_cache_system import TaskRecordCache, TaskStatusTreeCache
 from monitor_server.api.api_utils.task_status_merger import StatusMerger
+from monitor_server.settings.conf import config
 
 sys.path.append("../../")
 from monitor_server.models.model_006_tasks import TaskTrackingRecord, Task, db
@@ -11,7 +11,6 @@ import pickle
 import os
 
 from operation_utils.file import get_tmp_data_dir
-from monitor_server.settings.conf import config
 
 _tmp_dir = get_tmp_data_dir()
 
@@ -68,7 +67,7 @@ def load_records_to_redis():
 #         return records
 
 
-g_task_record_cache = TaskRecordCache(20)
+g_task_record_cache = TaskRecordCache(config.cache_size)
 task_status_tree_cache = TaskStatusTreeCache(g_task_record_cache, StatusMerger())
 task_status_tree_cache.load()  # 服务器启动的时候不存在线程竞争
 

@@ -17,7 +17,7 @@ class Machine(db.Model):
     free_storage_in_GB_2 = db.Column(db.Integer, nullable=True, unique=False)
     reserve_1 = db.Column(db.String(256), nullable=True, unique=False)
     reserve_2 = db.Column(db.String(256), nullable=True, unique=False)
-    docker_server_port= db.Column(db.Integer, nullable=False, unique=False, default=2375)
+    docker_server_port = db.Column(db.Integer, nullable=False, unique=False, default=2375)
 
     def __repr__(self):
         return "<%s %s>" % (self.ip_addr, self.host_name)
@@ -35,7 +35,7 @@ class PhysicalPort(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     machine_id = db.Column(db.Integer, nullable=False, unique=False)
     port_num = db.Column(db.Integer, nullable=False, unique=False)
-    available = db.Column(db.Integer, nullable=False, unique=False,default=1)
+    available = db.Column(db.Integer, nullable=False, unique=False, default=1)
 
 
 def init_machines():

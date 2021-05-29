@@ -16,6 +16,7 @@ class TaskTrackingRecord(db.Model):
     state = db.Column(db.Integer, nullable=False, unique=False)
     timestamp = db.Column(db.Float, nullable=False, unique=False)
     desc = db.Column(db.String(1024), nullable=True, unique=False)
+    location = db.Column(db.String(256), nullable=True, default="unknown,unknown")
 
     def __repr__(self):
         return "<%s:%s %s:%s %s>" % (self.parent_id, self.sub_id, CallCategory(self.call_category).name, self.name, StatePoint(self.state).name)
@@ -43,6 +44,7 @@ class TaskTrackingRecord(db.Model):
         record.name = self.name
         record.call_category = self.call_category
         record.timestamp = self.timestamp
+        record.location = self.location
         return record
 
 

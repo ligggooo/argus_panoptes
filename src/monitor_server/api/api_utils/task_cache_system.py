@@ -89,7 +89,7 @@ class KeyedDataSrc(ABC):
         pool.submit(self.write, items)
 
 
-from monitor_server.settings.conf import config
+from settings.conf import config
 
 
 class TaskTrackDbKeyedDataSrc(KeyedDataSrc):
@@ -109,7 +109,7 @@ class TaskTrackDbKeyedDataSrc(KeyedDataSrc):
             cur = engine.raw_connection().cursor()
             if config.SQLALCHEMY_DATABASE_URI.startswith("postgresql"):
                 execute_values(cur,
-                               'INSERT INTO task_track (sub_id,parent_id,root_id,name,call_category,state,timestamp,"desc") VALUES %s',
+                               'INSERT INTO task_track (sub_id,parent_id,root_id,name,call_category,state,timestamp,"desc", location) VALUES %s',
                                items)
                 cur.connection.commit()
             else:

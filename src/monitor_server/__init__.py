@@ -13,7 +13,6 @@ app.jinja_env.variable_start_string = '[['
 app.jinja_env.variable_end_string = ']]'
 # 将db注册到app中（在内部读取配置文件）
 
-
 db = SQLAlchemy(app)
 
 

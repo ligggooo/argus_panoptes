@@ -36,15 +36,17 @@ con.close()
 
 x = numpy.array([float(c[1]) for c in res])
 d = numpy.array([float(c[0]) for c in res])
-t = numpy.array([time.localtime(float(c[2])).tm_hour + time.localtime(float(c[2])).tm_min/60.0 for c in res])
+t = numpy.array([c[2] for c in res])
+t = t - t.min()
+t = t/3600
 
 for r in res:
     print(r)
 
 plt.figure(1)
-plt.plot(x,d)
+plt.plot(t, d)
 
 plt.figure(2)
-plt.plot(x,t)
+plt.plot(t, t)
 
 plt.show()

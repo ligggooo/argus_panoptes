@@ -5,6 +5,7 @@ import requests
 import json
 import time
 import sys
+import os
 
 
 from .process_monitor_types import CallCategory, StatePoint
@@ -56,12 +57,18 @@ class HttpLogger:
 
     def info(self, **kwargs):
         # msg = self.logger.makeRecord()
-        kwargs.update({"timestamp":time.time()})
+        location = "%s,%s"%(os.environ.get("HOST_IP", "unknown"), os.environ.get("CONTAINER_NAME","unknown"))
+        kwargs.update({"timestamp":time.time(), "location": location})
         msg = json.dumps(kwargs)
         self.logger.info(msg)
         # tc = datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f")[:-3]
         # msg = "%s %s"%(tc, msg)
-        requests.post(self.url, data={"msg":msg})
+        try:
+            requests.post(self.url, data={"msg":msg})
+        except requests.exceptions.ConnectTimeout as e:
+            self.logger.info(str(e))
+        except Exception as e:
+            print(e)
 
 
 def get_web_logger(url=TASK_RECORDER_URL):

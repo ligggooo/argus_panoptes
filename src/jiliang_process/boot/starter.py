@@ -1,7 +1,8 @@
 import sys
 import os
 import traceback
-sys.path.append("/workspace/jiliang_monitor_pr/src")
+sys.path.append(r"/workspace/jiliang_monitor_pr/src")
+sys.path.append(r"E:\workspace\jiliang_monitor_pr/src")
 from jiliang_process.boot.starter_conf import get_starter_conf
 from jiliang_process.boot.deco_module1 import deco_module
 from jiliang_process.process_monitor import task_monitor
@@ -75,7 +76,7 @@ class MyRunner:
             # print(args, kwargs)
             # module_cache = dict()
             module_name = args[0]
-            if module_name.startswith("dcs"):
+            if module_name.startswith("dcs") or module_name.startswith("s3fs"):
                 pass
             # print("lee import -------%s--------"%module_name)
             # if module_name in module_cache:
@@ -85,7 +86,7 @@ class MyRunner:
                 ret_module = self.__original_import(*args, **kwargs)
             except ImportError as e:
                 # print("lee import ImportError -------%s--------"%module_name,e)
-                print(args,kwargs)
+                # print(args,kwargs)
                 raise e
             except Exception as e:
                 # print("lee import Exception -------%s--------" % module_name,e)
@@ -94,7 +95,7 @@ class MyRunner:
             finally:
                 pass
             if len(args) <2 and len(module_name)>0:
-                print(args)
+                # print(args)
                 # print("lee done import cached ---%s---" % module_name)
                 # module_cache[module_name] = ret_module
                 return ret_module
@@ -140,10 +141,10 @@ class MyRunner:
 if __name__ == "__main__":
     print("start -------------------", sys.argv)
     if len(sys.argv) == 1:
-        mainfile = "test_task.py"
-        # mainfile = "e:\workspace\distributed_semantics\main.py"
+        mainfile = "demo.py"
         path = os.path.dirname(os.path.abspath(__file__))
         f = os.path.join(path, mainfile)
+        sys.argv = ["starter.py", "demo.py", '''{\"root_id\":\"\",\"parent_id\":\"\"}''']
     else:
         f = sys.argv[1]
     sys.argv = sys.argv[1:]
@@ -151,12 +152,12 @@ if __name__ == "__main__":
     # -----------------------------------------
     try:
         msg = sys.argv[1]
-        root_id, parent_id = task_monitor.extract_monitor_params_from_str(msg)
+        root_id, parent_id, _ = task_monitor.extract_monitor_params_from_str(msg)
         print("lee_debug", root_id, parent_id)
     except Exception as e:
-        print(e)
-        root_id = None
-        parent_id = None
+        raise e
+        # root_id = None
+        # parent_id = None
     # -----------------------------------------
     r = MyRunner()
     r.run_script(f,root_id=root_id, parent_id=parent_id)

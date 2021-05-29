@@ -1,11 +1,13 @@
 import datetime
 import sys, time
-
+from sqlalchemy import or_
 from flask import Blueprint, request, url_for, render_template, json
 # import json
 from flask_apscheduler import APScheduler
 from flask_cors import cross_origin
 
+from monitor_server.api.api_utils.api_logger import server_perf_logger
+from monitor_server.api.api_utils.server_exceptions import ServerPerformanceError
 from jiliang_process.status_track import StatusRecord
 from monitor_server.api.api_utils.db_utils import wake_up_data_base
 
@@ -50,13 +52,25 @@ def get_tasks():
     task_status_tree_cache.flush_cache()
 
     if not root_id:
-        tasks = Task.query.order_by(Task.id.desc()).limit(4).all()
+        tasks = Task.query.order_by(Task.id.desc()).limit(120).all()
 
         for t in tasks:
             t.note = str(t)
             t.status, t.state_track, t.desc = task_status_tree_cache.get_status(root_id=t.root_id, parent_id=t.root_id,
                                                                                 tag=t.name)
             t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
+            t.root_url = url_for("api_g5.get_tasks", root_id=t.root_id)
+            for b in t.state_track:
+                b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
+        return render_template("tasks.html", tasks=tasks, test_url=test_url, task_class="active")
+    elif not parent_id:
+        tasks, tree = task_status_tree_cache.get_tasks_from_cache(root_id=root_id, parent_id=root_id, sub_id=root_id)
+        for t in tasks:
+            t.note = str(t)
+            t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
+            t.root_url = url_for("api_g5.get_tasks", root_id=t.root_id)
+            t.status, t.state_track, _ = task_status_tree_cache.get_status(root_id=root_id, parent_id=t.sub_id,
+                                                                           tree=tree)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks, test_url=test_url, task_class="active")
@@ -65,12 +79,19 @@ def get_tasks():
         for t in tasks:
             t.note = str(t)
             t.desc = t.desc.replace(" ", "&nbsp;").replace("\n", "<br>")
+            t.root_url = url_for("api_g5.get_tasks", root_id=t.root_id)
             t.status, t.state_track, _ = task_status_tree_cache.get_status(root_id=root_id, parent_id=t.sub_id,
                                                                            tree=tree)
             for b in t.state_track:
                 b.url = url_for("api_g5.get_tasks", root_id=t.root_id, sub_id=b.sub_id, parent_id=b.parent_id)
         return render_template("tasks.html", tasks=tasks, test_url=test_url, task_class="active")
 
+
+@api_group5.route('/task_has_error', methods=['GET'])
+def check_task():
+    root_id = request.args.get("root_id")
+    tree_dump = task_status_tree_cache.get_tree_root_json_obj(root_id=root_id)
+    return json.dumps(tree_dump)
 
 @api_group5.route('/frontend_test_record', methods=['GET'])
 @cross_origin()
@@ -101,9 +122,12 @@ def frontend_test_root_record():
     limit = int(request.args.get("limit", 10))
     start_Time = request.args.get("start_Time")
     end_Time = request.args.get("end_Time")
+    key_word = request.args.get("key_word", "")
     data = []
 
     tasks = Task.query
+    if len(key_word) > 0:
+        tasks = tasks.filter(or_(Task.name.contains(key_word), Task.root_id == key_word))
     if start_Time:
         tasks = tasks.filter(Task.start_time >= time.mktime(time.strptime(start_Time, "%Y-%m-%d %H:%M:%S")))
     if end_Time:
@@ -137,10 +161,14 @@ def frontend_test_root_record():
 
 @api_group5.route('/record_tasks', methods=['POST', "GET"])
 def record_tasks():
+    start = time.time()
     raw_data = request.values.get('msg')
-    print(raw_data)
     data = json.loads(raw_data)
     recorder_tasks_doer(data)
+    delta_t = time.time()-start
+    server_perf_logger.warning(f"request finished in {str(delta_t)} seconds raw_data={raw_data}")
+    if delta_t > 0.5:
+        raise ServerPerformanceError(f"request finished in {str(delta_t)} seconds raw_data={raw_data}")
     return "ok"
 
 
@@ -185,10 +213,6 @@ def recorder_tasks_doer(data):
 
 @api_group5.route('/tasks_start_test', methods=['POST'])
 def test_tasks():
-    from jiliang_process.pm_test import test_main
-    import multiprocessing
-    p = multiprocessing.Process(target=test_main, args=())
-    p.start()
     msg = {"status": "success", "info": "测试任务已经启动"}
     return json.dumps(msg)
 

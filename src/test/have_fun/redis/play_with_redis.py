@@ -14,7 +14,7 @@
 import sys,time
 sys.path.insert(0,".")
 import redis,numpy
-from monitor_server.settings.conf import RedisConn
+from settings.conf import RedisConn
 
 r = redis.StrictRedis(host=RedisConn.host, 
             port=RedisConn.port,db=RedisConn.db)

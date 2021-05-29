@@ -41,7 +41,7 @@ def timer_deco(func):
 
     return w
 
-def concurrent_tester(func, n, m,args=[]):
+def concurrent_tester(func, n, m,args=()):
     pool = ThreadPoolExecutor(max_workers=n)
     res = [pool.submit(func, *args) for i in range(m)]
     cnt = 0

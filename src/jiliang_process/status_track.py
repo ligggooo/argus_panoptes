@@ -30,7 +30,8 @@ class StatusRecord(StatusRecordInterface):
                  call_category=None,
                  state=None,
                  timestamp=None,
-                 desc=None):
+                 desc=None,
+                 location=None):
         self.id = None
         self.sub_id = sub_id
         self.parent_id = parent_id
@@ -39,7 +40,9 @@ class StatusRecord(StatusRecordInterface):
         self.call_category: int = call_category
         self.state = state
         self.timestamp = timestamp
-        self.desc: Union[None,str] = desc
+        self.desc: Union[None, str] = desc
+        self.location: Union[str, None] = location
+
 
     def generate_fake_end_record(self):
         "生成一条假的结束记录"
@@ -57,7 +60,7 @@ class StatusRecord(StatusRecordInterface):
 
     def to_tuple(self):
         return (self.sub_id, self.parent_id, self.root_id, self.name, self.call_category, self.state, self.timestamp,
-                self.desc)
+                self.desc, self.location)
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -79,11 +82,13 @@ class StatusNode(StatusNodeInterface):
         self.err = set()
         self.info = set()
         self.desc = ""
+        self.location = ""
         self.ended_signature = None  # 为了手动关闭节点而增加的标记
 
     def __repr__(self):
-        return "%s<%s>%s<%d/%d/%d>" % (
-            self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1],self.sub_success_rate[2])
+        return "%s<%s>%s<%d/%d/%d><%s>" % (
+            self.tag, self.sub_id, self.status.name, self.sub_success_rate[0], self.sub_success_rate[1],
+            self.sub_success_rate[2], self.location)
 
     @staticmethod
     def create_empty_node(root_id, parent_id, sub_id, tag):
@@ -149,6 +154,7 @@ class StatusNode(StatusNodeInterface):
 class TaskStatusTree:
     def __init__(self):
         self.root: StatusNode = None
+        self.needs_update: bool = True  # 用于刷新操作的条件控制，新树当然需要刷新；当一颗树收到新纪录，就更新此变量
         self.orphans = []
         self.records = []
         self.node_cache = {}
@@ -220,7 +226,7 @@ class TaskStatusTree:
                 self.cache_node(new_node)
                 return True
 
-    def add_record(self, record):
+    def __add_record(self, record):
         res = True
         self.records.append(record)
         if not self.root:
@@ -256,9 +262,17 @@ class TaskStatusTree:
                 self.root.err.add("存在记录丢失，调用树被割裂")
                 break
 
-    def status_update(self, status_merger: StatusMergerInterface):
+    def status_update(self, status_merger: StatusMergerInterface, check_dead_tree=True)->None:
         # 后续遍历树,刷新每个节点的状态
         # 目前每次都重来一遍，以后规模增加之后可以做进一步优化
+        if not check_dead_tree and ProcessState.is_dead(self.root.status):
+            # 如果不检查死树，且当前树根节点确认已死则什么都不做
+            # 但是也有可能根节点死了但是叶子节点还活着
+            return
+        if not self.needs_update:
+            # 当前需要刷新
+            return
+        self.needs_update = False  # 标记更新标签为false
         stack = [self.root]
         stack_rev = []
         while stack:
@@ -266,7 +280,7 @@ class TaskStatusTree:
             tmp.sub_success_rate = [0, 0, 0]
             info_msg = None
             try:
-                tmp.status, err_msg, info_msg, time_stamps = status_merger.merge_status(tmp.records)
+                tmp.status, err_msg, info_msg, time_stamps, tmp.location = status_merger.merge_status(tmp.records)
                 tmp.start_time, tmp.end_time = time_stamps
                 if tmp.status == ProcessState.process_shutdown:  # 一个特殊情况，启动进程的进程发现子进程结束
                     # 目前的策略是： 在这个地方关掉所有的子节点
@@ -278,7 +292,7 @@ class TaskStatusTree:
                 tmp.err.update(err_msg)
             if info_msg is not None:
                 tmp.info.update(info_msg)
-            tmp.desc = "\n".join(tmp.info)+"\n"+"\n".join(tmp.err)
+            tmp.desc = "\n".join(tmp.info) + "\n" + "\n".join(tmp.err)
             # if desc and tmp.desc and desc != tmp.desc:
             #     tmp.desc = tmp.desc + " | \n " + desc
             # else:
@@ -297,7 +311,7 @@ class TaskStatusTree:
                 else:
                     node.sub_success_rate = [0, 0, 1]
             else:
-                if node.status == ProcessState.finished and node.sub_success_rate[1] > 0 : # 完成但是子任务存在错误
+                if node.status == ProcessState.finished and node.sub_success_rate[1] > 0:  # 完成但是子任务存在错误
                     node.status = ProcessState.partially_finished
 
             # 更新父节点
@@ -318,7 +332,7 @@ class TaskStatusTree:
             return None
         records = sorted(records, key=lambda x: x.sub_id)
         for r in records:
-            t.add_record(r)
+            t.__add_record(r)
             print(len(t.records), len(t.orphans))
 
         # 可能存在记录顺序不对导致有些节点没有找到父节点
@@ -329,8 +343,9 @@ class TaskStatusTree:
         return t
 
     def update_with_record(self, record, status_merger):
-        self.add_record(record)
-        # self.status_update(status_merger) # 不再每插一条记录都更新
+        self.__add_record(record)
+        # self.status_update(status_merger) # 不再每插一条记录都更新，而是标记为需要更新
+        self.needs_update = True
 
     def dumps(self):
         res = {}
@@ -351,7 +366,7 @@ if __name__ == "__main__":
     #
     # records = get_records_for_test()
     # for r in records:
-    #     txx.add_record(r)
+    #     txx.__add_record(r)
     #     pass
     # pass
     pass

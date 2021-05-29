@@ -1,0 +1,89 @@
+{% extends "base_show_template.html" %}
+  {% block boards %}
+  {% endblock %}
+
+{% block contents %}
+      <h2 class="sub-header"><a href="[[url_base]]" >
+                    发现如下容器未被数据库记录
+                  </a>
+        <button id="container_search_confirm" class="btn btn-warning btn-sm" aria-label="Left Align" style="margin-left:30px">
+                    确认记录<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                  </button>
+      </h2>
+      <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th class="hidden">real id</th>
+            <th class="col-sm-1 col-sm-offset-2 ">#</th>
+            <th class="col-sm-1 col-sm-offset-0 ">容器名称</th>
+            <th class="col-sm-1 col-sm-offset-0 ">启动命令</th>
+            <th class="col-sm-2 col-sm-offset-0 ">host机器</th>
+            <th class="col-sm-2 col-sm-offset-0 ">docker镜像</th>
+            <th class="col-sm-1 col-sm-offset-0 ">？</th>
+            <th class="col-sm-6 col-sm-offset-0 "></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in members %}
+              <tr class="[[m.tr_class]]">
+                <td class="hidden">[[m.id]]</td>
+                <td class="col-sm-1 col-sm-offset-0 ">[[loop.index]]</td>
+                <td class="col-sm-1 col-sm-offset-0 ">[[m.container_name]]</td>
+                <td class="col-sm-1 col-sm-offset-0 ">[[m.command]]</td>
+                <td class="col-sm-1 col-sm-offset-0 ">[[m.host_ip]]</td>
+                <td class="col-sm-1 col-sm-offset-0 ">[[m.image_name]]</td>
+                <td class="col-sm-1 col-sm-offset-0 ">
+                    <input type="checkbox" id="custom_check"  aria-label="..." checked="checked">
+                </td>
+                <td class="col-sm-6 col-sm-offset-0 ">
+
+                </td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  <script>
+            $(document).ready(function() {
+                $("button[id='container_search_confirm']").click(function (e){
+                  res = confirm("提交");
+                  if(res){
+                    var tr_list = $("tbody").children();
+                    var obj_holder=[];
+                    var cnt =0;
+                    for(var i=0;i<tr_list.length;i++){
+                      var obj={
+                      "container_name": $(tr_list[i].children[2]).text(),
+                      "host_ip": $(tr_list[i].children[4]).text(),
+                      }
+                      if($(tr_list[i].children[6].children).prop("checked")){
+                        console.log(obj);
+                        obj_holder[cnt] = obj;
+                        cnt = cnt +1;
+                      }
+                    }
+                    $.ajax({
+                        url:"[[url_for_post]]",
+                        type: "post",
+                        data: JSON.stringify(obj_holder),
+                        contentType:false,
+                        processData:false,
+                        success:function(data,status){
+                          console.log(data);
+                          console.log(status);
+                          data = JSON.parse(data);
+                          alert("status: "+data.status +"\ninfo: "+ data.info);
+                          $(location).attr("href",data.target_url);
+                         }
+                       });
+                  }
+
+
+                });
+            });
+
+  </script>
+  {% endblock %}
+
+

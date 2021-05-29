@@ -7,7 +7,7 @@ from monitor_server.models.model_003_machines import Machine
 from monitor_server.models.model_004_dockers import Image, Container
 from monitor_server.models.model_005_deploy import Deployment
 
-from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
+from operation_utils.dockers import get_docker_images, create_container, get_container_with_log, rm_container, start_container, \
     stop_container, restart_container, remove_container, cp_file_2_container, container_exec
 from operation_utils.file import get_tmp_data_dir, get_data_dir
 

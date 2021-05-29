@@ -9,18 +9,17 @@ import threading
 
 import requests
 
-from jiliang_process.jp_exceptions import ProcessIntentionallyShutDownException, ProcessShutDownException, \
-    ProcessAccidentallyShutDownException
+from jiliang_process.jp_exceptions import ProcessIntentionallyShutDownException, ProcessAccidentallyShutDownException
 from .process_logger import get_logger, get_web_logger
 from .call_track import IdTree
 from .process_monitor_types import CallCategory, StatePoint
-from .settings import TASK_UNIQUE_ID_URL
-
+from .settings import TASK_UNIQUE_ID_URL,TASK_RECORDER_URL
 
 class ProcessMonitor:
     """
     任务跟踪器核心类
     """
+    boot_runner_available = True
     def __init__(self, sub_id=None, parent_id=None, web_logger=True):
         # self.sub_id = sub_id
         # self.parent_id = parent_id
@@ -37,8 +36,8 @@ class ProcessMonitor:
         self.current_call_stack_node_dict = {self.main_thread_id: self.call_stack_tree.root}
         self.MONITOR_DISABLED = os.environ.get("MONITOR_ENABLED") is None
 
-    def re_config(self, TASK_RECORDER_URL="http://172.16.5.148:60010/record_tasks",
-                  TASK_UNIQUE_ID_URL="http://172.16.5.148:60010/task_unique_id", MONITOR_DISABLED=False):
+    def re_config(self, TASK_RECORDER_URL=TASK_RECORDER_URL,
+                  TASK_UNIQUE_ID_URL=TASK_UNIQUE_ID_URL, MONITOR_DISABLED=False):
         self.logger.url = TASK_RECORDER_URL
         self.unique_id_holder.reset_url(TASK_UNIQUE_ID_URL)
         self.MONITOR_DISABLED = MONITOR_DISABLED
@@ -331,9 +330,9 @@ class ProcessMonitor:
         except Exception as e:
             raise e
         if "root_id" in params and "parent_id" in params:
-            root_id = params.get("root_id")
-            parent_id = params.get("parent_id")
-            return root_id, parent_id, str_params
+            root_id = params.pop("root_id")
+            parent_id = params.pop("parent_id")
+            return root_id, parent_id, json.dumps(params)
         else:
             raise Exception("监控器参数抽取失败...")
 
@@ -353,9 +352,19 @@ class UniqueId:
         #     ret = Unique_id._unique_id
         #     Unique_id._unique_id += 1
         # return ret
-        res = requests.get(url=UniqueId._id_url)
-        data = json.loads(res.content)
-        u_id = data["task_unique_id"]
+        try:
+            res = requests.get(url=UniqueId._id_url, timeout=3)
+            data = json.loads(res.content)
+            u_id = data["task_unique_id"]
+        except json.decoder.JSONDecodeError as e:
+            print(e)
+            u_id = "invalid id"
+        except requests.exceptions.ConnectTimeout as e:
+            print(e)
+            u_id = "invalid id"
+        except Exception as e:
+            print(e)
+            u_id = "invalid id"
         return u_id
 
     @staticmethod

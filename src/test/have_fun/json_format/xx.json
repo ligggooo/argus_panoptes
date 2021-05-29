@@ -1,0 +1,187 @@
+{
+  "code": 200,
+  "data": {
+    "count": 71,
+    "data": [
+      {
+        "end_time": 1618995420.748277,
+        "err": [],
+        "hasChildren": true,
+        "id": "654414",
+        "info": [],
+        "root_id": "654414",
+        "start_time": 1618995407.675255,
+        "status": 1,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618995395.8484714,
+        "err": [],
+        "hasChildren": true,
+        "id": "654162",
+        "info": [],
+        "root_id": "654162",
+        "start_time": 1618995394.2931213,
+        "status": 1,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618995375.5716977,
+        "err": [],
+        "hasChildren": true,
+        "id": "653910",
+        "info": [
+          "\u4efb\u52a1\u5b58\u5728\u62a5\u9519",
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 269, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\autoTest\\intergration_test\\integration_test_before_deploy\\test_jl_monitor.py\", line 55, in task_root\n self.assertTrue(numpy.max(self.time_collector)/10 < 0.05, msg=\"\u76d1\u63a7\u8bf7\u6c42\u5355\u6b21\u8d85\u8fc70.05\")\n File \"D:\\dev_apps\\Anaconda\\Lib\\unittest\\case.py\", line 682, in assertTrue\n raise self.failureException(msg)\nAssertionError: False is not true : \u76d1\u63a7\u8bf7\u6c42\u5355\u6b21\u8d85\u8fc70.05\n"
+        ],
+        "root_id": "653910",
+        "start_time": 1618995373.9562852,
+        "status": 2,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618995339.0638006,
+        "err": [],
+        "hasChildren": true,
+        "id": "653658",
+        "info": [
+          "\u4efb\u52a1\u5b58\u5728\u62a5\u9519",
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 269, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\autoTest\\intergration_test\\integration_test_before_deploy\\test_jl_monitor.py\", line 53, in task_root\n self.assertTrue(interval < jobs*0.05, msg=\"\u76d1\u63a7\u5668\u6d4b\u8bd5\u51fd\u6570\u6267\u884c\u65f6\u5e38\u8d85\u8fc7%s\"% jobs * 0.05)\nTypeError: can't multiply sequence by non-int of type 'float'\n"
+        ],
+        "root_id": "653658",
+        "start_time": 1618995220.4904575,
+        "status": 2,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618995173.3678114,
+        "err": [],
+        "hasChildren": true,
+        "id": "651156",
+        "info": [
+          "\u4efb\u52a1\u5b58\u5728\u62a5\u9519",
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 269, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\autoTest\\intergration_test\\integration_test_before_deploy\\test_jl_monitor.py\", line 53, in task_root\n self.assertTrue(interval < jobs*0.05, msg=\"\u76d1\u63a7\u5668\u6d4b\u8bd5\u51fd\u6570\u6267\u884c\u65f6\u5e38\u8d85\u8fc7%s\"% jobs * 0.05)\nTypeError: can't multiply sequence by non-int of type 'float'\n"
+        ],
+        "root_id": "651156",
+        "start_time": 1618995160.1046317,
+        "status": 2,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618994757.3340862,
+        "err": [],
+        "hasChildren": true,
+        "id": "648654",
+        "info": [
+          "\u4efb\u52a1\u5b58\u5728\u62a5\u9519",
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 269, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\autoTest\\intergration_test\\integration_test_before_deploy\\test_jl_monitor.py\", line 52, in task_root\n self.assertTrue(interval < 10, msg=\"\u8bed\u4e49\u4efb\u52a1\u6267\u884c\u65f6\u95f4\u8d85\u8fc7180s\")\n File \"D:\\dev_apps\\Anaconda\\Lib\\unittest\\case.py\", line 682, in assertTrue\n raise self.failureException(msg)\nAssertionError: False is not true : \u8bed\u4e49\u4efb\u52a1\u6267\u884c\u65f6\u95f4\u8d85\u8fc7180s\n"
+        ],
+        "root_id": "648654",
+        "start_time": 1618994743.8845706,
+        "status": 2,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618994687.1959972,
+        "err": [],
+        "hasChildren": true,
+        "id": "646152",
+        "info": [
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 269, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\autoTest\\intergration_test\\integration_test_before_deploy\\test_jl_monitor.py\", line 53, in task_root\n self.assertTrue(interval < 10, msg=\"\u8bed\u4e49\u4efb\u52a1\u6267\u884c\u65f6\u95f4\u8d85\u8fc7180s\")\n File \"D:\\dev_apps\\Anaconda\\Lib\\unittest\\case.py\", line 682, in assertTrue\n raise self.failureException(msg)\nAssertionError: False is not true : \u8bed\u4e49\u4efb\u52a1\u6267\u884c\u65f6\u95f4\u8d85\u8fc7180s\n",
+          "\u4efb\u52a1\u5b58\u5728\u62a5\u9519"
+        ],
+        "root_id": "646152",
+        "start_time": 1618994673.750911,
+        "status": 2,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": 1618994503.6326292,
+        "err": [],
+        "hasChildren": true,
+        "id": "641917",
+        "info": [
+          "\u4efb\u52a1\u5b58\u5728\u62a5\u9519",
+          "Traceback (most recent call last):\n File \"E:\\workspace\\jiliang_monitor_pr\\src\\jiliang_process\\process_monitor.py\", line 269, in wrapper\n res = func(*args, **kwargs)\n File \"E:\\workspace\\jiliang_system\\autoTest\\intergration_test\\integration_test_before_deploy\\test_jl_monitor.py\", line 52, in task_root\n self.assertTrue(interval < 10, msg=\"\u8bed\u4e49\u4efb\u52a1\u6267\u884c\u65f6\u95f4\u8d85\u8fc7180s\")\n File \"D:\\dev_apps\\Anaconda\\Lib\\unittest\\case.py\", line 682, in assertTrue\n raise self.failureException(msg)\nAssertionError: False is not true : \u8bed\u4e49\u4efb\u52a1\u6267\u884c\u65f6\u95f4\u8d85\u8fc7180s\n"
+        ],
+        "root_id": "641917",
+        "start_time": 1618994487.5795434,
+        "status": 2,
+        "success_rate": [
+          1,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "641286",
+        "info": [],
+        "root_id": "641286",
+        "start_time": 1618994449.731588,
+        "status": 0,
+        "success_rate": [
+          0,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      },
+      {
+        "end_time": -1,
+        "err": [],
+        "hasChildren": true,
+        "id": "626827",
+        "info": [],
+        "root_id": "626827",
+        "start_time": 1618994206.7157052,
+        "status": 0,
+        "success_rate": [
+          0,
+          0,
+          1
+        ],
+        "tag": "\u90e8\u7f72\u524d\u6d4b\u8bd5\u76d1\u63a7\u5668\u662f\u5426\u6b63\u5e38\u5de5\u4f5c"
+      }
+    ]
+  },
+  "message": "\u8bf7\u6c42\u6210\u529f"
+}

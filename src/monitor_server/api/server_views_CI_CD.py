@@ -3,7 +3,7 @@ import os
 import json
 from monitor_server.api.api_utils.clear_package import clear_package_name, clear_package_path
 
-from operation_utils.dockers import get_docker_images, create_container, get_container, rm_container, start_container, \
+from operation_utils.dockers import get_docker_images, create_container, get_container_with_log, rm_container, start_container, \
     stop_container, restart_container, remove_container
 
 api_group6 = Blueprint("api_g6",__name__)

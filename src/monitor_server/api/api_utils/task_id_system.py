@@ -3,7 +3,7 @@ import threading
 import redis
 
 from monitor_server.models.model_006_tasks import TaskTrackingRecord, db
-from monitor_server.settings.conf import RedisConn
+from settings.conf import RedisConn
 
 
 class GlobalID:

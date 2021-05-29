@@ -27,7 +27,7 @@ def chain_get(mobj, chain):
         try:
             mobj = getattr(mobj, c)
         except AttributeError as e:
-            print(e)
+            print("--路径配置错误", e)
             return None
     return mobj
 
@@ -73,6 +73,9 @@ def deco_module(module,module_name,deco_rules):
             print("--装饰已经应用过", deco_rule)
     return status
 
+from jiliang_process.process_monitor import task_monitor
+
+demo_deco_normal = task_monitor.normal_task_deco(show_position_arg=0)
 
 if __name__ == "__main__":
     import mypack

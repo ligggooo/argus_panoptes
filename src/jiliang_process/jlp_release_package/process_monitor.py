@@ -5,12 +5,15 @@ import json
 
 
 class EmptyProcessMonitor:
+    boot_runner_available = False
     """
     任务跟踪器核心类的骨架
        为了减少对使用者的影响，EmptyProcessMonitor只提供根监控相关的参数检查功能，所有
        的监控装饰器都被短接
     """
     def __init__(self, sub_id=None, parent_id=None, web_logger=True):
+        self.current_id = "empty_id"
+        self.root_id = "empty_id"
         print("空的任务监控器初始化")
 
     def re_config(self, TASK_RECORDER_URL="http://172.16.5.148:60010/record_tasks",
@@ -24,7 +27,7 @@ class EmptyProcessMonitor:
         """
         print("空的任务监控器配置")
 
-    def normal_task_deco(self, name=None):
+    def normal_task_deco(self, name=None,show_position_arg=None):
         """普通调用的装饰器"""
         def deco(func):
             return func
@@ -91,41 +94,28 @@ class EmptyProcessMonitor:
 
     @staticmethod
     def pack_monitor_params_into_str(str_params):
-        print("packing monitor_params_into_str")
         try:
             params = json.loads(str_params)
         except Exception as e:
             err_msg = traceback.format_exc()
             raise Exception("json 解析失败，被打包的参数必须是json字符串\n%s" % err_msg)
-        # if "root_id" in params or "parent_id" in params:
-        #     raise Exception("监控器客户端参数与原始参数冲突...")
-        # else:
-        params.update({
-            "root_id": "empty root_id",
-            "parent_id": "empty parent_id"
-        })
-        return json.dumps(params)
+        else:
+            params.update({
+                "root_id": "empty root_id",
+                "parent_id": "empty parent_id"
+            })
+            return json.dumps(params)
 
     @staticmethod
     def extract_monitor_params_from_str(str_params):
-        print("extracting monitor_params_from_str")
-        try:
-            params = json.loads(str_params)
-        except Exception as e:
-            err_msg = traceback.format_exc()
-            raise Exception("json 解析失败，被打包的参数必须是json字符串\n%s"%err_msg)
-        if "root_id" in params and "parent_id" in params:
-            return params.get("root_id"), params.get("parent_id")
-        else:
-            raise Exception("跨进程调用接口必须提供（parent_id）(root_id)关键字参数，否则监控器无法获得进程关系...")
+        return "empty root_id","empty parent_id",str_params
 
 
-def __get_monitor(deploy_flag):
+def get_monitor(deploy_flag):
     if deploy_flag:
         import sys, os
-        root_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         jiliang_proc_path = os.path.join(root_path, "jiliang_monitor_pr", "src")
-        print(jiliang_proc_path)
         sys.path.append(jiliang_proc_path)
         from jiliang_process.process_monitor import ProcessMonitor
         task_monitor = ProcessMonitor()
@@ -133,6 +123,19 @@ def __get_monitor(deploy_flag):
                   TASK_UNIQUE_ID_URL="http://172.16.5.148:60010/task_unique_id",
                   MONITOR_DISABLED=False)
     else:
-        from deploy.jlp_release_package.process_monitor import EmptyProcessMonitor
         task_monitor = EmptyProcessMonitor()
     return task_monitor
+
+import  os
+
+if os.environ.get("MONITOR_ENABLED") is None:
+    task_monitor = EmptyProcessMonitor()
+    task_monitor.re_config()
+    from deploy.jlp_release_package.jp_exceptions import ProcessAccidentallyShutDownException, \
+        ProcessIntentionallyShutDownException, \
+        ProcessShutDownException
+else:
+    task_monitor = get_monitor(deploy_flag=True)
+    from jiliang_process.jp_exceptions import ProcessAccidentallyShutDownException, \
+        ProcessIntentionallyShutDownException, \
+        ProcessShutDownException

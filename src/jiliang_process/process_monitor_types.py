@@ -25,6 +25,11 @@ class ProcessState(enum.Enum):
     partially_finished = 3
     process_shutdown = 4
 
+    @staticmethod
+    def is_dead(state: enum.Enum):
+        dead = state.value in {-4, -1, 1, 2, 3, 4}
+        return dead
+
 
 class CallCategory(enum.Enum):
     root = -1

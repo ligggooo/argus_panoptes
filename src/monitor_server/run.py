@@ -5,7 +5,7 @@ sys.path.append(src_path)
 sys.path.append(os.path.join(src_path, "monitor_server"))
 
 from monitor_server import app
-from monitor_server.settings.conf import config
+from settings.conf import config
 from monitor_server.api.server_views_products import api_group1
 from monitor_server.api.server_views_machines import api_group2
 from monitor_server.api.server_views_containers import api_group3
@@ -22,6 +22,6 @@ app.register_blueprint(api_group6)
 
 
 if __name__ == '__main__':
-    app.run(host=config.host, port=config.port, threaded=False)
+    app.run(host=config.host, port=config.port, threaded=True, use_reloader=False)
     #app.run()
 

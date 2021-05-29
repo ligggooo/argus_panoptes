@@ -25,4 +25,9 @@ sh /workspace/jiliang_system/deploy/run.sh
 echo "========================================="
 echo $?
 echo "========================================="
+
+
+{% core_cmd %}
+
+
 /bin/bash
